@@ -1,0 +1,75 @@
+---
+# Adopted from ch.sbb.polarion.extension.xml-repair, trimmed for a JS/TS-only library and extended with
+# three local hooks that run this repo's npm scripts (format:check, lint, test:coverage:docker).
+# Activate with: pre-commit install  (requires the repo to be git-initialized first).
+default_install_hook_types: [pre-commit, commit-msg]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=5120]
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+        exclude_types: [markdown]  # avoid conflicts with markdown formatting
+      - id: check-json
+      - id: check-yaml
+      - id: no-commit-to-branch
+      - id: mixed-line-ending
+      - id: end-of-file-fixer
+  - repo: local
+    hooks:
+      # Privacy guards (from xml-repair) - block internal identifiers from being committed.
+      - id: sensitive-data-leak-urls
+        name: Sensitive data leak - URLs
+        entry: (?<!polarion-opensource@)(?<!www\.)sbb\.ch
+        language: pygrep
+        types: [text]
+      - id: sensitive-data-leak-ue-numbers
+        name: Sensitive data leak - UE numbers
+        entry: \b([uUeE]{1,2})\d{5,6}\b
+        language: pygrep
+        types: [text]
+      - id: sensitive-data-leak-dev-ticket-numbers
+        name: Sensitive data leak - DEV ticket numbers
+        entry: \bDEV-\d{1,6}\b
+        language: pygrep
+        types: [text]
+      # This repo's own gates (check-only - they fail the commit but never modify the working tree;
+      # run `npm run format` / `npm run lint:fix` to fix). See package.json.
+      - id: prettier-check
+        name: Prettier (format:check)
+        entry: npm run format:check
+        language: system
+        pass_filenames: false
+        files: \.(ts|tsx|css|mjs)$
+      - id: eslint
+        name: ESLint
+        entry: npm run lint
+        language: system
+        pass_filenames: false
+        files: \.(ts|tsx|js|mjs)$
+      # Dockerized behavior + visual-regression tests (pinned Playwright image) WITH the coverage gate
+      # (istanbul, 80% floor - see vitest.config.ts). Same suite the plain test run executes, plus
+      # --coverage, so the gate is enforced here at no extra test run. Heavy (~30-60s+, needs Docker
+      # running); gated on source changes so docs-only commits skip it.
+      - id: test-coverage-docker
+        name: Vitest in Docker (behavior + visual regression + coverage gate)
+        entry: npm run test:coverage:docker
+        language: system
+        pass_filenames: false
+        files: \.(ts|tsx|css)$
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/grigoriev/pre-commit-check-git-user
+    rev: v0.9.3
+    hooks:
+      - id: check-git-config-user-email
+        args: [--templates, ^\S+\.\S+@sbb\.ch$]
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.16.4
+    hooks:
+      - id: commitizen

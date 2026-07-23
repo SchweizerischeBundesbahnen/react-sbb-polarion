@@ -1,0 +1,52 @@
+.about-page {
+  position: relative;
+}
+
+/* Extension icon in the top-right corner, mirroring the legacy about.css `.app-icon`. */
+.about-page .app-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 64px;
+  height: 64px;
+}
+
+.about-table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 760px;
+  font-size: 13px;
+}
+
+.about-table th,
+.about-table td {
+  border: 1px solid #cccccc;
+  padding: 5px 8px;
+  text-align: left;
+  vertical-align: top;
+  line-height: 18px;
+}
+
+.about-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.about-table td:first-child {
+  padding-left: 10px;
+}
+
+.about-page .markdown-body {
+  margin-top: 24px;
+}
+
+/* Sub-heading (h3) inside the About page: dark bold, no bar (Polarion admin look). */
+.about-page h3 {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: bold;
+  color: #000028;
+  margin: 20px 0 8px;
+  padding-left: 4px;
+}
