@@ -50,7 +50,6 @@ jobs:
         run: |
           npm pack
           VERSION="$(node -p "require('./package.json').version")"
-          # npm pack derives the filename from the scoped package name
-          # (grigoriev-react-sbb-polarion-*); publish the asset without the scope prefix.
+          # npm pack derives the filename from the scoped package name publish the asset without the scope prefix.
           mv ./*.tgz "react-sbb-polarion-${VERSION}.tgz"
           gh release create "v${VERSION}" ./*.tgz --title "v${VERSION}" --generate-notes
