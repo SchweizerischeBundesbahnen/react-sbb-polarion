@@ -1,0 +1,17 @@
+/*
+ * Bundled generic control stylesheet — copied from ch.sbb.polarion.extension.generic
+ * (app/src/main/resources/css). control-tokens first: it declares the --sbb-* custom properties the
+ * other sheets consume. The icon tokens in control-tokens.css are real url() references to the sibling
+ * images/ (rewritten from generic's build-time `inline:` placeholders); Vite inlines them as base64 at
+ * build, so the emitted style.css is self-contained (no runtime icon requests).
+ *
+ * This replaces the old runtime dependency on the Polarion-served generic CSS + ensureSharedStyles
+ * injection: the library now owns these styles and ships them in its bundled style.css.
+ */
+@import './control-tokens.css';
+@import './checkboxes.css';
+@import './radios.css';
+@import './inputs.css';
+@import './searchable-dropdown.css';
+@import './buttons.css';
+@import './alerts.css';

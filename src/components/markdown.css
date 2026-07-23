@@ -1,0 +1,31 @@
+/* Polarion admin-page heading look applied to rendered markdown help articles (README / User Guide),
+   matching the generic common.css. The base `.markdown-body` styling comes from the generic
+   github-markdown-light.css the consuming app links in its index.html. */
+.markdown-body h1 {
+  font-size: 26px;
+  line-height: 34px;
+  font-weight: bold;
+  color: #000028;
+  margin: 24px 0 12px;
+  padding-bottom: 4px;
+  border-bottom: 4px solid #f3f3f0;
+}
+
+.markdown-body h2 {
+  font-size: 22px;
+  line-height: 30px;
+  font-weight: bold;
+  color: #000028;
+  background-color: #f3f3f0;
+  padding: 8px 14px;
+  margin: 24px 0 12px;
+}
+
+.markdown-body h3 {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: bold;
+  color: #000028;
+  margin: 20px 0 8px;
+  padding-left: 4px;
+}

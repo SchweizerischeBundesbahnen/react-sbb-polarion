@@ -1,0 +1,78 @@
+/* Revisions table - matches the generic common.css #revisions-table look. */
+.revisions-expand-container {
+  width: 100%;
+  max-height: 150px;
+  overflow-y: auto;
+  margin: 12px 0 20px;
+}
+
+.revisions-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: black;
+  text-align: left;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.revisions-table th {
+  position: sticky;
+  top: 0;
+  font-weight: bold;
+  font-size: 8pt;
+  background: #e8e8e3;
+  color: black;
+  text-align: center;
+  border-top: 0;
+  border-bottom: 3px solid #b3b3be;
+  border-right: 1px solid #b3b3be;
+  padding: 2px 5px;
+}
+
+.revisions-table td {
+  font-size: 11px;
+  padding: 0 5px;
+  border: 1px solid #dddddd;
+}
+
+.revisions-table tbody tr:nth-child(even) td {
+  background: #f3f3f0;
+}
+
+.revisions-table tbody tr:nth-child(odd) td {
+  background: #fff;
+}
+
+.revisions-table tbody tr:hover td {
+  background: #ebf7f8;
+}
+
+/* Right-align the revision number; center the Date (3rd) and Actions (last) columns. */
+.revisions-table td:first-child {
+  text-align: right;
+}
+
+.revisions-table td:nth-child(3),
+.revisions-table td:last-child {
+  text-align: center;
+}
+
+.revisions-table .empty-message {
+  padding: 5px;
+  text-align: left;
+}
+
+.revert-to-revision-button {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.revert-to-revision-icon {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  background: var(--sbb-revision-revert-icon) center / contain no-repeat;
+}

@@ -1,0 +1,26 @@
+/* The gray action toolbar bar, matching the generic common.css .actions-pane look (the light-gray
+   bar behind the Save/Cancel/Default/Revisions buttons on the legacy admin pages). */
+.actions-pane {
+  background: #f5f5f5;
+  border-bottom: 1px solid #dedede;
+  padding: 8px;
+  margin-top: 24px;
+}
+
+/* The buttons sit in an inline flow; .sbb-btn--control already carries the legacy 5px inter-button
+   spacing (buttons.css), so no gap is needed here. The descendant selector (higher specificity than a
+   bare .action-buttons) is deliberate: the generic configurations.css an app may still runtime-link
+   sets `.action-buttons { display: inline-block; margin-left: 2em }`, which would otherwise indent the
+   toolbar ~2em past the intended 8px bar padding. This overrides it regardless of stylesheet order. */
+.actions-pane .action-buttons {
+  display: inline-flex;
+  margin-left: 0;
+}
+
+/* Shared control icon-label gap: spacing for the generic .sbb-icon-* glyph next to a button label
+   (Save/Cancel/Default/Revisions here, plus ConfigurationsPane's Rename/Delete/Add-new). Only labelled
+   buttons carry .button-image, so icon-only buttons are unaffected. This lives in the library so its
+   control buttons render self-contained (the consuming apps previously each defined this rule). */
+.sbb-btn .button-image {
+  margin-right: 5px;
+}

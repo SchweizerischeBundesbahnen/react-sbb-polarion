@@ -1,0 +1,15 @@
+# Build output & dependencies
+dist/
+node_modules/
+
+# Vendored verbatim from ch.sbb.polarion.extension.generic - never reformat; re-copy to update.
+src/generic/
+
+# Test artifacts & committed reference screenshots
+test/expected/
+test/__diff__/
+test/__screenshots__/
+.vitest-attachments/
+
+# Generated / not ours
+package-lock.json

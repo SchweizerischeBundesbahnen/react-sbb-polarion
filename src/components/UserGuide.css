@@ -1,0 +1,15 @@
+.user-guide-page {
+  font-size: 13px;
+}
+
+/* Images are illustrative; make them non-clickable and framed. */
+.user-guide-page a:has(img) {
+  pointer-events: none;
+  cursor: default;
+}
+
+.user-guide-page img {
+  margin: 10px;
+  border: 15px solid #eee;
+  max-width: 100%;
+}

@@ -1,0 +1,61 @@
+/* Shared modal - the SBB 2606 look (dark header, white body). Colors read the generic design tokens
+   where relevant, with literal fallbacks so the modal is styled even standalone (vite dev). */
+.rsp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.rsp-modal {
+  background: #fff;
+  color: var(--sbb-color-text, #1a1a1a);
+  border-radius: 6px;
+  /* Size to content (like the legacy popup), capped so it never gets huge or overflows the viewport. */
+  width: max-content;
+  max-width: min(640px, calc(100vw - 32px));
+  max-height: 85vh;
+  overflow: auto;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Dark header (matches the generic 2606 modal / micromodal default): dark bar, white title + close. */
+.rsp-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 0 16px;
+  background-color: #23233c;
+  border-radius: 6px 6px 0 0;
+}
+
+.rsp-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #fff;
+}
+
+.rsp-modal-close {
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: #fff;
+}
+
+.rsp-modal-content {
+  padding: 16px;
+}
+
+.rsp-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+}

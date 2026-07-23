@@ -1,0 +1,28 @@
+.configurations-pane {
+  margin: 8px 0 16px;
+}
+
+.config-row,
+.config-edit-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.config-row select,
+.config-edit-row input[type='text'] {
+  min-width: 220px;
+}
+
+.config-note {
+  color: var(--sbb-color-text-muted, #6b6b6b);
+  margin: 6px 0 0;
+}
+
+/* The rows use flex `gap`, so drop the control button's own inter-button margin (the generic
+   buttons.css sets margin-right: 5px for the legacy admin toolbar look). */
+.config-row .sbb-btn,
+.config-edit-row .sbb-btn {
+  margin-right: 0;
+}

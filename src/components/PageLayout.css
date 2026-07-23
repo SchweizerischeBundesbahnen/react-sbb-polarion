@@ -1,0 +1,50 @@
+/* Shared page-shell spacing for every RSP consuming app, declared once here so all extensions match
+   (before this lived per-app in each App.css and drifted - xml-repair 16/20, others 24/32). An app can
+   still override in its own App.css if it truly must.
+
+   0. Reset the document body's default 8px UA margin. Each app owns its own iframe `index.html`
+      document (Polarion embeds the admin page in an iframe whose `<body class="sbb-ui">` is ours), so
+      without this the 8px UA margin adds to the `.app` padding below (8 + 10 = 18px gap). Scoped to the
+      element `body`, so it is a no-op in shadow-mounted form-extension panels (`.sbb-ui` sits on a div
+      there, no body) and never touches the host Polarion page (RSP CSS is not loaded there). */
+body {
+  margin: 0;
+}
+
+/* 1. Outer page margin on the `.app` root: a uniform 10px gap from the Polarion content-area edges, so
+      the gap from the top equals the gap from the left. */
+.app {
+  padding: 10px;
+}
+
+/* 2. The standard admin-page heading rendered by PageLayout's `<h1>` (title pages only). `margin-top: 0`
+      so the heading sits the same 10px from the top as from the left. The `>` combinator keeps this off
+      the h1s inside the About/UserGuide README article (those are `.page .page-body article h1`). */
+.page > h1 {
+  font-size: 30px;
+  line-height: 38px;
+  font-weight: bold;
+  color: #000028;
+  margin: 0 0 16px;
+  padding-bottom: 4px;
+  border-bottom: 4px solid #f3f3f0;
+}
+
+/* The "back to overview" nav shown by PageLayout in non-embedded (dev) mode, plus the page body. The
+   link color reads the generic accent token when present, with a literal fallback. */
+.page-nav {
+  margin-bottom: 8px;
+}
+
+.page-nav a {
+  color: var(--sbb-color-accent, #0d5c9e);
+  text-decoration: none;
+}
+
+.page-nav a:hover {
+  text-decoration: underline;
+}
+
+.page-body {
+  line-height: 1.5;
+}
