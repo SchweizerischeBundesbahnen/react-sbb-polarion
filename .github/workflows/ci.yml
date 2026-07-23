@@ -1,0 +1,24 @@
+name: CI
+
+# Runs on every pushed commit (branch pushes also show up as checks on their PRs).
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    # Pinned to the installed Playwright version (see package-lock.json) so the visual-test
+    # screenshots match the references generated via `npm run test:update:docker`. Bump this tag
+    # together with any Playwright bump (same rule as scripts/docker-test.mjs).
+    container: mcr.microsoft.com/playwright:v1.61.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test

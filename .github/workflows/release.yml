@@ -1,0 +1,56 @@
+name: Release
+
+# Manually triggered release: bumps the version, commits + tags on main, and publishes a GitHub
+# release with the npm tarball attached as an asset. Consumers install the tarball straight from
+# the release asset URL - no registry, no auth token (the repo is public).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'npm version argument: patch | minor | major | explicit version (e.g. 1.2.3)'
+        required: true
+        default: patch
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    # Same pinned Playwright image as ci.yml - see the comment there.
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.61.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm test
+
+  release:
+    needs: test
+    # Releases are cut from main only.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run build
+      - name: Bump version, tag and push
+        env:
+          VERSION_ARG: ${{ inputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm version "$VERSION_ARG" -m "chore: bump version to %s"
+          git push --follow-tags
+      - name: Pack and create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm pack
+          VERSION="$(node -p "require('./package.json').version")"
+          # npm pack derives the filename from the scoped package name
+          # (grigoriev-react-sbb-polarion-*); publish the asset without the scope prefix.
+          mv ./*.tgz "react-sbb-polarion-${VERSION}.tgz"
+          gh release create "v${VERSION}" ./*.tgz --title "v${VERSION}" --generate-notes
