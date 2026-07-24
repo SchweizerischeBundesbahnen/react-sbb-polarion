@@ -12,9 +12,19 @@ body {
 }
 
 /* 1. Outer page margin on the `.app` root: a uniform 10px gap from the Polarion content-area edges, so
-      the gap from the top equals the gap from the left. */
+      the gap from the top equals the gap from the left.
+
+      The `.app` root also sets the page TEXT font for every admin page in the RSP app. RSP is
+      font-neutral for controls (they read --sbb-control-font-family directly), but page text
+      (headings, About tables, panes, the README article) previously inherited whatever ambient font
+      the host iframe supplied, so each extension's admin pages rendered in a different typeface.
+      Setting it on the app root — which every admin page lives under, but which the bare control test
+      hosts (.sbb-ui / .sbb-ui.standard-admin-page, without .app) never use — gives every admin page
+      the SBB stack (Selawik via the @font-face in control-tokens.css), matching Polarion's native
+      admin pages. Controls keep their own font-family token, so they are unaffected. */
 .app {
   padding: 10px;
+  font-family: var(--sbb-control-font-family);
 }
 
 /* 2. The standard admin-page heading rendered by PageLayout's `<h1>` (title pages only). `margin-top: 0`

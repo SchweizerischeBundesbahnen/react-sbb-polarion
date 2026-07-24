@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getScope } from '../services/scope';
 import type { ConfigurationPropertiesModel, ConfigurationStatus, SendRequest, Version } from '../types';
 import './About.css';
@@ -58,6 +58,7 @@ export default function About({ sendRequest, appIcon, restApiUrl }: AboutProps) 
 
   const [data, setData] = useState<AboutData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -94,6 +95,34 @@ export default function About({ sendRequest, appIcon, restApiUrl }: AboutProps) 
     };
   }, [sendRequest, scope]);
 
+  // Same-page anchor links (property descriptions and the README article cross-references, e.g.
+  // `#strictdoc-configuration`) otherwise resolve against this page's URL, so the browser hover
+  // preview leaks the embedded query string (?feature=…&embedded=true&scope=…). Turn them into
+  // in-page scroll targets with just the fragment as their tooltip - no resolved URL is exposed.
+  useEffect(() => {
+    const root = pageRef.current;
+    if (!root) return;
+    root.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
+      const href = a.getAttribute('href') ?? '';
+      const id = decodeURIComponent(href.slice(1));
+      a.removeAttribute('href'); // drop the resolvable URL so the hover preview stays clean
+      a.title = href;
+      a.setAttribute('role', 'link');
+      a.tabIndex = 0;
+      a.classList.add('about-anchor');
+      const scrollToTarget = () => {
+        if (id) document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      };
+      a.addEventListener('click', scrollToTarget);
+      a.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          scrollToTarget();
+        }
+      });
+    });
+  }, [data]);
+
   return (
     <PageLayout title="About">
       {error ? (
@@ -101,33 +130,37 @@ export default function About({ sendRequest, appIcon, restApiUrl }: AboutProps) 
       ) : !data ? (
         <p>Loading...</p>
       ) : (
-        <div className="about-page">
-          <img className="app-icon" src={appIcon} alt="" />
-          <h3>Extension info</h3>
-          <table className="about-table">
-            <thead>
-              <tr>
-                <th>Manifest entry</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {versionRows(data.version).map((row) => (
-                <tr key={row.label}>
-                  <td>{row.label}</td>
-                  <td>
-                    {row.email ? (
-                      <a target="_blank" rel="noreferrer" href={`mailto:${row.value}`}>
-                        {row.value}
-                      </a>
-                    ) : (
-                      row.value
-                    )}
-                  </td>
+        <div className="about-page" ref={pageRef}>
+          <div className="about-header">
+            <h3>Extension info</h3>
+            <img className="app-icon" src={appIcon} alt="" />
+          </div>
+          <div className="about-table-wrap">
+            <table className="about-table">
+              <thead>
+                <tr>
+                  <th>Manifest entry</th>
+                  <th>Value</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {versionRows(data.version).map((row) => (
+                  <tr key={row.label}>
+                    <td>{row.label}</td>
+                    <td>
+                      {row.email ? (
+                        <a target="_blank" rel="noreferrer" href={`mailto:${row.value}`}>
+                          {row.value}
+                        </a>
+                      ) : (
+                        row.value
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {/* Debug-only manual REST token auth test (ported from the generic about.jsp). */}
           {data.config.properties.some((p) => p.key.endsWith('.debug') && p.value === 'true') && (
@@ -135,70 +168,78 @@ export default function About({ sendRequest, appIcon, restApiUrl }: AboutProps) 
           )}
 
           <h3>Extension configuration properties</h3>
-          <table className="about-table">
-            <thead>
-              <tr>
-                <th>Configuration property</th>
-                <th>Value</th>
-                <th>Default</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.config.properties.map((prop) => (
-                <tr key={prop.key}>
-                  <td>{prop.key}</td>
-                  <td>{prop.value}</td>
-                  <td>{prop.defaultValue ?? ''}</td>
-                  <td>{prop.description ?? ''}</td>
+          <div className="about-table-wrap">
+            <table className="about-table">
+              <thead>
+                <tr>
+                  <th>Configuration property</th>
+                  <th>Value</th>
+                  <th>Default</th>
+                  <th>Description</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.config.properties.map((prop) => (
+                  <tr key={prop.key}>
+                    <td>{prop.key}</td>
+                    <td>{prop.value}</td>
+                    <td>{prop.defaultValue ?? ''}</td>
+                    {/* Descriptions are trusted server-authored HTML (they may contain links into the
+                        README anchors below, e.g. #strictdoc-configuration), same as the legacy JSP. */}
+                    <td className="about-description" dangerouslySetInnerHTML={{ __html: prop.description ?? '' }} />
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {data.config.obsoleteProperties.length > 0 && (
             <>
               <h3>Obsolete/non-valid configuration properties</h3>
-              <table className="about-table">
-                <thead>
-                  <tr>
-                    <th>Configuration property</th>
-                    <th>Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.config.obsoleteProperties.map((prop) => (
-                    <tr key={prop.key}>
-                      <td>{prop.key}</td>
-                      <td>{prop.value}</td>
+              <div className="about-table-wrap">
+                <table className="about-table">
+                  <thead>
+                    <tr>
+                      <th>Configuration property</th>
+                      <th>Value</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.config.obsoleteProperties.map((prop) => (
+                      <tr key={prop.key}>
+                        <td>{prop.key}</td>
+                        <td>{prop.value}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
 
           {data.statuses.length > 0 && (
             <>
               <h3>Extension configuration status</h3>
-              <table className="about-table">
-                <thead>
-                  <tr>
-                    <th>Configuration</th>
-                    <th>Status</th>
-                    <th>Info</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.statuses.map((status) => (
-                    <tr key={status.name}>
-                      <td>{status.name}</td>
-                      <td style={{ color: STATUS_COLORS[status.status] }}>{status.status}</td>
-                      <td>{status.details}</td>
+              <div className="about-table-wrap">
+                <table className="about-table">
+                  <thead>
+                    <tr>
+                      <th>Configuration</th>
+                      <th>Status</th>
+                      <th>Info</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.statuses.map((status) => (
+                      <tr key={status.name}>
+                        <td>{status.name}</td>
+                        <td style={{ color: STATUS_COLORS[status.status] }}>{status.status}</td>
+                        <td>{status.details}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
 
