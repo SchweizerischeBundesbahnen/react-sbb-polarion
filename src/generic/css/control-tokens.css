@@ -29,6 +29,25 @@
    :root was dropped in #535 once every consumer surface carried a scope wrapper — do NOT reintroduce
    it: a :root declaration is global and re-enables cross-version clobbering for any control that
    sits outside a wrapper. New consumers must tag their UI root with one of the scope classes. */
+
+/* Selawik — the Polarion 2606 UI font. Polarion serves it itself at /polarion/ria/fonts/selawik/,
+   but only its native pages load it (via the petrel theme). RSP-based React SPAs run in their own
+   iframe without petrel, so "Selawik" in the font stack fell back to Arial and looked different from
+   the native admin pages. Declaring @font-face here (pointing at Polarion's own served files) makes
+   those SPAs render the real Selawik — matching the native About/admin pages exactly. */
+@font-face {
+    font-family: 'Selawik';
+    src: url('/polarion/ria/fonts/selawik/selawk.ttf') format('truetype');
+    font-weight: 400;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Selawik';
+    src: url('/polarion/ria/fonts/selawik/selawkb.ttf') format('truetype');
+    font-weight: 700;
+    font-display: swap;
+}
+
 .modal__container,
 .standard-admin-page,
 .form-wrapper,

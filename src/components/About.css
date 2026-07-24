@@ -2,19 +2,40 @@
   position: relative;
 }
 
-/* Extension icon in the top-right corner, mirroring the legacy about.css `.app-icon`. */
+/* Extension info heading and the extension icon share the top row: the icon sits at the top-right
+ * (mirroring the legacy about.css `.app-icon`) but stays in flow so it never overlaps the tables
+ * below, even when the page is narrow. */
+.about-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.about-header h3 {
+  margin-top: 0;
+}
+
 .about-page .app-icon {
-  position: absolute;
-  top: 0;
-  right: 0;
+  flex: 0 0 auto;
   width: 64px;
   height: 64px;
 }
 
+/* Each table scrolls horizontally on its own when it can't fit (e.g. long, non-wrapping property
+ * keys on a narrow page) instead of pushing the page wider or hiding content under the icon. */
+.about-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Size to content (not `width: 100%`): the table takes exactly the width its columns need, so a
+ * non-wrapping key column can't starve the Description column, and when the total exceeds the page
+ * the wrapper above scrolls. Columns still wrap down to their min-content before that scroll kicks
+ * in, so a scrollbar appears only when the table genuinely can't fit. */
 .about-table {
   border-collapse: collapse;
-  width: 100%;
-  max-width: 760px;
+  width: auto;
   font-size: 13px;
 }
 
@@ -35,10 +56,34 @@
 
 .about-table td:first-child {
   padding-left: 10px;
+  /* Keep configuration-property keys / manifest entries on a single line; the wrapper scrolls
+   * horizontally rather than wrapping these identifiers. */
+  white-space: nowrap;
+}
+
+/* Description cells hold trusted server-authored HTML (prose with links) and must wrap normally.
+ * Cap the width so a long description wraps into a readable column instead of stretching the whole
+ * table (short ones, like a single link, still render on one line under this cap). */
+.about-table td.about-description {
+  white-space: normal;
+  max-width: 340px;
 }
 
 .about-page .markdown-body {
   margin-top: 24px;
+}
+
+/* Same-page anchor links rewritten into in-page scroll targets (see About.tsx). They lose their
+ * href, so restore the link look and keep them keyboard/hover-friendly. */
+.about-page .about-anchor {
+  color: var(--sbb-color-accent, #0d5c9e);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.about-page .about-anchor:hover,
+.about-page .about-anchor:focus-visible {
+  text-decoration: underline;
 }
 
 /* Sub-heading (h3) inside the About page: dark bold, no bar (Polarion admin look). */
