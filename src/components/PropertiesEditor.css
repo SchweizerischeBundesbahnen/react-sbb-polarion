@@ -1,0 +1,113 @@
+/*
+ * .properties editor - a textarea with a syntax-highlighted layer painted underneath it.
+ *
+ * The two layers MUST agree on every metric that affects where a glyph lands (font, size, line
+ * height, tab size, padding, white-space) or the highlight drifts away from the text the user sees.
+ * `white-space: pre` (no wrapping, like the legacy code-input) keeps that agreement even when the
+ * textarea shows a vertical scrollbar and is therefore narrower than the highlight layer: with no
+ * wrapping, a narrower box changes nothing about where the line breaks are. The horizontal and
+ * vertical scroll offsets are synced in the component.
+ */
+.properties-editor {
+  position: relative;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 250px;
+  overflow: hidden;
+  border: 1px solid var(--sbb-control-border);
+  border-radius: var(--sbb-control-radius);
+  background: var(--sbb-control-bg);
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.properties-editor:hover {
+  box-shadow: var(--sbb-control-shadow-hover);
+}
+
+/* The focus ring belongs to the wrapper: the textarea itself is transparent and edge-to-edge, so its
+   own outline would be clipped by the wrapper's overflow. */
+.properties-editor:focus-within {
+  border-color: var(--sbb-control-border-focus);
+  box-shadow: var(--sbb-control-shadow-hover);
+}
+
+/* Shared metrics. Anything here that differs between the two layers misaligns them. */
+.properties-editor__highlight,
+.properties-editor__input {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 8px;
+  border: 0;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  tab-size: 2;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.properties-editor__highlight {
+  /* Scrolled programmatically to follow the textarea; never scrolls on its own, and never eats a
+     click meant for the textarea above it. */
+  overflow: hidden;
+  pointer-events: none;
+  color: #000;
+  background: transparent;
+}
+
+/* Consuming apps style bare `code` for inline code in their prose (border, tinted background, 0.9em).
+   That selector would otherwise reach the highlight layer's own <code>, boxing every line AND shrinking
+   its text out of alignment with the textarea above. Neutralised here: a class+element selector wins
+   over the app's bare element rule. */
+.properties-editor__highlight code {
+  font: inherit;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+}
+
+.properties-editor__input {
+  overflow: auto;
+  resize: none;
+  outline: none;
+  background: transparent;
+  /* The glyphs come from the highlight layer below; the caret and the selection stay visible. */
+  color: transparent;
+  caret-color: #1a1a1a;
+}
+
+.properties-editor__input::selection {
+  /* Selecting transparent text would otherwise show as an empty band. */
+  background: #b3d4fc;
+}
+
+.properties-editor__input::placeholder {
+  color: #a0a0a0;
+}
+
+/* Token colors, matching prism's default theme (comment / attr-name / punctuation / attr-value), which
+   is the theme the legacy admin pages loaded. */
+.properties-editor__comment {
+  color: #708090;
+}
+
+.properties-editor__key {
+  color: #690;
+}
+
+.properties-editor__separator {
+  color: #999;
+}
+
+.properties-editor__value {
+  color: #07a;
+}

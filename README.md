@@ -184,13 +184,17 @@ To go back to local development against unpublished changes, reverse step 2
 ## Exports
 
 **Components**: `PageLayout`, `SearchableSelect`, `Modal`, `Toaster`, `BreadcrumbInjector`,
-`RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`.
+`RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
+`PropertiesEditor`.
 
 **Config / helpers**: `configureGenericModules(base)` (sets the base URL for the generic ES modules the
 library still loads at runtime - now only `BreadcrumbBridge.js` via `BreadcrumbInjector`; call once per
 entry point that uses the breadcrumb), `createEditableSelect` / `createSearchableSelect` (the vendored
 generic combobox factories, for bespoke editable / richer-option inputs), `getCookie`/`setCookie`,
 `isEmbedded()`, `getScope()` / `getProjectIdFromScope(scope)`.
+
+**Functions**: `tokenizePropertiesLine(line)` - the `.properties` line tokenizer behind
+`PropertiesEditor`, exported so a consumer can highlight the same way outside the editor.
 
 **Types**: `SelectOption`, `SearchableDropdownInstance`, `ConfigurationsPaneHandle`,
 `ConfigurationsService<T>`, `SettingName`, `Revision`, `Version`, `ConfigurationProperty`,
