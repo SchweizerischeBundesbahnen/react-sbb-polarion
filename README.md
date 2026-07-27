@@ -125,61 +125,36 @@ import { PageLayout } from '@grigoriev/react-sbb-polarion';
 Rebuild the library (`npm run build`, or `npm run dev` for watch mode) after changing a component;
 the symlinked consumer picks up the new `dist/`.
 
-## Switch to the published package (semver + GitHub Packages)
+## How consumers depend on this package
 
-Once this package is published, each consumer moves off the local `file:` link to a normal semver
-dependency. **No application code changes** - the imports, `configureGenericModules(...)` calls, and
-the `style.css` import all stay exactly as they are. Only the dependency source and a bit of build
-config change.
+Published to **npmjs** as [`@grigoriev/react-sbb-polarion`](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion),
+public, Apache-2.0. A consuming extension declares a plain semver range and needs nothing else - no
+`.npmrc`, no token, no registry configuration, because npmjs is npm's default registry:
 
-**In this package (one-time publish setup):**
+```jsonc
+// <ext>/ui/package.json
+"dependencies": {
+  "@grigoriev/react-sbb-polarion": "^0.0.7"
+}
+```
 
-1. Give it a real version (`package.json` `"version"`, e.g. `0.1.0`) and remove `"private": true`.
-2. Point publishing at the org registry:
+Renovate tracks it like any other dependency, and each release carries **npm provenance** - a signed
+attestation, issued from the release workflow's OIDC token, that the tarball was built by that workflow
+from that commit.
 
-   ```json
-   "publishConfig": {
-     "registry": "https://npm.pkg.github.com"
-   }
-   ```
+> Earlier versions were consumed as a **GitHub release tarball URL**
+> (`https://github.com/grigoriev/react-sbb-polarion/releases/download/vX/…tgz`). That is no longer
+> possible: **npm 12 refuses "remote" dependencies** outright (`EALLOWREMOTE`, `allow-remote` defaults to
+> `none`), and renovate could never track a URL anyway. The release asset is still published for the
+> versions pinned to it, but new consumers use the registry.
 
-3. Publish (auth with a GitHub token that has `write:packages`):
+Nothing about the application code changes between the two - the imports,
+`configureGenericModules(...)` and the `style.css` import stay exactly as they are.
 
-   ```bash
-   npm publish
-   ```
-
-**In each consuming extension (`ui/`):**
-
-1. Add an `.npmrc` so the `@grigoriev` scope resolves to GitHub Packages (the scope
-   must match the GitHub org, and npm scopes are lowercase):
-
-   ```
-   @grigoriev:registry=https://npm.pkg.github.com
-   //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-   ```
-
-   (CI already provides a token; developers use a personal access token with `read:packages`.)
-
-2. Change the dependency from the local link to a semver range, then reinstall:
-
-   ```jsonc
-   // package.json
-   // - "@grigoriev/react-sbb-polarion": "file:../../react-sbb-polarion"
-   // + "@grigoriev/react-sbb-polarion": "^0.1.0"
-   ```
-
-   ```bash
-   npm install
-   ```
-
-3. Remove the `resolve.dedupe: ['react', 'react-dom']` line from `vite.config.js` (and
-   `vite.formext.config.js` where present). It only existed to collapse the two React copies the
-   `file:` symlink created; a registry install has no nested React, so the dedupe becomes a no-op -
-   leaving it is harmless, removing it keeps the config clean.
-
-To go back to local development against unpublished changes, reverse step 2
-(`npm install file:../../react-sbb-polarion`) and re-add the dedupe rule.
+The `resolve.dedupe: ['react', 'react-dom']` in `vite.config.js` (and `vite.formext.config.js` where
+present) only mattered for the `file:` symlink, which nests its own React. A registry install has no
+nested React, so the dedupe is a no-op - harmless to keep, and it is what makes a temporary switch back
+to a local checkout work without touching the config.
 
 ## Exports
 
