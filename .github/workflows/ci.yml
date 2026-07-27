@@ -14,6 +14,10 @@ jobs:
     # screenshots match the references generated via `npm run test:update:docker`. Bump this tag
     # together with any Playwright bump (same rule as scripts/docker-test.mjs).
     container: mcr.microsoft.com/playwright:v1.61.1-jammy
+    # This IS the reference environment for the committed screenshots, so the visual suites must
+    # assert here (they skip themselves anywhere else - see vitest.config.ts).
+    env:
+      PIXEL_REFERENCES: '1'
     steps:
       - uses: actions/checkout@v4
       - run: npm ci

@@ -48,7 +48,7 @@ function renderToolbar({ withDefault = true }: { withDefault?: boolean } = {}) {
 const barShot = (name: string) =>
   expect(page.elementLocator(document.querySelector('.actions-pane') as HTMLElement)).toMatchScreenshot(name);
 
-describe('ConfigurationButtons visual states', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('ConfigurationButtons visual states', () => {
   it('default (gray bar, Save/Cancel/Default/Revisions control buttons)', async () => {
     renderToolbar();
     await barShot('configuration-buttons-default');

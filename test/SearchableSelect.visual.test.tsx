@@ -80,7 +80,7 @@ const AB_ICONS: Opt[] = [
   { value: 'b', label: 'Second', icon: ICON },
 ];
 
-describe('SearchableSelect visual states - closed control', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - closed control', () => {
   it('default (first option selected)', async () => {
     const select = makeSelect(AB);
     host('default', select);
@@ -135,7 +135,7 @@ describe('SearchableSelect visual states - closed control', () => {
   });
 });
 
-describe('SearchableSelect visual states - open list', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - open list', () => {
   it('single-select open list', async () => {
     const select = makeSelect(ABC);
     host('single-open', select);
@@ -166,7 +166,7 @@ describe('SearchableSelect visual states - open list', () => {
 const LONG =
   'Third - a deliberately long option label that cannot fit within the control width, extended much further with extra filler words so that even at the 1280 by 720 desktop viewport the popup grows far wider than the screen and the captured reference is deliberately clipped at the right edge';
 
-describe('SearchableSelect visual states - long values / overflow', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - long values / overflow', () => {
   it('closed trigger with a long selected value', async () => {
     const select = makeSelect([
       { value: 'a', label: 'First' },

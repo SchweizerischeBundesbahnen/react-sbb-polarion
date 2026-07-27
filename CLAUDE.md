@@ -24,6 +24,13 @@ the standalone class goes away). So:
   - `control-tokens.css` - generic's `inline:` icon placeholders are rewritten to real
     `url(../images/…)` (Vite inlines them at build); `ensureSharedStyles.js` is a local no-op (the CSS
     is bundled, not injected at runtime).
+  - `control-tokens.css` - the two Selawik **`@font-face`** blocks (400 + 700, pointing at Polarion's
+    own `/polarion/ria/fonts/selawik/*.ttf`). Added in v0.0.2; generic's copy has **none**, and this is
+    deliberate and permanent: Polarion's native pages already load Selawik through the petrel theme, so
+    only the React SPAs - which run in their own iframe without petrel - need the declaration. A
+    by-the-book re-copy from generic silently deletes it, every admin page falls back to Arial, and the
+    **test suite stays green** (nothing serves `/polarion/ria/fonts/…` under test, so the references
+    render the fallback either way). Re-add it after any re-copy.
 
 ## Visual-regression reference screenshots
 

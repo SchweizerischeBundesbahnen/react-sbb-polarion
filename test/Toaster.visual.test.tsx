@@ -28,7 +28,7 @@ function teardown() {
 
 afterEach(teardown);
 
-describe('Toaster visual', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('Toaster visual', () => {
   it('rich colors (success / warning / error)', async () => {
     // Disable sonner's enter/stack transitions so the toasts jump straight to their resting state:
     // otherwise the animated (transform/opacity) element never stabilizes and `toMatchScreenshot`

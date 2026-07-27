@@ -33,7 +33,7 @@ afterEach(() => {
 
 const shot = (input: HTMLInputElement, name: string) => expect(page.elementLocator(input)).toMatchScreenshot(name);
 
-describe('Checkbox visual states', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('Checkbox visual states', () => {
   it('unchecked', async () => {
     await shot(mount({}), 'checkbox-unchecked');
   });
