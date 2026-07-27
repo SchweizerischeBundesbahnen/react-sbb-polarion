@@ -2,7 +2,7 @@
   "name": "@grigoriev/react-sbb-polarion",
   "version": "0.0.6",
   "description": "Shared React UI components for SBB Polarion extension apps.",
-  "private": true,
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/grigoriev/react-sbb-polarion.git"
@@ -74,5 +74,8 @@
   },
   "allowScripts": {
     "esbuild": true
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
