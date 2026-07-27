@@ -37,6 +37,13 @@ the standalone class goes away). So:
 - References in `test/expected/` are canonical **only when generated on Linux** in the pinned Playwright
   Docker image. Regenerate with `npm run test:update:docker` - never bare `npm run test:update` (it is
   guarded to refuse off Linux, so the committed PNG always matches CI).
+- **Every font a component names must exist in the pinned image**, or the reference is hostage to
+  fontconfig tie-breaking and the suite goes intermittently red. The image ships no Consolas / Monaco /
+  Ubuntu Mono / DejaVu, and its generic `monospace` keyword matches three faces (WenQuanYi Zen Hei Mono,
+  Liberation Mono, FreeMono) with no stable winner — `PropertiesEditor` hit exactly this, failing one CI
+  run and passing the next on the same commit. End such a stack on a face the image has (`Liberation
+  Mono`, `Liberation Sans`, `FreeMono`); check with
+  `docker run --rm mcr.microsoft.com/playwright:v1.61.1-jammy fc-list : family`.
 - A bare `npm test` on Windows/macOS will **diff on the screenshot even when the component is
   unchanged** (OS font antialiasing - the control font stack is Windows-only Segoe UI, absent on Linux).
   That is expected; do NOT "fix" it by overwriting the reference. Confirm real visual changes with
