@@ -33,7 +33,15 @@
   box-shadow: var(--sbb-control-shadow-hover);
 }
 
-/* Shared metrics. Anything here that differs between the two layers misaligns them. */
+/* Shared metrics. Anything here that differs between the two layers misaligns them.
+
+   The font stack must END on a face that exists in the pinned Playwright image, not on the generic
+   `monospace` keyword. That image ships no Consolas / Monaco / Ubuntu Mono, so the stack fell through
+   to `monospace`, which fontconfig there resolves ambiguously (WenQuanYi Zen Hei Mono, Liberation
+   Mono and FreeMono all match). Different runs picked different faces, so the committed reference
+   screenshots failed intermittently on CI - twice on the same commit, once green, once 4554 pixels
+   off. 'Liberation Mono' is present in the image and pins the choice; DejaVu Sans Mono precedes it
+   for real Linux desktops, Consolas/Monaco still win on Windows/macOS. */
 .properties-editor__highlight,
 .properties-editor__input {
   position: absolute;
@@ -42,7 +50,7 @@
   margin: 0;
   padding: 8px;
   border: 0;
-  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-family: Consolas, Monaco, 'Ubuntu Mono', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
   font-size: 12px;
   font-weight: 400;
   line-height: 1.5;
