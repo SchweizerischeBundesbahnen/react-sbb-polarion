@@ -28,6 +28,9 @@ export { default as UserGuide } from './components/UserGuide';
 export { ConfigurationsPane } from './components/ConfigurationsPane';
 export type { ConfigurationsPaneHandle, ConfigurationsService } from './components/ConfigurationsPane';
 export { default as RevisionsTable } from './components/RevisionsTable';
+// The .properties editor for settings pages whose whole configuration is one properties document
+// (the DMS connectors). Replaces the legacy <code-input lang="properties"> web component.
+export { default as PropertiesEditor, tokenizePropertiesLine } from './components/PropertiesEditor';
 export { default as ConfigurationButtons } from './components/ConfigurationButtons';
 export { configureGenericModules } from './config/genericModules';
 export { getCookie, setCookie } from './services/cookies';
