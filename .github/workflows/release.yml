@@ -1,8 +1,11 @@
 name: Release
 
-# Manually triggered release: bumps the version, commits + tags on main, and publishes a GitHub
-# release with the npm tarball attached as an asset. Consumers install the tarball straight from
-# the release asset URL - no registry, no auth token (the repo is public).
+# Manually triggered release. Order matters: the package goes to the registry FIRST, and only a
+# successful publish is recorded in git (commit, tag, GitHub release). The reverse order is what left
+# v0.0.7 and v0.0.8 tagged for versions that exist in no registry.
+#
+# NOTE: npmjs binds its trusted publisher to this file's name. Renaming release.yml breaks publishing
+# silently - update the trusted publisher configuration on npmjs in the same change.
 on:
   workflow_dispatch:
     inputs:
@@ -11,11 +14,24 @@ on:
         required: true
         default: patch
 
+# One release at a time. The tag/version guards below are read-then-act, so two concurrent dispatches
+# would both pass them and then fight over the push.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+# Least privilege by default; the release job widens it for itself.
 permissions:
-  contents: write
-  # npm provenance: lets `npm publish --provenance` attest, from a signed OIDC token, that this
-  # tarball was built by this workflow from this commit.
-  id-token: write
+  contents: read
+
+defaults:
+  run:
+    # GitHub's default is `bash -e`: a failing command inside a pipeline would otherwise pass.
+    shell: bash -euo pipefail {0}
+
+env:
+  # Must match the node in the Playwright image below, so what gets published is what was tested.
+  NODE_VERSION: 24.18.0
 
 jobs:
   test:
@@ -33,40 +49,94 @@ jobs:
 
   release:
     needs: test
-    # Releases are cut from main only.
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      # Push the version commit and tag, and create the release.
+      contents: write
+      # The OIDC identity npm authenticates with (trusted publishing) and signs provenance with.
+      id-token: write
     steps:
+      # A job-level `if` would skip silently and still report a green check.
+      - name: Refuse to release from anywhere but main
+        if: github.ref_name != 'main'
+        run: |
+          echo "::error::Releases are cut from main only (got ${{ github.ref_name }})"
+          exit 1
+
       - uses: actions/checkout@v4
+        with:
+          # Full history: the rebase below and `gh release --generate-notes` both need it.
+          fetch-depth: 0
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
-          # Required for `npm publish` to resolve the auth token below.
+          node-version: ${{ env.NODE_VERSION }}
+          # Points npm at npmjs and writes the .npmrc the OIDC exchange needs.
           registry-url: https://registry.npmjs.org
+          cache: npm
+
       - run: npm ci
-      - run: npm run build
-      - name: Bump version, tag and push
+
+      # Bump the manifest only - no commit, no tag. Nothing outlives the run until the publish succeeds.
+      - name: Bump the version and check it can be released
         env:
           VERSION_ARG: ${{ inputs.version }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          npm version "$VERSION_ARG" -m "chore: bump version to %s"
-          git push --follow-tags
+          npm version "$VERSION_ARG" --no-git-tag-version
+          VERSION="$(node -p "require('./package.json').version")"
+          NAME="$(node -p "require('./package.json').name")"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            echo "::error::Tag v$VERSION already exists - pick another version input."
+            exit 1
+          fi
+          # The tag and the registry can disagree (0.0.8 was published by hand), so check both.
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "::error::$NAME@$VERSION is already on npmjs - pick another version input."
+            exit 1
+          fi
+
+      # After the bump, so anything that ever inlines the version ships the released one.
+      - run: npm run build
+
       # The registry is the distribution channel: consumers depend on a semver range, which npm 12
       # requires (it refuses "remote" tarball-URL dependencies outright) and which renovate can track.
+      #
+      # No token: npmjs trusts this repository's release workflow, so npm authenticates with its OIDC
+      # identity - which also produces the provenance attestation, hence no --provenance flag. A token
+      # could not be used anyway: the account requires 2FA for writes, so publishing with one fails on
+      # EOTP, and npm is retiring 2FA-bypassing tokens for direct publishing.
       - name: Publish to npmjs
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --provenance --access public
-      # The GitHub release asset stays: it is what the previously released versions are pinned to, and
-      # it keeps the release page self-contained.
+        run: npm publish --access public
+
+      # Only now that the package is on the registry. The rebase must happen BEFORE the tag is created:
+      # rebasing afterwards rewrites the commit and leaves the tag on an unreachable one, which
+      # --follow-tags then silently declines to push.
+      - name: Commit, tag and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit package.json package-lock.json -m "chore: bump version to ${VERSION}"
+          git fetch origin main
+          git rebase origin/main
+          git tag -a "v${VERSION}" -m "v${VERSION}"
+          git push --follow-tags origin HEAD:main
+
       - name: Pack and create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm pack
-          VERSION="$(node -p "require('./package.json').version")"
-          # npm pack derives the filename from the scoped package name publish the asset without the scope prefix.
-          mv ./*.tgz "react-sbb-polarion-${VERSION}.tgz"
-          gh release create "v${VERSION}" ./*.tgz --title "v${VERSION}" --generate-notes
+          # npm pack names the tarball after the scoped package; the release asset drops the scope.
+          TARBALL="$(npm pack --silent)"
+          ASSET="react-sbb-polarion-${VERSION}.tgz"
+          mv "$TARBALL" "$ASSET"
+          gh release create "v${VERSION}" "$ASSET" --title "v${VERSION}" --generate-notes
+
+      # The publish is irreversible; the git side is not. If pushing failed - most likely branch
+      # protection rejecting github-actions[bot] - say exactly what to finish by hand.
+      - name: Explain how to recover
+        if: failure()
+        run: |
+          echo "::warning::If 'Publish to npmjs' succeeded and a later step failed, ${{ github.event.repository.name }}@${VERSION:-?} is already on the registry."
+          echo "::warning::Finish by hand: git tag -a v${VERSION:-?} -m v${VERSION:-?} && git push --follow-tags, then create the GitHub release."
