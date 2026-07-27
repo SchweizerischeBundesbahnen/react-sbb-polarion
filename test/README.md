@@ -60,7 +60,7 @@ Under the hood this runs `scripts/docker-test.mjs`, which spawns:
 
 ```bash
 docker run --rm -v "<project>:/work" -v /work/node_modules -w /work \
-  mcr.microsoft.com/playwright:v<playwright-version>-jammy \
+  mcr.microsoft.com/playwright:v<playwright-version>-noble \
   bash -c "npm ci && npm test"
 ```
 

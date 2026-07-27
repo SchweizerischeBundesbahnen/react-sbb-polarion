@@ -16,8 +16,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const script = process.argv[2] || 'test';
 
 // Pin the image to the installed Playwright version so the container's browser + system deps match the
-// version references were authored with. (Ubuntu base kept at jammy; bump alongside a Playwright bump
-// if a future release drops the jammy image.)
+// version references were authored with. (Ubuntu base: noble = 24.04, which is what Playwright
+// publishes for current releases; bump alongside a Playwright bump if the base ever changes again.)
 let playwrightVersion;
 try {
   const pkg = JSON.parse(readFileSync(resolve(root, 'node_modules/playwright/package.json'), 'utf8'));
@@ -26,7 +26,7 @@ try {
   console.error('Cannot read node_modules/playwright - run `npm install` first.');
   process.exit(1);
 }
-const image = `mcr.microsoft.com/playwright:v${playwrightVersion}-jammy`;
+const image = `mcr.microsoft.com/playwright:v${playwrightVersion}-noble`;
 
 const args = [
   'run',
