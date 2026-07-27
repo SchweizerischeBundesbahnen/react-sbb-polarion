@@ -41,24 +41,42 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          # Required for `npm publish` to resolve the auth token below.
+          # Points npm at npmjs and writes the .npmrc that the OIDC exchange below needs.
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - run: npm run build
-      - name: Bump version, tag and push
+      # Bump the manifest only - no commit, no tag. Everything that outlives the run happens after the
+      # publish succeeds: a failed publish used to leave a pushed commit and tag behind for a version
+      # that exists nowhere, and it did, twice.
+      - name: Bump the version
         env:
           VERSION_ARG: ${{ inputs.version }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          npm version "$VERSION_ARG" -m "chore: bump version to %s"
-          git push --follow-tags
+          npm version "$VERSION_ARG" --no-git-tag-version
+          echo "VERSION=$(node -p "require('./package.json').version")" >> "$GITHUB_ENV"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$(node -p "require('./package.json').version")" >/dev/null 2>&1; then
+            echo "::error::Tag v$(node -p "require('./package.json').version") already exists - pick another version input."
+            exit 1
+          fi
       # The registry is the distribution channel: consumers depend on a semver range, which npm 12
       # requires (it refuses "remote" tarball-URL dependencies outright) and which renovate can track.
+      #
+      # No token: npmjs is configured to trust this repository's release workflow, so npm authenticates
+      # with the same OIDC identity that signs the provenance statement. A granular token cannot be used
+      # here anyway - the account requires 2FA for writes, so publishing with one fails on EOTP, and npm
+      # is retiring 2FA-bypassing tokens for direct publishing.
       - name: Publish to npmjs
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --provenance --access public
+      # Only now that the package is on the registry: record the version in git and publish the release.
+      - name: Commit, tag and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore: bump version to ${VERSION}"
+          git tag -a "v${VERSION}" -m "v${VERSION}"
+          # The run may have started before someone else pushed; rebase rather than fail on a stale ref.
+          git pull --rebase origin main
+          git push --follow-tags
       # The GitHub release asset stays: it is what the previously released versions are pinned to, and
       # it keeps the release page self-contained.
       - name: Pack and create GitHub release
@@ -66,7 +84,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm pack
-          VERSION="$(node -p "require('./package.json').version")"
           # npm pack derives the filename from the scoped package name publish the asset without the scope prefix.
           mv ./*.tgz "react-sbb-polarion-${VERSION}.tgz"
           gh release create "v${VERSION}" ./*.tgz --title "v${VERSION}" --generate-notes
