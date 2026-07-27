@@ -57,7 +57,7 @@ const dialogShot = (name: string) =>
 const LONG_TITLE =
   'Export document - a deliberately long dialog title that will not fit on one line in the modal header and should wrap or clip';
 
-describe('Modal visual states', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('Modal visual states', () => {
   it('default', async () => {
     renderModal({});
     await dialogShot('modal-default');

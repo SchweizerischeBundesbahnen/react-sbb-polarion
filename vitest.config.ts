@@ -11,7 +11,15 @@ const componentDir = (testFileName: string): string => testFileName.split(/[\\/]
 // (toMatchScreenshot) captures the components' actual look. Reference screenshots are committed and
 // MUST be generated in the pinned Playwright Docker image (see test/README.md) so Windows-dev and
 // Linux-CI produce identical pixels.
+// The committed reference screenshots are pixel-locked to the pinned Playwright image, so the visual
+// assertions are meaningful only there. scripts/docker-test.mjs sets PIXEL_REFERENCES=1 inside the
+// container; everywhere else (a developer's macOS/Windows box, a plain CI runner) the visual suites
+// skip themselves rather than failing on the host's font metrics - which shift both the antialiasing
+// and the rendered element height, i.e. a red run that says nothing about the code.
+const pixelReferences = process.env.PIXEL_REFERENCES === '1';
+
 export default defineConfig({
+  define: { __PIXEL_REFERENCES__: JSON.stringify(pixelReferences) },
   plugins: [react()],
   test: {
     // Tests live under test/, not co-located in src/.

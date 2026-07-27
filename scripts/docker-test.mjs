@@ -31,6 +31,11 @@ const image = `mcr.microsoft.com/playwright:v${playwrightVersion}-jammy`;
 const args = [
   'run',
   '--rm',
+  // Marks this run as THE reference environment for the pixel comparisons. The committed screenshots
+  // are locked to this image, so the visual tests assert only when this is set (see vitest.config.ts);
+  // anywhere else they skip instead of failing on the host's font metrics.
+  '-e',
+  'PIXEL_REFERENCES=1',
   // Mount the project; an anonymous volume shadows node_modules so the container's Linux `npm ci` does
   // not overwrite a Windows/macOS host's native binaries. Screenshots still write back via the mount.
   '-v',

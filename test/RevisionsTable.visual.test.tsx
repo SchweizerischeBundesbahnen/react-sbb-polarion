@@ -67,7 +67,7 @@ afterEach(() => {
   document.querySelectorAll('.visual-host').forEach((el) => el.remove());
 });
 
-describe('RevisionsTable visual states', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('RevisionsTable visual states', () => {
   it('populated (zebra rows, revert icons)', async () => {
     const h = host('populated');
     await renderTable(h, REVISIONS);
@@ -87,7 +87,7 @@ describe('RevisionsTable visual states', () => {
 // than the row overflowing horizontally. These references fixate that current wrapping behavior on
 // purpose - a future ellipsis/nowrap would flip them and force review. Each case keeps one short row
 // above the long one so the effect on the column width (and on the neighbouring short row) is visible.
-describe('RevisionsTable visual states - long values', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('RevisionsTable visual states - long values', () => {
   it('long Baseline name (hyphenated identifier wraps at its hyphens)', async () => {
     const h = host('long-baseline');
     await renderTable(h, [

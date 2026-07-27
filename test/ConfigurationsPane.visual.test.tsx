@@ -100,7 +100,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('ConfigurationsPane visual states - view mode', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('ConfigurationsPane visual states - view mode', () => {
   it('Default selected at global scope (Default note, Rename/Delete disabled)', async () => {
     await mount();
     await vi.waitFor(() => expect(note()?.textContent).toContain("The Default configuration can't be renamed"));
@@ -137,7 +137,7 @@ describe('ConfigurationsPane visual states - view mode', () => {
   });
 });
 
-describe('ConfigurationsPane visual states - editor mode', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('ConfigurationsPane visual states - editor mode', () => {
   it('"Add new" editor open (empty input, Save disabled)', async () => {
     await mount({ cookie: 'Requirements' });
     await vi.waitFor(() => expect(btn('Add new').disabled).toBe(false));
@@ -166,7 +166,7 @@ describe('ConfigurationsPane visual states - editor mode', () => {
   });
 });
 
-describe('ConfigurationsPane visual states - error banners', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('ConfigurationsPane visual states - error banners', () => {
   it('load-error banner when loading the names fails', async () => {
     const service = makeService({
       loadConfigurationNames: vi.fn(async () => {
