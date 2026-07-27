@@ -43,7 +43,7 @@ the standalone class goes away). So:
   Liberation Mono, FreeMono) with no stable winner — `PropertiesEditor` hit exactly this, failing one CI
   run and passing the next on the same commit. End such a stack on a face the image has (`Liberation
   Mono`, `Liberation Sans`, `FreeMono`); check with
-  `docker run --rm mcr.microsoft.com/playwright:v1.61.1-jammy fc-list : family`.
+  `docker run --rm mcr.microsoft.com/playwright:v1.62.0-noble fc-list : family`.
 - A bare `npm test` on Windows/macOS will **diff on the screenshot even when the component is
   unchanged** (OS font antialiasing - the control font stack is Windows-only Segoe UI, absent on Linux).
   That is expected; do NOT "fix" it by overwriting the reference. Confirm real visual changes with
