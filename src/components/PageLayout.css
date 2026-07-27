@@ -21,10 +21,21 @@ body {
       Setting it on the app root — which every admin page lives under, but which the bare control test
       hosts (.sbb-ui / .sbb-ui.standard-admin-page, without .app) never use — gives every admin page
       the SBB stack (Selawik via the @font-face in control-tokens.css), matching Polarion's native
-      admin pages. Controls keep their own font-family token, so they are unaffected. */
+      admin pages. Controls keep their own font-family token, so they are unaffected.
+
+      `font-size` and `color` moved here on 2026-07-27 for the same reason: all five converted
+      extensions repeated the identical `.app { font-size: 13px; color: #1a1a1a }` in their own
+      App.css, so the next drift would have been in size/color instead of typeface. 13px is Polarion's
+      admin base (generic common.css `body, input, select { font-size: 13px }`), which the RSP apps do
+      not load; without it the page inherits the browser default 16px and every paragraph, list and
+      .markdown-body article renders too large (headings and table cells use explicit px sizes and are
+      unaffected). #1a1a1a is what all five already resolved to. An app that genuinely needs a
+      different value can still override it in its own App.css. */
 .app {
   padding: 10px;
   font-family: var(--sbb-control-font-family);
+  font-size: 13px;
+  color: #1a1a1a;
 }
 
 /* 2. The standard admin-page heading rendered by PageLayout's `<h1>` (title pages only). `margin-top: 0`
