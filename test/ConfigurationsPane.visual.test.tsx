@@ -179,7 +179,6 @@ describe.skipIf(!__PIXEL_REFERENCES__)('ConfigurationsPane visual states - error
   });
 
   it('delete-error banner when deleting a selected configuration fails', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const service = makeService({
       deleteConfiguration: vi.fn(async () => {
         throw new Error('boom');
@@ -188,6 +187,11 @@ describe.skipIf(!__PIXEL_REFERENCES__)('ConfigurationsPane visual states - error
     await mount({ service, cookie: 'Requirements' });
     await vi.waitFor(() => expect(btn('Delete').disabled).toBe(false));
     btn('Delete').click();
+    // Deletion is behind a real dialog now, so confirm it: its OK button is labelled "Delete".
+    await vi.waitFor(() => expect(document.querySelector('.rsp-modal')).not.toBeNull());
+    Array.from(document.querySelectorAll<HTMLButtonElement>('.rsp-modal-footer .sbb-btn'))
+      .find((b) => (b.textContent ?? '').trim() === 'Delete')!
+      .click();
     await vi.waitFor(() => expect(alertError()?.textContent).toContain('Error occurred while deleting'));
     await shot('delete-error');
   });

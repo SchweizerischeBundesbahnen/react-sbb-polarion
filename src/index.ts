@@ -18,6 +18,9 @@ export { createEditableSelect } from './generic/searchableSelect.js';
 export { createSearchableSelect } from './generic/searchableSelect.js';
 export type { SearchableDropdownInstance } from './generic/searchableSelect.js';
 export { default as Modal } from './components/Modal';
+// `window.confirm` as a real dialog: a promise-returning `confirm()` plus the element to render.
+export { default as useConfirm } from './hooks/useConfirm';
+export type { ConfirmOptions, UseConfirm } from './hooks/useConfirm';
 // Shared app-wide toast host (sonner, preconfigured: top-center + richColors + 5s). Mount once near the
 // app root; fire toasts with `toast()` from `sonner`. sonner is a peer dependency (not bundled).
 export { default as Toaster } from './components/Toaster';

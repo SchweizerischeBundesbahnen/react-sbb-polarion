@@ -59,3 +59,8 @@
   gap: 8px;
   padding: 12px 16px;
 }
+
+/* The question inside a confirm dialog: plain paragraph, no extra margin above the footer. */
+.rsp-confirm-message {
+  margin: 0;
+}

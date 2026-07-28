@@ -172,24 +172,36 @@ describe('ConfigurationsPane', () => {
     await vi.waitFor(() => expect(service.renameConfiguration).toHaveBeenCalledWith('foo', '', 'renamed'));
   });
 
+  /** The confirm dialog is a real element now, so answer it by clicking its footer button. The
+   *  confirming button is labelled after the action ("Delete"), not "OK". */
+  const answerDialog = async (label: string) => {
+    await vi.waitFor(() => expect(document.querySelector('.rsp-modal')).not.toBeNull());
+    const button = Array.from(document.querySelectorAll<HTMLButtonElement>('.rsp-modal-footer .sbb-btn')).find(
+      (b) => (b.textContent ?? '').trim() === label,
+    );
+    if (!button) throw new Error(`dialog button not found: ${label}`);
+    button.click();
+  };
+
   it('deletes the selected configuration after confirmation', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     document.cookie = 'ck-test=foo; path=/';
     const { service } = await mount();
     await vi.waitFor(() => expect(service.loadContent).toHaveBeenCalledWith('foo', ''));
     btn('Delete').click();
+    await answerDialog('Delete');
     await vi.waitFor(() => expect(service.deleteConfiguration).toHaveBeenCalledWith('foo', ''));
   });
 
   it('does not delete when the confirmation is cancelled', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
     document.cookie = 'ck-test=foo; path=/';
     const { service } = await mount();
     await vi.waitFor(() => expect(service.loadContent).toHaveBeenCalledWith('foo', ''));
     btn('Delete').click();
+    await answerDialog('Cancel');
     // Give the (cancelled) handler a tick, then assert nothing was deleted.
     await new Promise((r) => setTimeout(r, 20));
     expect(service.deleteConfiguration).not.toHaveBeenCalled();
+    expect(document.querySelector('.rsp-modal')).toBeNull();
   });
 
   it('shows the inherited-from-global note and disables editing for a parent-scope config', async () => {
@@ -216,7 +228,6 @@ describe('ConfigurationsPane', () => {
   });
 
   it('shows a delete-error banner when deletion fails', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     document.cookie = 'ck-test=foo; path=/';
     const service = makeService({
       deleteConfiguration: vi.fn(async () => {
@@ -226,6 +237,7 @@ describe('ConfigurationsPane', () => {
     await mount({ service });
     await vi.waitFor(() => expect(service.loadContent).toHaveBeenCalledWith('foo', ''));
     btn('Delete').click();
+    await answerDialog('Delete');
     await vi.waitFor(() =>
       expect(alertError()?.textContent).toContain('Error occurred while deleting the configuration.'),
     );
