@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import RestAuthTest from '../src/components/RestAuthTest';
+import { parkPointer } from './helpers';
 
 // Visual-regression states for the debug-only REST auth test. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live
@@ -41,7 +42,10 @@ const runButton = () =>
     (b) => b.textContent?.trim() === 'Test REST authentication',
   )!;
 
-const shot = (name: string) => expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
+const shot = async (name: string) => {
+  await parkPointer();
+  return expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
+};
 
 afterEach(() => {
   cleanup();

@@ -3,6 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import { userEvent } from 'vitest/browser';
 import { ConfigurationsPane, type ConfigurationsService } from '../src/components/ConfigurationsPane';
+import { parkPointer } from './helpers';
 
 // Visual-regression states for the shared ConfigurationsPane. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live
@@ -92,7 +93,10 @@ async function mount(opts: Opts = {}) {
   return { service };
 }
 
-const shot = (name: string) => expect(page.elementLocator(pane() as HTMLElement)).toMatchScreenshot(name);
+const shot = async (name: string) => {
+  await parkPointer();
+  return expect(page.elementLocator(pane() as HTMLElement)).toMatchScreenshot(name);
+};
 
 afterEach(() => {
   cleanup();

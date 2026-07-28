@@ -3,6 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import UserGuide from '../src/components/UserGuide';
 import type { SendRequest } from '../src/types';
+import { parkPointer } from './helpers';
 
 // Visual-regression states for the shared User Guide page. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live
@@ -34,7 +35,10 @@ function mount(sendRequest: SendRequest) {
   render(<UserGuide sendRequest={sendRequest} />, { container });
 }
 
-const shot = (name: string) => expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
+const shot = async (name: string) => {
+  await parkPointer();
+  return expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
+};
 
 afterEach(() => {
   cleanup();

@@ -3,6 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import RevisionsTable from '../src/components/RevisionsTable';
 import type { Revision } from '../src/types';
+import { parkPointer } from './helpers';
 
 // Visual-regression states for the shared RevisionsTable. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References
@@ -57,10 +58,12 @@ async function renderTable(container: HTMLElement, revisions: Revision[]): Promi
   }
 }
 
-const shot = (container: HTMLElement, name: string) =>
-  expect(page.elementLocator(container.querySelector('.revisions-expand-container') as HTMLElement)).toMatchScreenshot(
-    name,
-  );
+const shot = async (container: HTMLElement, name: string) => {
+  await parkPointer();
+  return expect(
+    page.elementLocator(container.querySelector('.revisions-expand-container') as HTMLElement),
+  ).toMatchScreenshot(name);
+};
 
 afterEach(() => {
   cleanup();

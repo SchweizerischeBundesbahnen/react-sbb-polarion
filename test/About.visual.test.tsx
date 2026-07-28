@@ -3,6 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import About from '../src/components/About';
 import type { ConfigurationPropertiesModel, ConfigurationStatus, Version } from '../src/types';
+import { parkPointer } from './helpers';
 
 // Visual-regression states for the shared About page. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live
@@ -94,7 +95,10 @@ const fullPage = () =>
     return new Response(README, { status: 200 });
   });
 
-const shot = (name: string) => expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
+const shot = async (name: string) => {
+  await parkPointer();
+  return expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
+};
 
 afterEach(() => {
   cleanup();
@@ -116,8 +120,10 @@ function sectionUnder(heading: string): HTMLElement {
   return wrap;
 }
 
-const sectionShot = (element: HTMLElement, name: string) =>
-  expect(page.elementLocator(element)).toMatchScreenshot(name);
+const sectionShot = async (element: HTMLElement, name: string) => {
+  await parkPointer();
+  return expect(page.elementLocator(element)).toMatchScreenshot(name);
+};
 
 async function mountLoaded() {
   mount(fullPage());
