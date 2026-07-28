@@ -1,0 +1,41 @@
+/* The role-checkbox page. These rules used to live in each extension's App.css; they belong with the
+   component that renders the markup. The page shell (padding, headings, the notifications box, the
+   toolbar) comes from PageLayout.css and the bundled generic control CSS. */
+
+.authorization-page .roles-group {
+  margin-bottom: 16px;
+}
+
+.authorization-page .roles-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.authorization-page .roles-list li {
+  padding: 2px 0;
+}
+
+.authorization-page .roles-list label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.align-left {
+  text-align: left;
+}
+
+.quick-help {
+  margin-top: 20px;
+}
+
+.quick-help-text h3 {
+  margin: 12px 0 4px;
+}
+
+.quick-help-text p {
+  margin: 4px 0;
+}
