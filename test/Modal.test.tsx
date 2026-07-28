@@ -141,4 +141,12 @@ describe('Modal', () => {
     okBtn().click();
     expect(onOk).not.toHaveBeenCalled();
   });
+
+  // The document-level listener sees every keystroke while the dialog is open, so it must react to
+  // Escape alone - typing into a field inside the dialog cannot be allowed to close it.
+  it('ignores keys other than Escape', () => {
+    const { onCancel } = openModal();
+    ['Enter', 'a', 'Tab', ' ', 'ArrowDown'].forEach((key) => keydown(document.body, key));
+    expect(onCancel).not.toHaveBeenCalled();
+  });
 });

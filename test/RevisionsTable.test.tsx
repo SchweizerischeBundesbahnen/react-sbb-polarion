@@ -108,4 +108,34 @@ describe('RevisionsTable', () => {
     q<HTMLButtonElement>('[data-testid="bump"]').click();
     await vi.waitFor(() => expect(loadRevisions).toHaveBeenCalledTimes(2));
   });
+
+  // Both settle paths are guarded by the effect's `cancelled` flag. Closing the revisions toggle (or
+  // leaving the page) while a slow list request is in flight must not push rows or an error banner
+  // into a table that is no longer mounted.
+  it('ignores a revision list that resolves after unmount', async () => {
+    let settle!: (items: Revision[]) => void;
+    const loadRevisions = vi.fn(() => new Promise<Revision[]>((resolve) => (settle = resolve)));
+    render(<RevisionsTable name="cfg" scope="s1" reloadToken={0} loadRevisions={loadRevisions} onRevert={() => {}} />);
+    await waitForTable();
+
+    cleanup();
+    settle(REVISIONS);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(document.querySelector('.revisions-table')).toBeNull();
+    expect(document.body.textContent).not.toContain('3 388');
+  });
+
+  it('ignores a failed revision list that rejects after unmount', async () => {
+    let fail!: (reason: Error) => void;
+    const loadRevisions = vi.fn(() => new Promise<Revision[]>((_resolve, reject) => (fail = reject)));
+    render(<RevisionsTable name="cfg" scope="s1" reloadToken={0} loadRevisions={loadRevisions} onRevert={() => {}} />);
+    await waitForTable();
+
+    cleanup();
+    fail(new Error('boom'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(document.querySelector('.alert-error')).toBeNull();
+  });
 });
