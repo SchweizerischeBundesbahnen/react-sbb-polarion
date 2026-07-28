@@ -1,8 +1,18 @@
 /* Output box for the REST token auth test (ported from the generic about.css .rest-auth-test-output). */
+
+/* Same stack as PropertiesEditor: a bare `monospace` is not safe here. The pinned Playwright image
+   ships three faces that match the generic keyword (WenQuanYi Zen Hei Mono, Liberation Mono, FreeMono)
+   with no stable winner, so the reference screenshot would flip between CI runs on an unchanged
+   component. Ending on a face the image actually has makes the pick deterministic; the Windows-only
+   entries ahead of it keep the Polarion look on a developer box. */
+.rest-auth-test-intro code,
+.rest-auth-test-output {
+  font-family: Consolas, Monaco, 'Ubuntu Mono', 'DejaVu Sans Mono', 'Liberation Mono', monospace;
+}
+
 .rest-auth-test-output {
   margin-top: 10px;
   padding: 8px 10px;
-  font-family: monospace;
   font-size: 12px;
   line-height: 18px;
   white-space: pre-wrap;

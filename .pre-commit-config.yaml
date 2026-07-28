@@ -51,7 +51,7 @@ repos:
         pass_filenames: false
         files: \.(ts|tsx|js|mjs)$
       # Dockerized behavior + visual-regression tests (pinned Playwright image) WITH the coverage gate
-      # (istanbul, 80% floor - see vitest.config.ts). Same suite the plain test run executes, plus
+      # (istanbul, 100% of lines and functions - see vitest.config.ts). Same suite the plain test run executes, plus
       # --coverage, so the gate is enforced here at no extra test run. Heavy (~30-60s+, needs Docker
       # running); gated on source changes so docs-only commits skip it.
       - id: test-coverage-docker

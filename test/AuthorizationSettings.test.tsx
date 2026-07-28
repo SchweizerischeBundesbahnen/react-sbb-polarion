@@ -210,6 +210,115 @@ describe('AuthorizationSettings', () => {
     await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
   });
 
+  it('unticks a granted role', async () => {
+    await mount();
+    expect(roleCheckbox('admin').checked).toBe(true);
+
+    roleCheckbox('admin').click();
+
+    expect(roleCheckbox('admin').checked).toBe(false);
+  });
+
+  // A setting written before one of the two role kinds existed comes back without that array at all;
+  // the page has to treat it as "nothing granted" instead of failing on the missing property.
+  it('treats a stored setting with no role arrays as nothing granted', async () => {
+    await mount(makeService({ loadContent: () => Promise.resolve({} as AuthorizationContent) }));
+
+    expect(roleCheckbox('admin').checked).toBe(false);
+    expect(roleCheckbox('user').checked).toBe(false);
+    expect(roleCheckbox('project_admin').checked).toBe(false);
+  });
+
+  it('falls back to a generic message when a failed save carries none', async () => {
+    await mount(makeService({ saveContent: () => Promise.reject(new Error('')) }));
+
+    button('Save').click();
+
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Error occurred during saving the data'));
+  });
+
+  // The mount effect guards both settle paths with `cancelled`. Navigating away from the page before
+  // the roles arrive must not push them (or the load banner) into an unmounted tree.
+  it('ignores roles that resolve after unmount', async () => {
+    let settle!: (roles: typeof ROLES) => void;
+    render(
+      <AuthorizationSettings
+        title="Repair Authorization"
+        service={makeService({ loadRoles: () => new Promise((resolve) => (settle = resolve)) })}
+      />,
+    );
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Loading...'));
+
+    cleanup();
+    settle(ROLES);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(document.querySelector('.roles-list')).toBeNull();
+  });
+
+  it('ignores a load failure that rejects after unmount', async () => {
+    let fail!: (reason: Error) => void;
+    render(
+      <AuthorizationSettings
+        title="Repair Authorization"
+        service={makeService({ loadRoles: () => new Promise((_resolve, reject) => (fail = reject)) })}
+      />,
+    );
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Loading...'));
+
+    cleanup();
+    fail(new Error('boom'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(document.querySelector('.alert-error')).toBeNull();
+  });
+
+  // Every toolbar action that re-reads the setting can fail on its own, long after the page loaded
+  // fine. Each one has to surface the load banner rather than silently leaving the stale selection on
+  // screen, which would look like the action succeeded.
+  it('reports a failed re-read of the stored roles when cancelling', async () => {
+    let calls = 0;
+    await mount(
+      makeService({
+        loadContent: () => (++calls === 1 ? Promise.resolve({ ...STORED }) : Promise.reject(new Error('gone'))),
+      }),
+    );
+    roleCheckbox('user').click();
+
+    button('Cancel').click();
+    await answerDialog('OK');
+
+    await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
+    expect(document.querySelector('.alert-error')!.textContent).toContain('Error occurred loading the data');
+  });
+
+  it('reports a failed read of the default values', async () => {
+    await mount(makeService({ loadDefaultContent: () => Promise.reject(new Error('nope')) }));
+
+    button('Default').click();
+    await answerDialog('OK');
+
+    await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
+    expect(document.body.textContent).not.toContain('Reverted to the default values');
+  });
+
+  it('reports a revision whose content cannot be read', async () => {
+    await mount(
+      makeService({
+        loadRevisions: () => Promise.resolve([{ name: '4321', date: '2026-01-01', author: 'jdoe' }]),
+        loadContent: (_scope, revision) =>
+          revision ? Promise.reject(new Error('gone')) : Promise.resolve({ ...STORED }),
+      }),
+    );
+
+    button('Revisions').click();
+    await vi.waitFor(() => expect(document.querySelector('.revision-number')).not.toBeNull());
+    document.querySelector<HTMLButtonElement>('.revert-to-revision-button')!.click();
+
+    await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
+    expect(roleCheckbox('admin').checked).toBe(true);
+  });
+
   it('renders the extension help text', async () => {
     await mount(makeService(), <p>Only admins may repair.</p>);
 

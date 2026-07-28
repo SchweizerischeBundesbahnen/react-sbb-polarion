@@ -3,6 +3,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 import PropertiesEditor from '../src/components/PropertiesEditor';
+import { parkPointer } from './helpers';
 
 // Visual-regression states for the .properties editor: the token colors and, more importantly, that the
 // highlighted layer sits exactly under the textarea's text (a metric that drifts apart is invisible to
@@ -48,7 +49,9 @@ function renderEditor(value: string) {
 }
 
 const editorShot = (name: string) =>
-  expect(page.elementLocator(document.querySelector('.properties-editor') as HTMLElement)).toMatchScreenshot(name);
+  parkPointer().then(() =>
+    expect(page.elementLocator(document.querySelector('.properties-editor') as HTMLElement)).toMatchScreenshot(name),
+  );
 
 describe.skipIf(!__PIXEL_REFERENCES__)('PropertiesEditor visual states', () => {
   it('highlights comments, keys, separators and values', async () => {

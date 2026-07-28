@@ -68,7 +68,7 @@ export default function RestAuthTest({ restApiUrl }: RestAuthTestProps) {
   return (
     <>
       <h3>REST API authentication test</h3>
-      <p>
+      <p className="rest-auth-test-intro">
         Sends <code>GET {restApiUrl}</code> with the current session&apos;s <code>X-Polarion-REST-Token</code> header,
         obtained via <code>top.getRestApiToken()</code>. Use it to verify that in-session REST authentication works. The
         token requires <code>com.siemens.polarion.rest.security.restApiToken.enabled=true</code> in{' '}

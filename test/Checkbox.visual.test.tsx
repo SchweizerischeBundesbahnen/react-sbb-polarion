@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
+import { parkPointer } from './helpers';
 
 // There is no Checkbox component: the 2606 look is applied by checkboxes.css + the --sbb-checkbox-*
 // tokens to a plain <input type="checkbox"> when it sits inside one of the scope wrappers the CSS
@@ -31,7 +32,10 @@ afterEach(() => {
   document.querySelectorAll('.checkbox-host').forEach((el) => el.remove());
 });
 
-const shot = (input: HTMLInputElement, name: string) => expect(page.elementLocator(input)).toMatchScreenshot(name);
+const shot = async (input: HTMLInputElement, name: string) => {
+  await parkPointer();
+  return expect(page.elementLocator(input)).toMatchScreenshot(name);
+};
 
 describe.skipIf(!__PIXEL_REFERENCES__)('Checkbox visual states', () => {
   it('unchecked', async () => {

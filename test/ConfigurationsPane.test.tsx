@@ -267,4 +267,126 @@ describe('ConfigurationsPane', () => {
     await ref.current!.reloadNames();
     expect(service.loadConfigurationNames).toHaveBeenCalledTimes(2);
   });
+
+  // The name list can load while the content behind the selected name cannot; that is a separate
+  // failure from the list request itself and still has to reach the banner.
+  it('shows the load-error banner when the selected content cannot be read', async () => {
+    const service = makeService({
+      loadContent: vi.fn(async () => {
+        throw new Error('content gone');
+      }),
+    });
+    await mount({ service });
+    await vi.waitFor(() => expect(alertError()).not.toBeNull());
+  });
+
+  // After a create the pane reloads the list and must land on the new entry, overriding the
+  // remember-cookie that still points at the previously selected one.
+  it('selects the freshly created configuration over the remembered one', async () => {
+    document.cookie = 'ck-test=foo; path=/';
+    let created = false;
+    const service = makeService({
+      loadConfigurationNames: vi.fn(async () => (created ? [...NAMES, { name: 'brandnew', scope: '' }] : NAMES)),
+      createConfiguration: vi.fn(async () => {
+        created = true;
+      }),
+    });
+    await mount({ service });
+    await vi.waitFor(() => expect(service.loadContent).toHaveBeenCalledWith('foo', ''));
+
+    btn('Add new').click();
+    await vi.waitFor(() => expect(nameInput()).not.toBeNull());
+    await userEvent.fill(nameInput()!, 'brandnew');
+    btn('Save').click();
+
+    await vi.waitFor(() => expect(service.loadContent).toHaveBeenCalledWith('brandnew', ''));
+  });
+
+  it('reports why creating a configuration failed', async () => {
+    const service = makeService({
+      createConfiguration: vi.fn(async () => {
+        throw new Error('disk full');
+      }),
+    });
+    await mount({ service });
+    btn('Add new').click();
+    await vi.waitFor(() => expect(nameInput()).not.toBeNull());
+    await userEvent.fill(nameInput()!, 'brandnew');
+    btn('Save').click();
+
+    await vi.waitFor(() => expect(alertError()?.textContent).toContain('disk full'));
+  });
+
+  it('falls back to a generic message when a failed create carries none', async () => {
+    const service = makeService({
+      createConfiguration: vi.fn(async () => {
+        throw new Error('');
+      }),
+    });
+    await mount({ service });
+    btn('Add new').click();
+    await vi.waitFor(() => expect(nameInput()).not.toBeNull());
+    await userEvent.fill(nameInput()!, 'brandnew');
+    btn('Save').click();
+
+    await vi.waitFor(() =>
+      expect(alertError()?.textContent).toContain('Error occurred while saving the configuration'),
+    );
+  });
+
+  // Renaming validates the same way creating does - the new name must be legal and must not collide
+  // with a sibling - and a rejected name must never reach the service.
+  it('rejects an invalid new name when renaming', async () => {
+    document.cookie = 'ck-test=foo; path=/';
+    const { service } = await mount();
+    await vi.waitFor(() => expect(service.loadContent).toHaveBeenCalledWith('foo', ''));
+
+    btn('Rename').click();
+    await vi.waitFor(() => expect(nameInput()?.value).toBe('foo'));
+    await userEvent.fill(nameInput()!, 'bad*name');
+    btn('Update').click();
+
+    await vi.waitFor(() =>
+      expect(alertError()?.textContent).toContain('Only alphanumeric characters, hyphens and spaces are allowed'),
+    );
+    expect(service.renameConfiguration).not.toHaveBeenCalled();
+  });
+
+  it('reports why renaming failed', async () => {
+    document.cookie = 'ck-test=foo; path=/';
+    const service = makeService({
+      renameConfiguration: vi.fn(async () => {
+        throw new Error('locked by another user');
+      }),
+    });
+    await mount({ service });
+    await vi.waitFor(() => expect(service.loadContent).toHaveBeenCalledWith('foo', ''));
+
+    btn('Rename').click();
+    await vi.waitFor(() => expect(nameInput()?.value).toBe('foo'));
+    await userEvent.fill(nameInput()!, 'renamed');
+    btn('Update').click();
+
+    await vi.waitFor(() => expect(alertError()?.textContent).toContain('locked by another user'));
+  });
+
+  it('falls back to a generic message when a failed rename carries none', async () => {
+    document.cookie = 'ck-test=foo; path=/';
+    const service = makeService({
+      renameConfiguration: vi.fn(async () => {
+        throw new Error('');
+      }),
+    });
+    await mount({ service });
+    await vi.waitFor(() => expect(service.loadContent).toHaveBeenCalledWith('foo', ''));
+
+    btn('Rename').click();
+    await vi.waitFor(() => expect(nameInput()?.value).toBe('foo'));
+    await userEvent.fill(nameInput()!, 'renamed');
+    btn('Update').click();
+
+    await vi.waitFor(() =>
+      expect(alertError()?.textContent).toContain('Error occurred while saving the configuration'),
+    );
+  });
 });
