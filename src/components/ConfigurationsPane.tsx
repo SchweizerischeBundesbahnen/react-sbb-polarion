@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import type { Ref } from 'react';
+import useConfirm from '../hooks/useConfirm';
 import { getCookie, setCookie } from '../services/cookies';
 import type { SettingName } from '../types';
 import './ConfigurationsPane.css';
@@ -70,6 +71,7 @@ export function ConfigurationsPane<T>({
   const { loadConfigurationNames, loadContent, createConfiguration, renameConfiguration, deleteConfiguration } =
     service;
 
+  const { confirm, confirmDialog } = useConfirm();
   const [names, setNames] = useState<SettingName[]>([]);
   const [selected, setSelected] = useState('');
   const [mode, setMode] = useState<Mode>('view');
@@ -212,7 +214,9 @@ export function ConfigurationsPane<T>({
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete this ${label}?`)) {
+    if (
+      !(await confirm(`Are you sure you want to delete this ${label}?`, { title: `Delete ${label}`, okText: 'Delete' }))
+    ) {
       return;
     }
     setDeleteError(false);
@@ -307,6 +311,7 @@ export function ConfigurationsPane<T>({
           {nameError && <div className="alert alert-error">{nameError}</div>}
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 }

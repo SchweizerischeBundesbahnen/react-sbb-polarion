@@ -158,6 +158,8 @@ to a local checkout work without touching the config.
 
 ## Exports
 
+**Hooks**: `useConfirm()` — `window.confirm` as a real dialog: returns a promise-returning `confirm(message, options?)` plus the `confirmDialog` element to render.
+
 **Components**: `PageLayout`, `SearchableSelect`, `Modal`, `Toaster`, `BreadcrumbInjector`,
 `RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
 `PropertiesEditor`.
@@ -171,7 +173,7 @@ generic combobox factories, for bespoke editable / richer-option inputs), `getCo
 **Functions**: `tokenizePropertiesLine(line)` - the `.properties` line tokenizer behind
 `PropertiesEditor`, exported so a consumer can highlight the same way outside the editor.
 
-**Types**: `SelectOption`, `SearchableDropdownInstance`, `ConfigurationsPaneHandle`,
+**Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableDropdownInstance`, `ConfigurationsPaneHandle`,
 `ConfigurationsService<T>`, `SettingName`, `Revision`, `Version`, `ConfigurationProperty`,
 `ConfigurationPropertiesModel`, `ConfigurationStatus`, `SendRequest`.
 
