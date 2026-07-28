@@ -17,6 +17,8 @@ export { createEditableSelect } from './generic/searchableSelect.js';
 // with per-option icons and indented subtypes (data-icon / data-icon-bg attributes + preserveOptionClasses).
 export { createSearchableSelect } from './generic/searchableSelect.js';
 export type { SearchableDropdownInstance } from './generic/searchableSelect.js';
+export { default as Tabs } from './components/Tabs';
+export type { TabItem } from './components/Tabs';
 export { default as Modal } from './components/Modal';
 // `window.confirm` as a real dialog: a promise-returning `confirm()` plus the element to render.
 export { default as useConfirm } from './hooks/useConfirm';

@@ -113,7 +113,9 @@ npm records `"@grigoriev/react-sbb-polarion": "file:../../react-sbb-polarion"` a
 the consumer's `vite.config.js` so both sides share one React:
 
 ```js
-resolve: { dedupe: ['react', 'react-dom'] }
+resolve: {
+  dedupe: ['react', 'react-dom'];
+}
 ```
 
 Then import from the package name:
@@ -160,9 +162,15 @@ to a local checkout work without touching the config.
 
 **Hooks**: `useConfirm()` — `window.confirm` as a real dialog: returns a promise-returning `confirm(message, options?)` plus the `confirmDialog` element to render.
 
-**Components**: `PageLayout`, `SearchableSelect`, `Modal`, `Toaster`, `BreadcrumbInjector`,
+**Components**: `PageLayout`, `SearchableSelect`, `Tabs`, `Modal`, `Toaster`, `BreadcrumbInjector`,
 `RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
 `PropertiesEditor`, `AuthorizationSettings`.
+
+`Tabs` is the shared tab bar from the generic framework's `tabs.css` - one tab-bar look for every
+extension. It is controlled (`items`, `activeId`, `onSelect`) and selects only: the caller renders
+whatever the active tab stands for. It uses that stylesheet's JS-driven variant, so the tab count is
+free; generic's pure-CSS variant caps at four. The tabs stay real radio inputs, visually hidden rather
+than removed, so the bar is still keyboard-reachable and arrow keys switch tabs.
 
 `AuthorizationSettings` is the whole "which roles may do this" administration page - the global and
 project roles of the current scope as checkboxes, the Save / Cancel / Default / Revisions toolbar and
