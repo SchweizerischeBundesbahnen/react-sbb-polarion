@@ -162,7 +162,15 @@ to a local checkout work without touching the config.
 
 **Components**: `PageLayout`, `SearchableSelect`, `Modal`, `Toaster`, `BreadcrumbInjector`,
 `RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
-`PropertiesEditor`.
+`PropertiesEditor`, `AuthorizationSettings`.
+
+`AuthorizationSettings` is the whole "which roles may do this" administration page - the global and
+project roles of the current scope as checkboxes, the Save / Cancel / Default / Revisions toolbar, the
+revision table and the newer-bundle warning. Pair it with `createAuthorizationService(sendRequest,
+settingName)`, which builds the calls over generic's own endpoints (`/roles`, the single-setting
+endpoints, `/version`); the extension supplies the title and its own Quick Help text. Note that
+`/roles` is opt-in on the Java side: the extension has to name generic's `RolesInternalController` and
+`RolesApiController` in its REST application.
 
 **Config / helpers**: `configureGenericModules(base)` (sets the base URL for the generic ES modules the
 library still loads at runtime - now only `BreadcrumbBridge.js` via `BreadcrumbInjector`; call once per
@@ -170,12 +178,13 @@ entry point that uses the breadcrumb), `createEditableSelect` / `createSearchabl
 generic combobox factories, for bespoke editable / richer-option inputs), `getCookie`/`setCookie`,
 `isEmbedded()`, `getScope()` / `getProjectIdFromScope(scope)`.
 
-**Functions**: `tokenizePropertiesLine(line)` - the `.properties` line tokenizer behind
+**Functions**: `createAuthorizationService(sendRequest, settingName)`, `tokenizePropertiesLine(line)` - the `.properties` line tokenizer behind
 `PropertiesEditor`, exported so a consumer can highlight the same way outside the editor.
 
 **Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableDropdownInstance`, `ConfigurationsPaneHandle`,
-`ConfigurationsService<T>`, `SettingName`, `Revision`, `Version`, `ConfigurationProperty`,
-`ConfigurationPropertiesModel`, `ConfigurationStatus`, `SendRequest`.
+`ConfigurationsService<T>`, `AuthorizationService`, `AuthorizationContent`, `RolesInfo`, `BundleVersion`,
+`SettingName`, `Revision`, `Version`, `ConfigurationProperty`, `ConfigurationPropertiesModel`,
+`ConfigurationStatus`, `SendRequest`.
 
 Component **and** generic control CSS are bundled into one stylesheet, imported once by the consumer:
 `import '@grigoriev/react-sbb-polarion/style.css'`.

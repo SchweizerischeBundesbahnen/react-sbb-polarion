@@ -35,6 +35,12 @@ export { default as RevisionsTable } from './components/RevisionsTable';
 // (the DMS connectors). Replaces the legacy <code-input lang="properties"> web component.
 export { default as PropertiesEditor, tokenizePropertiesLine } from './components/PropertiesEditor';
 export { default as ConfigurationButtons } from './components/ConfigurationButtons';
+// The role-checkbox administration page (xml-repair, api-extender, diff-tool): global and project
+// roles as checkboxes over one named setting, with the standard toolbar and revisions. Pair it with
+// createAuthorizationService, which builds the calls over generic's own endpoints.
+export { default as AuthorizationSettings } from './components/AuthorizationSettings';
+export { createAuthorizationService } from './services/authorizationSettings';
+export type { AuthorizationContent, AuthorizationService, RolesInfo } from './services/authorizationSettings';
 export { configureGenericModules } from './config/genericModules';
 export { getCookie, setCookie } from './services/cookies';
 export { isEmbedded } from './services/params';
