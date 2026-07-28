@@ -7,19 +7,12 @@ const DEFAULT_NAME = 'Default';
 export interface AuthorizationContent {
   globalRoles: string[];
   projectRoles: string[];
-  /** Bundle that last wrote the setting; drives the "a newer version is installed" warning. */
-  bundleTimestamp?: string;
 }
 
 /** Roles available to grant in the current scope, from generic's `/roles` endpoint. */
 export interface RolesInfo {
   globalRoles: string[];
   projectRoles: string[];
-}
-
-/** The bit of generic's `/version` answer the newer-bundle warning compares against. */
-export interface BundleVersion {
-  bundleBuildTimestamp?: string;
 }
 
 /** What {@link AuthorizationSettings} needs; an extension normally gets it from `createAuthorizationService`. */
@@ -29,8 +22,6 @@ export interface AuthorizationService {
   saveContent(scope: string, content: AuthorizationContent): Promise<void>;
   loadDefaultContent(): Promise<AuthorizationContent>;
   loadRevisions(name: string, scope: string): Promise<Revision[]>;
-  /** Used only for the newer-bundle warning; may be omitted, and the warning is then never shown. */
-  loadVersion?(): Promise<BundleVersion>;
   defaultName: string;
 }
 
@@ -64,8 +55,8 @@ async function okOrThrow(response: Response): Promise<void> {
 
 /**
  * Builds the calls an authorization page makes, over generic's own endpoints: `/roles` (opt-in, from
- * generic's RolesInternalController), the single-setting endpoints for the always-present `Default`
- * setting, and `/version`.
+ * generic's RolesInternalController) and the single-setting endpoints for the always-present
+ * `Default` setting.
  *
  * `settingName` is the feature the extension stores under - an extension may have more than one page,
  * each over its own setting.
@@ -107,7 +98,5 @@ export function createAuthorizationService(sendRequest: SendRequest, settingName
         method: 'GET',
         url: settingsPath(`/names/${encodeURIComponent(name)}/revisions?scope=${encodeURIComponent(scope)}`),
       }).then((r) => jsonOrThrow<Revision[]>(r)),
-
-    loadVersion: () => sendRequest({ method: 'GET', url: '/version' }).then((r) => jsonOrThrow<BundleVersion>(r)),
   };
 }

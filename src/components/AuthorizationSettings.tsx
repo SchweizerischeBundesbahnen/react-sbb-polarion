@@ -1,12 +1,7 @@
 import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import useConfirm from '../hooks/useConfirm';
-import type {
-  AuthorizationContent,
-  AuthorizationService,
-  BundleVersion,
-  RolesInfo,
-} from '../services/authorizationSettings';
+import type { AuthorizationContent, AuthorizationService, RolesInfo } from '../services/authorizationSettings';
 import { getScope } from '../services/scope';
 import type { Revision } from '../types';
 import './AuthorizationSettings.css';
@@ -41,7 +36,6 @@ export default function AuthorizationSettings({ title, service, quickHelp }: Aut
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
-  const [newerVersion, setNewerVersion] = useState(false);
   const [showRevisions, setShowRevisions] = useState(false);
   const [revisionsToken, setRevisionsToken] = useState(0);
 
@@ -54,23 +48,11 @@ export default function AuthorizationSettings({ title, service, quickHelp }: Aut
   useEffect(() => {
     let cancelled = false;
     setLoadingError(false);
-    Promise.all([
-      service.loadRoles(scope),
-      service.loadContent(scope),
-      // Advisory only - a version the page cannot read simply means no warning.
-      service.loadVersion?.().catch((): BundleVersion => ({})) ?? Promise.resolve<BundleVersion>({}),
-    ])
-      .then(([availableRoles, content, version]) => {
+    Promise.all([service.loadRoles(scope), service.loadContent(scope)])
+      .then(([availableRoles, content]) => {
         if (cancelled) return;
         setRoles(availableRoles);
         applyContent(content);
-        // Only claim the bundle is newer when both sides are known: without a version to compare
-        // against, the page would otherwise warn on every load.
-        setNewerVersion(
-          Boolean(content.bundleTimestamp) &&
-            Boolean(version.bundleBuildTimestamp) &&
-            content.bundleTimestamp !== version.bundleBuildTimestamp,
-        );
         setLoaded(true);
       })
       .catch(() => {
@@ -102,7 +84,6 @@ export default function AuthorizationSettings({ title, service, quickHelp }: Aut
     toast.dismiss();
     try {
       await service.saveContent(scope, buildPayload());
-      setNewerVersion(false);
       setRevisionsToken((t) => t + 1);
       toast.success('Data successfully saved.');
     } catch (e) {
@@ -167,12 +148,6 @@ export default function AuthorizationSettings({ title, service, quickHelp }: Aut
         {loadingError && (
           <div className="alert alert-error">
             Error occurred loading the data. Be sure Polarion is started and accessible.
-          </div>
-        )}
-        {newerVersion && (
-          <div className="alert alert-warning">
-            A newer plugin version is installed than the one that saved these settings, which can lead to unexpected
-            behaviour. Check that the saved data is still relevant. This message disappears after the next save.
           </div>
         )}
       </div>
