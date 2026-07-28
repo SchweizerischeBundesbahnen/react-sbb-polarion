@@ -1,0 +1,24 @@
+{
+  "files": [
+    {
+      "path": "CLAUDE.md",
+      "description": "The non-obvious rules of this repo: the vendored src/generic transit artifact and its intentional local patches, how the visual-regression references are generated, the packaging constraints (react external, --sbb-* token scopes), and the ban on silencing checks. Read this before judging whether a diff is idiomatic here."
+    },
+    {
+      "path": "test/README.md",
+      "description": "How the Vitest browser-mode suite, the dockerized visual regression and the coverage gate work - including why a bare `npm test` diffs on screenshots off Linux."
+    },
+    {
+      "path": "README.md",
+      "description": "What the library is, how consumers install and import it, and the supported build/lint/test commands."
+    },
+    {
+      "path": "package.json",
+      "description": "The peer/dev dependency split (react, react-dom and sonner are peers), the exact-pinned playwright version that the container tag in the workflows must match, and the full script list."
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "description": "The reference environment for the committed screenshots: the pinned Playwright image and PIXEL_REFERENCES=1, plus the lint/format/typecheck/build/test gate every PR must pass."
+    }
+  ]
+}
