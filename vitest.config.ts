@@ -53,15 +53,29 @@ export default defineConfig({
         // Barrel re-exports only.
         'src/index.ts',
       ],
-      // Fixed 80% gate (do not change). The suite currently sits comfortably above this; the floor
-      // just guards against a meaningful regression. Behavior-only and full-suite give the same
-      // numbers (the visual tests render components the behavior tests already exercise), so the gate
-      // holds for both the local behavior-only run and the Docker full-suite run.
+      // Every line and every function is executed by the suite, and the gate says so: a new branch of
+      // code that no test reaches fails the run rather than quietly eroding a percentage.
+      //
+      // Statements and branches sit just below 100 on purpose. Four guards cannot be reached from a
+      // test without rewriting the code they protect, so they are left honest and visible in the
+      // report instead of being annotated away:
+      //   - BreadcrumbInjector `!shellDocument?.head` - only true for a cross-origin top window, and
+      //     the runner is same-origin with its own shell.
+      //   - SearchableSelect `!element` and PropertiesEditor `!highlight` - refs that are always
+      //     attached by the time the effect/handler runs; the check exists to satisfy the type, and
+      //     replacing it with a non-null assertion would turn a no-op into a crash.
+      //   - About `getAttribute('href') ?? ''` - the querySelector is `a[href^="#"]`, so the attribute
+      //     is always there.
+      // Raise these two floors if one of those guards ever becomes reachable.
+      //
+      // Behavior-only and full-suite give the same numbers (the visual tests render components the
+      // behavior tests already exercise), so the gate holds for both the local behavior-only run and
+      // the Docker full-suite run.
       thresholds: {
-        lines: 80,
-        functions: 80,
-        statements: 80,
-        branches: 80,
+        lines: 100,
+        functions: 100,
+        statements: 99,
+        branches: 98,
       },
     },
     browser: {

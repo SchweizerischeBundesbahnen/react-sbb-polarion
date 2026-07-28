@@ -89,7 +89,8 @@ repo's npm scripts:
 - **Prettier (`format:check`)** and **ESLint (`lint`)** - check-only: they block the commit but never
   modify your working tree (run `npm run format` / `npm run lint:fix` to fix).
 - **Vitest in Docker + coverage (`test:coverage:docker`)** - runs the behavior + visual-regression
-  suite in the pinned Playwright image **and enforces the 80% coverage gate** (needs Docker running;
+  suite in the pinned Playwright image **and enforces the coverage gate** - 100% of lines and
+  functions (needs Docker running;
   ~30–60s+). Fires on commits touching `.ts`/`.tsx`/`.css`.
 
 Activate once (the repo must be git-initialized first):
