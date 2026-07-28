@@ -21,7 +21,6 @@ function makeService(overrides: Partial<AuthorizationService> = {}): Authorizati
     saveContent: () => Promise.resolve(),
     loadDefaultContent: () => Promise.resolve({ globalRoles: [], projectRoles: [] }),
     loadRevisions: () => Promise.resolve([]),
-    loadVersion: () => Promise.resolve({ bundleBuildTimestamp: '2026-01-01 00:00' }),
     ...overrides,
   };
 }
@@ -198,42 +197,6 @@ describe('AuthorizationSettings', () => {
 
     await vi.waitFor(() => expect(roleCheckbox('user').checked).toBe(true));
     expect(roleCheckbox('admin').checked).toBe(false);
-  });
-
-  it('warns when the setting was written by an older bundle, and stops after a save', async () => {
-    await mount(
-      makeService({
-        loadContent: () => Promise.resolve({ ...STORED, bundleTimestamp: '2020-01-01 00:00' }),
-      }),
-    );
-
-    expect(document.querySelector('.alert-warning')).not.toBeNull();
-
-    button('Save').click();
-
-    await vi.waitFor(() => expect(document.querySelector('.alert-warning')).toBeNull());
-  });
-
-  it('does not warn when the setting matches the installed bundle', async () => {
-    await mount(
-      makeService({
-        loadContent: () => Promise.resolve({ ...STORED, bundleTimestamp: '2026-01-01 00:00' }),
-      }),
-    );
-
-    expect(document.querySelector('.alert-warning')).toBeNull();
-  });
-
-  it('shows no warning at all when the service cannot report a version', async () => {
-    await mount(
-      makeService({
-        loadVersion: undefined,
-        loadContent: () => Promise.resolve({ ...STORED, bundleTimestamp: '2020-01-01 00:00' }),
-      }),
-    );
-
-    // Without a version to compare against the page would otherwise cry wolf on every load.
-    expect(document.querySelector('.alert-warning')).toBeNull();
   });
 
   it('reports a page it could not load', async () => {

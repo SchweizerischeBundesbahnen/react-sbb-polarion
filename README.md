@@ -165,10 +165,10 @@ to a local checkout work without touching the config.
 `PropertiesEditor`, `AuthorizationSettings`.
 
 `AuthorizationSettings` is the whole "which roles may do this" administration page - the global and
-project roles of the current scope as checkboxes, the Save / Cancel / Default / Revisions toolbar, the
-revision table and the newer-bundle warning. Pair it with `createAuthorizationService(sendRequest,
-settingName)`, which builds the calls over generic's own endpoints (`/roles`, the single-setting
-endpoints, `/version`); the extension supplies the title and its own Quick Help text. Note that
+project roles of the current scope as checkboxes, the Save / Cancel / Default / Revisions toolbar and
+the revision table. Pair it with `createAuthorizationService(sendRequest, settingName)`, which builds
+the calls over generic's own endpoints (`/roles` and the single-setting endpoints); the extension
+supplies the title and its own Quick Help text. Note that
 `/roles` is opt-in on the Java side: the extension has to name generic's `RolesInternalController` and
 `RolesApiController` in its REST application.
 
@@ -182,7 +182,7 @@ generic combobox factories, for bespoke editable / richer-option inputs), `getCo
 `PropertiesEditor`, exported so a consumer can highlight the same way outside the editor.
 
 **Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableDropdownInstance`, `ConfigurationsPaneHandle`,
-`ConfigurationsService<T>`, `AuthorizationService`, `AuthorizationContent`, `RolesInfo`, `BundleVersion`,
+`ConfigurationsService<T>`, `AuthorizationService`, `AuthorizationContent`, `RolesInfo`,
 `SettingName`, `Revision`, `Version`, `ConfigurationProperty`, `ConfigurationPropertiesModel`,
 `ConfigurationStatus`, `SendRequest`.
 
