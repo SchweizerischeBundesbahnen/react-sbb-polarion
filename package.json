@@ -1,6 +1,6 @@
 {
   "name": "@grigoriev/react-sbb-polarion",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Shared React UI components for SBB Polarion extension apps.",
   "license": "Apache-2.0",
   "repository": {
