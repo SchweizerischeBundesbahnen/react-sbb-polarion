@@ -1,9 +1,22 @@
 # @grigoriev/react-sbb-polarion
 
-[![codecov](https://codecov.io/gh/grigoriev/react-sbb-polarion/graph/badge.svg)](https://codecov.io/gh/grigoriev/react-sbb-polarion)
+[![npm version](https://img.shields.io/npm/v/@grigoriev/react-sbb-polarion)](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion)
+[![npm downloads](https://img.shields.io/npm/dm/@grigoriev/react-sbb-polarion)](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion)
+[![node](https://img.shields.io/node/v/@grigoriev/react-sbb-polarion)](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion)
+[![license](https://img.shields.io/npm/l/@grigoriev/react-sbb-polarion)](./LICENSE)
 
-Shared React UI components for the SBB Polarion extensions' React admin apps. Local prototype: not yet
-published to a registry.
+[![codecov](https://codecov.io/gh/grigoriev/react-sbb-polarion/graph/badge.svg)](https://codecov.io/gh/grigoriev/react-sbb-polarion)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
+
+[![Reliability](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
+[![Security](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
+[![Duplicated Lines](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
+
+Shared React UI components for the SBB Polarion extensions' React admin apps. Published to npmjs as
+[`@grigoriev/react-sbb-polarion`](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion) —
+public, Apache-2.0, with npm provenance on every release.
 
 ## Build
 
@@ -103,7 +116,7 @@ pre-commit install            # installs the pre-commit + commit-msg hooks
 pre-commit run --all-files    # optional: run every hook once
 ```
 
-## Consume it locally (before it is published)
+## Consume it from a local checkout
 
 In an extension's `ui/` folder:
 
