@@ -1,8 +1,19 @@
 name: CI
 
-# Runs on every pushed commit (branch pushes also show up as checks on their PRs).
+# `ci` is a required status check on main, so it has to report on the pull request itself: a branch
+# push produces a check run only in the repository that owns the branch, which would leave a fork's PR
+# permanently unmergeable. Hence the pull_request trigger. `push` is narrowed to main so a same-repo
+# branch does not build twice for the same commit (once for the branch, once for its PR).
 on:
   push:
+    branches: [main]
+  pull_request:
+
+# A new push to a PR makes the run in flight pointless; main is left alone so release history is not
+# cancelled halfway.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
