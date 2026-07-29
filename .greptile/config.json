@@ -1,0 +1,85 @@
+{
+  "strictness": 3,
+  "commentTypes": ["logic", "syntax", "style"],
+  "triggerOnUpdates": true,
+  "summarySection": {
+    "included": true,
+    "collapsible": true
+  },
+  "rules": [
+    {
+      "id": "vendored-generic-not-hand-edited",
+      "rule": "src/generic/** is a vendored copy of ch.sbb.polarion.extension.generic (app/src/main/resources/js and /css), kept in sync until the other extensions migrate onto RSP. It must never be hand-edited, restyled, reformatted or 'cleaned up' - changes come from re-copying the file out of generic. It is deliberately excluded from Prettier and ESLint, so flag any diff that reformats it, renames its identifiers, converts it to TypeScript or modernises its idioms.",
+      "scope": "src/generic/**",
+      "severity": "error",
+      "enabled": true
+    },
+    {
+      "id": "vendored-generic-local-deviations",
+      "rule": "The vendored copy carries intentional local patches that a by-the-book re-copy from generic silently deletes. A diff that removes any of them is a regression, even when every check stays green: (1) SearchableDropdown.js appends its option-list portal to getRootNode() rather than document.body and detects outside clicks via event.composedPath(), both required for the form-extension shadow roots; (2) control-tokens.css rewrites generic's 'inline:' icon placeholders to real url(../images/...) references that Vite inlines at build, and ensureSharedStyles.js is a local no-op because the CSS is bundled rather than injected at runtime; (3) control-tokens.css declares the two Selawik @font-face blocks (400 and 700) pointing at /polarion/ria/fonts/selawik/*.ttf - generic has none, and dropping them makes every admin page silently fall back to Arial while the test suite stays green.",
+      "scope": "src/generic/**",
+      "severity": "error",
+      "enabled": true
+    },
+    {
+      "id": "no-silenced-checks",
+      "rule": "Never make a check pass by silencing it. Flag added eslint-disable comments, @ts-ignore/@ts-expect-error, types weakened to any, skipped or removed tests (it.skip, describe.skip, .only that hides siblings), and lowered coverage thresholds. The cause gets fixed instead.",
+      "severity": "error",
+      "enabled": true
+    },
+    {
+      "id": "visual-references-are-linux-only",
+      "rule": "PNGs under test/expected/ are canonical only when generated on Linux inside the pinned Playwright Docker image, via 'npm run test:update:docker'. A bare 'npm test' on macOS or Windows diffs on antialiasing even when nothing changed, so overwriting a reference to get green is never the fix. Flag reference-screenshot changes that are not accompanied by an actual, explained visual change.",
+      "scope": "test/expected/**",
+      "severity": "error",
+      "enabled": true
+    },
+    {
+      "id": "fonts-must-exist-in-pinned-image",
+      "rule": "Every font a component names must exist in the pinned Playwright image, or the reference screenshot is hostage to fontconfig tie-breaking and CI goes intermittently red on unchanged commits. The image ships no Consolas, Monaco, Ubuntu Mono or DejaVu, and the generic 'monospace' keyword matches three faces with no stable winner. Font stacks must end on a face the image has: Liberation Mono, Liberation Sans or FreeMono.",
+      "scope": "src/**/*.{css,ts,tsx}",
+      "severity": "error",
+      "enabled": true
+    },
+    {
+      "id": "react-stays-external",
+      "rule": "react and react-dom are peer dependencies and must stay external to the bundle. Flag anything that moves them into dependencies, adds them to Vite's bundled input, or imports them in a way that would ship a second React copy in dist/.",
+      "severity": "error",
+      "enabled": true
+    },
+    {
+      "id": "sbb-tokens-scope",
+      "rule": "The --sbb-* design tokens are declared on the .sbb-ui, .standard-admin-page, .modal__container and .form-wrapper scopes, deliberately not on :root. A component only renders styled under one of those ancestors, and tests must wrap the render in .sbb-ui. Flag new tokens declared on :root, and components or tests that consume the tokens without such an ancestor.",
+      "scope": "src/**/*.{css,tsx}",
+      "severity": "warning",
+      "enabled": true
+    },
+    {
+      "id": "playwright-version-lockstep",
+      "rule": "The playwright devDependency in package.json and the 'container: mcr.microsoft.com/playwright:v<version>-noble' tag in .github/workflows/ci.yml and release.yml are the same number written twice, and the committed reference screenshots were generated against it. A PR that bumps one without the other makes the visual suite red. release.yml's NODE_VERSION must also match the node shipped in that image.",
+      "scope": "{package.json,.github/workflows/*.yml}",
+      "severity": "error",
+      "enabled": true
+    },
+    {
+      "id": "screenshots-capture-a-resting-state",
+      "rule": "Playwright leaves the mouse wherever the previous action put it, and that position survives across tests and across test files. A visual test that never touches the mouse therefore inherits a stray pointer, and if the captured component happens to sit under it the reference is written in its :hover paint - silently, because the capture still succeeds. Every capture of a resting state must call parkPointer() from test/helpers.ts first; only a test that is deliberately about :hover captures without parking. A reference that flips between otherwise identical runs is this bug, not flaky rendering.",
+      "scope": "test/**/*.visual.test.tsx",
+      "severity": "error",
+      "enabled": true
+    },
+    {
+      "id": "coverage-gate-not-lowered",
+      "rule": "The coverage gate in vitest.config.ts is 100% of lines and functions, with statements and branches just below it for four documented guards that cannot be reached from a test. Lowering any threshold, widening coverage.exclude, or annotating code away with istanbul ignore comments to get a run green is not acceptable - add the missing test, or say why the code is unreachable. CI enforces this through `npm run test:coverage:full`; a bare `npm test` applies no thresholds at all, so replacing the CI command with one silently removes the gate.",
+      "scope": "{vitest.config.ts,.github/workflows/*.yml,src/**}",
+      "severity": "error",
+      "enabled": true
+    },
+    {
+      "id": "conventional-commits-no-scope",
+      "rule": "Commit subjects follow Conventional Commits in English as 'type: subject' with no scope - never 'type(scope): subject'. Subject is imperative mood, lowercase first letter, no trailing period, at most 50 characters. No issue or task references, and no attribution trailers such as Co-Authored-By or 'Generated with Claude Code'.",
+      "severity": "warning",
+      "enabled": true
+    }
+  ]
+}
