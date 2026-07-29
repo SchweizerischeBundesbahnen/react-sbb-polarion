@@ -360,7 +360,7 @@ describe('SearchableSelect (React wrapper, multi-select)', () => {
     await vi.waitFor(() => expect(document.querySelector('.sd-trigger-multi')).not.toBeNull());
     expect(chipLabels()).toEqual(['First', 'Second']);
     // Exactly one control: the previous instance was destroyed, not left behind.
-    expect(document.querySelectorAll('.searchable-dropdown').length).toBe(1);
+    expect(document.querySelectorAll('.searchable-dropdown')).toHaveLength(1);
   });
 });
 

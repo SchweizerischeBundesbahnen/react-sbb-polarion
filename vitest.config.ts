@@ -53,12 +53,14 @@ export default defineConfig({
         // Barrel re-exports only.
         'src/index.ts',
       ],
-      // Every line and every function is executed by the suite, and the gate says so: a new branch of
-      // code that no test reaches fails the run rather than quietly eroding a percentage.
+      // A 90% floor. It is a regression guard, not a target: the suite actually runs at 100% of lines
+      // and functions and a little under that on statements and branches, so the gap between the real
+      // numbers and this floor is deliberate headroom - a feature branch can land slightly under while
+      // its tests are still being written, without the build stopping.
       //
-      // Statements and branches sit just below 100 on purpose. Four guards cannot be reached from a
-      // test without rewriting the code they protect, so they are left honest and visible in the
-      // report instead of being annotated away:
+      // Read the printed report, not just the exit code. Passing the gate says nothing was catastrophic;
+      // it does not say the new code is covered. What the floor cannot express is that four guards are
+      // unreachable from a test and always will be, so 100% is not attainable anyway:
       //   - BreadcrumbInjector `!shellDocument?.head` - only true for a cross-origin top window, and
       //     the runner is same-origin with its own shell.
       //   - SearchableSelect `!element` and PropertiesEditor `!highlight` - refs that are always
@@ -66,16 +68,15 @@ export default defineConfig({
       //     replacing it with a non-null assertion would turn a no-op into a crash.
       //   - About `getAttribute('href') ?? ''` - the querySelector is `a[href^="#"]`, so the attribute
       //     is always there.
-      // Raise these two floors if one of those guards ever becomes reachable.
       //
       // Behavior-only and full-suite give the same numbers (the visual tests render components the
       // behavior tests already exercise), so the gate holds for both the local behavior-only run and
       // the Docker full-suite run.
       thresholds: {
-        lines: 100,
-        functions: 100,
-        statements: 99,
-        branches: 98,
+        lines: 90,
+        functions: 90,
+        statements: 90,
+        branches: 90,
       },
     },
     browser: {

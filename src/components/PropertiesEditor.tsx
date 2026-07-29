@@ -24,8 +24,48 @@ interface Token {
 
 // A comment line starts with # or ! after optional leading whitespace (java.util.Properties).
 const COMMENT = /^\s*[#!]/;
-// The first unescaped = or : ends the key; surrounding whitespace belongs to the separator.
-const SEPARATOR = /^((?:\\.|[^\\=:])*?)(\s*[=:]\s*)([\s\S]*)$/;
+const IS_SPACE = /\s/;
+
+/**
+ * Splits a line at its first unescaped `=` or `:`, with the whitespace around that character counted
+ * as part of the separator. Returns null when the line has no separator at all.
+ *
+ * Scanned by hand rather than matched with `/^((?:\\.|[^\\=:])*?)(\s*[=:]\s*)([\s\S]*)$/`: expressing
+ * "up to the first unescaped separator" needs a lazy quantifier over an alternation, which backtracks
+ * over every position on a line that has no separator. The scan below is single-pass. It is also the
+ * only formulation that keeps the whitespace on the separator - making that quantifier greedy pulls a
+ * trailing space into the key instead ("key " rather than "key" for `key : value`).
+ */
+function splitAtSeparator(line: string): { key: string; separator: string; value: string } | null {
+  let index = 0;
+  let separatorAt = -1;
+  // Positions holding the second character of a `\x` pair; such a character is part of the key even
+  // when it is whitespace or a separator character.
+  const escaped = new Set<number>();
+  while (index < line.length) {
+    const char = line[index];
+    if (char === '\\') {
+      // A trailing lone backslash cannot start a pair, so the line has no usable separator.
+      if (index + 1 >= line.length) return null;
+      escaped.add(index + 1);
+      index += 2;
+      continue;
+    }
+    if (char === '=' || char === ':') {
+      separatorAt = index;
+      break;
+    }
+    index += 1;
+  }
+  if (separatorAt === -1) return null;
+
+  let start = separatorAt;
+  while (start > 0 && IS_SPACE.test(line[start - 1]) && !escaped.has(start - 1)) start -= 1;
+  let end = separatorAt + 1;
+  while (end < line.length && IS_SPACE.test(line[end])) end += 1;
+
+  return { key: line.slice(0, start), separator: line.slice(start, end), value: line.slice(end) };
+}
 
 /**
  * Splits one `.properties` line into highlight tokens. A line is either a comment, a
@@ -39,11 +79,11 @@ export function tokenizePropertiesLine(line: string): Token[] {
   if (COMMENT.test(line)) {
     return [{ kind: 'comment', text: line }];
   }
-  const match = SEPARATOR.exec(line);
-  if (!match) {
+  const split = splitAtSeparator(line);
+  if (!split) {
     return [{ kind: 'key', text: line }];
   }
-  const [, key, separator, value] = match;
+  const { key, separator, value } = split;
   const tokens: Token[] = [];
   if (key !== '') {
     tokens.push({ kind: 'key', text: key });
