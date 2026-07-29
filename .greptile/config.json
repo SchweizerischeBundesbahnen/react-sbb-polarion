@@ -71,7 +71,7 @@
     },
     {
       "id": "coverage-gate-not-lowered",
-      "rule": "The coverage gate in vitest.config.ts is 100% of lines and functions, with statements and branches just below it for four documented guards that cannot be reached from a test. Lowering any threshold, widening coverage.exclude, or annotating code away with istanbul ignore comments to get a run green is not acceptable - add the missing test, or say why the code is unreachable. CI enforces this through `npm run test:coverage:full`; a bare `npm test` applies no thresholds at all, so replacing the CI command with one silently removes the gate.",
+      "rule": "The coverage gate in vitest.config.ts is a 90% floor on all four metrics, and the same floor is the coverage condition of the SonarQube Cloud quality gate. It is a regression guard with deliberate headroom, not a target - the suite runs at 100% of lines and functions. Flag anything that games the number rather than earns it: widening coverage.exclude or sonar.coverage.exclusions to hide untested code, istanbul ignore comments, and any further lowering of the floor. New code is expected to arrive with its tests; passing the floor is not evidence that it did. CI enforces this through `npm run test:coverage:full`, and a bare `npm test` applies no thresholds at all, so replacing the CI command with one silently removes the gate.",
       "scope": "{vitest.config.ts,.github/workflows/*.yml,src/**}",
       "severity": "error",
       "enabled": true

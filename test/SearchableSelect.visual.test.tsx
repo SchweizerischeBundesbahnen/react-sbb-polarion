@@ -281,7 +281,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
         </div>
       </div>,
     );
-    await vi.waitFor(() => expect(document.querySelectorAll('.sd-chip').length).toBe(2));
+    await vi.waitFor(() => expect(document.querySelectorAll('.sd-chip')).toHaveLength(2));
     await expect(page.getByTestId('multi-flex-row')).toMatchScreenshot('multi-in-flex-row');
   });
 });

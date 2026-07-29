@@ -38,6 +38,13 @@ export interface MultiSelectProps extends BaseProps {
 
 export type SearchableSelectProps = SingleSelectProps | MultiSelectProps;
 
+/** The selection as a list in both modes: multi-select passes one through, single-select wraps its
+ *  value, and an empty single-select value is no selection rather than a selection of "". */
+function toValues(props: SearchableSelectProps): string[] {
+  if (props.multiple) return props.value;
+  return props.value ? [props.value] : [];
+}
+
 /**
  * Renders a React-controlled native <select> and upgrades it to the shared Polarion
  * SearchableDropdown. The dropdown factory is the generic vanilla-JS module, copied into this library
@@ -59,7 +66,7 @@ export default function SearchableSelect(props: Readonly<SearchableSelectProps>)
   // one. These two lines are where the mode is read, so the effects and the change handler below have no
   // branch at all and the render branches only where the DOM itself differs. The eventual move of the
   // dropdown's logic into this file inherits the same shape.
-  const values = props.multiple ? props.value : props.value ? [props.value] : [];
+  const values = toValues(props);
   const emit = props.multiple ? props.onChange : (next: string[]) => props.onChange(next[0] ?? '');
 
   const selectRef = useRef<HTMLSelectElement>(null);
