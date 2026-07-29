@@ -75,7 +75,7 @@ jobs:
           # into the local git config and removes it in its post step.
           ssh-key: ${{ secrets.RELEASE_SSH_KEY }}
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           # Points npm at npmjs and writes the .npmrc the OIDC exchange needs.
