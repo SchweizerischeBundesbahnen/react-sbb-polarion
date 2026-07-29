@@ -33,7 +33,7 @@ export default function ConfigurationButtons({
       <div className="action-buttons">
         <button type="button" className="sbb-btn sbb-btn--control" title="Save data" onClick={onSave}>
           <span className="button-image sbb-icon-save" aria-hidden="true" />
-          Save
+          <span>Save</span>
         </button>
         <button
           type="button"
@@ -42,7 +42,7 @@ export default function ConfigurationButtons({
           onClick={onCancel}
         >
           <span className="button-image sbb-icon-cancel" aria-hidden="true" />
-          Cancel
+          <span>Cancel</span>
         </button>
         {onRevertToDefault && (
           <button
@@ -52,7 +52,7 @@ export default function ConfigurationButtons({
             onClick={onRevertToDefault}
           >
             <span className="button-image sbb-icon-revert" aria-hidden="true" />
-            Default
+            <span>Default</span>
           </button>
         )}
         <button
@@ -63,7 +63,7 @@ export default function ConfigurationButtons({
           onClick={onToggleRevisions}
         >
           <span className="button-image sbb-icon-select-revision" aria-hidden="true" />
-          Revisions
+          <span>Revisions</span>
         </button>
       </div>
     </div>

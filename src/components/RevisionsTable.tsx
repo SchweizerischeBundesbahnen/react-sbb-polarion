@@ -21,10 +21,15 @@ interface RevisionsTableProps {
 /** Group a numeric revision name with spaces as the thousands separator (e.g. 3388 -> "3 388"),
  * mirroring the generic `insertRevisionSpaces`. Non-numeric names are returned unchanged. */
 function formatRevision(name: string): string {
-  // The lookahead is anchored to the end rather than written as `(\d{3})+(?!\d)`: the guard above
-  // already established the whole name is digits, so the two are equivalent, and anchoring keeps the
-  // repeated group from backtracking over every split.
-  return /^\d+$/.test(name) ? name.replace(/\B(?=(?:\d{3})+$)/g, ' ') : name;
+  if (!/^\d+$/.test(name)) return name;
+  // Sliced from the right rather than matched with a lookahead: every regex spelling of "every third
+  // digit" needs a repeated group inside the lookahead, which is quadratic in the worst case. Walking
+  // the string backwards in steps of three is linear and says the same thing more plainly.
+  const groups: string[] = [];
+  for (let end = name.length; end > 0; end -= 3) {
+    groups.unshift(name.slice(Math.max(0, end - 3), end));
+  }
+  return groups.join(' ');
 }
 
 /**
