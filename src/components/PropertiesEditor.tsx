@@ -76,7 +76,7 @@ export default function PropertiesEditor({
   placeholder,
   readOnly,
   className,
-}: PropertiesEditorProps) {
+}: Readonly<PropertiesEditorProps>) {
   const highlightRef = useRef<HTMLPreElement>(null);
 
   // The highlight layer does not scroll on its own (it has no scrollbars); it follows the textarea.

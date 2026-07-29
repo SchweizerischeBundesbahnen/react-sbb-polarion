@@ -18,7 +18,7 @@ interface PageLayoutProps {
  * (About, settings pages, ...); omit it for a primary product surface that should carry the Overview
  * back link but not an admin heading.
  */
-export default function PageLayout({ title, children }: PageLayoutProps) {
+export default function PageLayout({ title, children }: Readonly<PageLayoutProps>) {
   // Carry the current scope back to the Overview landing so navigating back and into another feature
   // keeps the project scope (dev navigation only; in Polarion the page is embedded and this is hidden).
   const scope = getScope();

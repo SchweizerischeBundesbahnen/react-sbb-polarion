@@ -144,9 +144,9 @@ describe('SearchableDropdown - vanilla-only features (ported from generic)', () 
       dropdown.addOption('a', 'A');
       dropdown.addOption('b', 'B');
       dropdown.selectMultipleValues(['a', 'b']);
-      expect(dropdown.trigger.querySelectorAll('.sd-chip').length).toBe(2);
+      expect(dropdown.trigger.querySelectorAll('.sd-chip')).toHaveLength(2);
       dropdown.empty();
-      expect(dropdown.trigger.querySelectorAll('.sd-chip').length).toBe(0);
+      expect(dropdown.trigger.querySelectorAll('.sd-chip')).toHaveLength(0);
       expect(dropdown.getSelectedValue()).toEqual([]);
       dropdown.destroy();
     });
@@ -217,8 +217,8 @@ describe('SearchableDropdown - vanilla-only features (ported from generic)', () 
       new SearchableDropdown({ element: select, rememberSelection: false });
       new SearchableDropdown({ element: select, rememberSelection: false });
       const last = new SearchableDropdown({ element: select, rememberSelection: false });
-      expect(document.querySelectorAll('.searchable-dropdown').length).toBe(1);
-      expect(document.querySelectorAll('.sd-portal').length).toBe(1);
+      expect(document.querySelectorAll('.searchable-dropdown')).toHaveLength(1);
+      expect(document.querySelectorAll('.sd-portal')).toHaveLength(1);
       last.destroy();
     });
 
@@ -256,9 +256,9 @@ describe('SearchableDropdown - vanilla-only features (ported from generic)', () 
         selectContainer: document.getElementById('build-container')!,
         rememberSelection: false,
       });
-      expect(document.querySelectorAll('.sd-portal').length).toBe(1);
+      expect(document.querySelectorAll('.sd-portal')).toHaveLength(1);
       dropdown.destroy();
-      expect(document.querySelectorAll('.sd-portal').length).toBe(0);
+      expect(document.querySelectorAll('.sd-portal')).toHaveLength(0);
     });
 
     it('scopes the body-level portal with .sbb-ui so its tokens match the trigger', () => {

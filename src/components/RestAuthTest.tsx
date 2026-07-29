@@ -19,7 +19,7 @@ interface Result {
  * and shows the raw HTTP status + body so an admin can confirm in-session REST auth works. Requires
  * `com.siemens.polarion.rest.security.restApiToken.enabled=true`.
  */
-export default function RestAuthTest({ restApiUrl }: RestAuthTestProps) {
+export default function RestAuthTest({ restApiUrl }: Readonly<RestAuthTestProps>) {
   const [result, setResult] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
 

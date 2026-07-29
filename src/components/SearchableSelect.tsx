@@ -32,7 +32,7 @@ export default function SearchableSelect({
   allowEmpty = false,
   disabled = false,
   id,
-}: SearchableSelectProps) {
+}: Readonly<SearchableSelectProps>) {
   const selectRef = useRef<HTMLSelectElement>(null);
   const sdRef = useRef<SearchableDropdownInstance | null>(null);
 

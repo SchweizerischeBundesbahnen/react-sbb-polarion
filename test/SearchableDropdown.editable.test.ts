@@ -61,7 +61,7 @@ describe('SearchableDropdown - editable (free-text) mode', () => {
     });
     fire(dd.trigger, 'focus');
     expect(dd.isOpen).toBe(true);
-    expect(dd.itemsEl.children.length).toBe(2);
+    expect(dd.itemsEl.children).toHaveLength(2);
     dd.destroy();
   });
 
@@ -95,7 +95,7 @@ describe('SearchableDropdown - editable (free-text) mode', () => {
     fire(dd.trigger, 'input');
     expect(dd.trigger.value).toBe('10');
     expect(dd.isOpen).toBe(true);
-    expect(dd.itemsEl.children.length).toBe(1);
+    expect(dd.itemsEl.children).toHaveLength(1);
     dd.destroy();
   });
 
@@ -112,7 +112,7 @@ describe('SearchableDropdown - editable (free-text) mode', () => {
     dd.trigger.value = 'ban';
     fire(dd.trigger, 'input');
     expect(dd.trigger.value).toBe('ban');
-    expect(dd.itemsEl.children.length).toBe(1);
+    expect(dd.itemsEl.children).toHaveLength(1);
     dd.destroy();
   });
 
@@ -131,7 +131,7 @@ describe('SearchableDropdown - editable (free-text) mode', () => {
     dd.trigger.value = 'A';
     fire(dd.trigger, 'input');
     expect(dd.isOpen).toBe(true);
-    expect(dd.itemsEl.children.length).toBe(1);
+    expect(dd.itemsEl.children).toHaveLength(1);
     dd.trigger.value = 'AA';
     fire(dd.trigger, 'input');
     expect(dd.isOpen).toBe(false);

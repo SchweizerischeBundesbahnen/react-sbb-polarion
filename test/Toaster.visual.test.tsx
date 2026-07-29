@@ -48,7 +48,7 @@ function mountHost() {
 }
 
 async function settled(count: number) {
-  await vi.waitFor(() => expect(document.querySelectorAll('[data-sonner-toast]').length).toBe(count));
+  await vi.waitFor(() => expect(document.querySelectorAll('[data-sonner-toast]')).toHaveLength(count));
   // Small settle so sonner has finished measuring/positioning the expanded stack before capture.
   await new Promise((resolve) => setTimeout(resolve, 300));
 }

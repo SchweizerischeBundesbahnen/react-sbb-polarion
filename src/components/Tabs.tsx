@@ -32,7 +32,7 @@ interface TabsProps {
  *
  * Tabs select something; they do not themselves render what was selected. The caller draws the panel.
  */
-export default function Tabs({ items, activeId, onSelect, name, ariaLabel }: TabsProps) {
+export default function Tabs({ items, activeId, onSelect, name, ariaLabel }: Readonly<TabsProps>) {
   const generatedName = useId();
 
   return (

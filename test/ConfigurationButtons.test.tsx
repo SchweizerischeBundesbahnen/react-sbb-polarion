@@ -125,7 +125,9 @@ describe('ConfigurationButtons', () => {
 
   it('exposes the tooltip titles matching the legacy admin toolbar', () => {
     renderButtons();
-    expect(byLabel('Save').querySelector('.button-image')?.getAttribute('title')).toBe('Save data');
+    // On the button, like the other three - not on the icon span, so the tooltip covers the whole
+    // control rather than just the glyph.
+    expect(byLabel('Save').getAttribute('title')).toBe('Save data');
     expect(byLabel('Cancel').getAttribute('title')).toBe('Cancel editing and revert to last persisted state');
     expect(byLabel('Default').getAttribute('title')).toBe('Load default values');
     expect(byLabel('Revisions').getAttribute('title')).toBe('Toggle list of revisions');

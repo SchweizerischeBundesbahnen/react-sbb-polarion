@@ -29,7 +29,7 @@ interface AuthorizationSettingsProps {
  * The setting is the generic single `Default` setting of whatever feature name the service was built
  * with, so one extension can have several of these pages over different settings.
  */
-export default function AuthorizationSettings({ title, service, quickHelp }: AuthorizationSettingsProps) {
+export default function AuthorizationSettings({ title, service, quickHelp }: Readonly<AuthorizationSettingsProps>) {
   const { confirm, confirmDialog } = useConfirm();
 
   const [roles, setRoles] = useState<RolesInfo>({ globalRoles: [], projectRoles: [] });

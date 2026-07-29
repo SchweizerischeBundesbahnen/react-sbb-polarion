@@ -67,7 +67,7 @@ export function ConfigurationsPane<T>({
   onSelectedChange,
   onEditingNameChange,
   ref,
-}: ConfigurationsPaneProps<T>) {
+}: Readonly<ConfigurationsPaneProps<T>>) {
   const { loadConfigurationNames, loadContent, createConfiguration, renameConfiguration, deleteConfiguration } =
     service;
 
@@ -115,12 +115,17 @@ export function ConfigurationsPane<T>({
           return;
         }
         const cookieName = getCookie(cookieKey);
-        const pick =
-          preferred && list.some((n) => n.name === preferred)
-            ? preferred
-            : cookieName && list.some((n) => n.name === cookieName)
-              ? cookieName
-              : list[0].name;
+        const listed = (name: string | null | undefined): name is string => !!name && list.some((n) => n.name === name);
+        // An explicitly requested name wins (it was just created or renamed), then the remembered one,
+        // and failing both the first entry.
+        let pick: string;
+        if (listed(preferred)) {
+          pick = preferred;
+        } else if (listed(cookieName)) {
+          pick = cookieName;
+        } else {
+          pick = list[0].name;
+        }
         await selectConfig(pick);
       } catch {
         setLoadError(true);
@@ -246,7 +251,7 @@ export function ConfigurationsPane<T>({
               disabled={editingDisabled || !selected}
               onClick={() => openEditor('rename')}
             >
-              <span className="button-image sbb-icon-edit" role="img" aria-label="Rename" />
+              <span className="button-image sbb-icon-edit" aria-hidden="true" />
               Rename
             </button>
             <button
@@ -256,7 +261,7 @@ export function ConfigurationsPane<T>({
               disabled={editingDisabled || !selected}
               onClick={handleDelete}
             >
-              <span className="button-image sbb-icon-delete" role="img" aria-label="Delete" />
+              <span className="button-image sbb-icon-delete" aria-hidden="true" />
               Delete
             </button>
             <button
@@ -265,7 +270,7 @@ export function ConfigurationsPane<T>({
               title={`Add new ${label}`}
               onClick={() => openEditor('new')}
             >
-              <span className="button-image sbb-icon-table-plus" role="img" aria-label="Add" />
+              <span className="button-image sbb-icon-table-plus" aria-hidden="true" />
               Add new
             </button>
           </div>
@@ -296,7 +301,7 @@ export function ConfigurationsPane<T>({
             onChange={(e) => setNameInput(e.target.value)}
           />
           <button type="button" className="sbb-btn sbb-btn--control" onClick={closeEditor}>
-            <span className="button-image sbb-icon-cancel" role="img" aria-label="Cancel" />
+            <span className="button-image sbb-icon-cancel" aria-hidden="true" />
             Cancel
           </button>
           <button
@@ -305,7 +310,7 @@ export function ConfigurationsPane<T>({
             disabled={nameInput.trim().length === 0}
             onClick={mode === 'new' ? submitCreate : submitRename}
           >
-            <span className="button-image sbb-icon-save" role="img" aria-label={mode === 'new' ? 'Save' : 'Update'} />
+            <span className="button-image sbb-icon-save" aria-hidden="true" />
             {mode === 'new' ? 'Save' : 'Update'}
           </button>
           {nameError && <div className="alert alert-error">{nameError}</div>}

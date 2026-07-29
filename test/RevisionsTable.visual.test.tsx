@@ -51,7 +51,7 @@ async function renderTable(container: HTMLElement, revisions: Revision[]): Promi
   await vi.waitFor(() => expect(container.querySelector('.revisions-table')).not.toBeNull());
   if (revisions.length > 0) {
     await vi.waitFor(() =>
-      expect(container.querySelectorAll('.revisions-table tbody tr').length).toBe(revisions.length),
+      expect(container.querySelectorAll('.revisions-table tbody tr')).toHaveLength(revisions.length),
     );
   } else {
     await vi.waitFor(() => expect(container.querySelector('.empty-message')).not.toBeNull());

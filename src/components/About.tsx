@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { getScope } from '../services/scope';
 import type { ConfigurationPropertiesModel, ConfigurationStatus, SendRequest, Version } from '../types';
 import './About.css';
@@ -53,7 +53,7 @@ function versionRows(version: Version): Array<{ label: string; value: string; em
  * REST auth test. The per-extension bits are injected: the REST request function, the app icon and
  * the RestAuthTest URL. The endpoints themselves are the generic ones, identical for every extension.
  */
-export default function About({ sendRequest, appIcon, restApiUrl }: AboutProps) {
+export default function About({ sendRequest, appIcon, restApiUrl }: Readonly<AboutProps>) {
   const scope = getScope();
 
   const [data, setData] = useState<AboutData | null>(null);
@@ -123,132 +123,134 @@ export default function About({ sendRequest, appIcon, restApiUrl }: AboutProps) 
     });
   }, [data]);
 
-  return (
-    <PageLayout title="About">
-      {error ? (
-        <div className="alert alert-error">{error}</div>
-      ) : !data ? (
-        <p>Loading...</p>
-      ) : (
-        <div className="about-page" ref={pageRef}>
-          <div className="about-header">
-            <h3>Extension info</h3>
-            <img className="app-icon" src={appIcon} alt="" />
-          </div>
-          <div className="about-table-wrap">
-            <table className="about-table">
-              <thead>
-                <tr>
-                  <th>Manifest entry</th>
-                  <th>Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {versionRows(data.version).map((row) => (
-                  <tr key={row.label}>
-                    <td>{row.label}</td>
-                    <td>
-                      {row.email ? (
-                        <a target="_blank" rel="noreferrer" href={`mailto:${row.value}`}>
-                          {row.value}
-                        </a>
-                      ) : (
-                        row.value
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Debug-only manual REST token auth test (ported from the generic about.jsp). */}
-          {data.config.properties.some((p) => p.key.endsWith('.debug') && p.value === 'true') && (
-            <RestAuthTest restApiUrl={restApiUrl} />
-          )}
-
-          <h3>Extension configuration properties</h3>
-          <div className="about-table-wrap">
-            <table className="about-table">
-              <thead>
-                <tr>
-                  <th>Configuration property</th>
-                  <th>Value</th>
-                  <th>Default</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.config.properties.map((prop) => (
-                  <tr key={prop.key}>
-                    <td>{prop.key}</td>
-                    <td>{prop.value}</td>
-                    <td>{prop.defaultValue ?? ''}</td>
-                    {/* Descriptions are trusted server-authored HTML (they may contain links into the
-                        README anchors below, e.g. #strictdoc-configuration), same as the legacy JSP. */}
-                    <td className="about-description" dangerouslySetInnerHTML={{ __html: prop.description ?? '' }} />
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {data.config.obsoleteProperties.length > 0 && (
-            <>
-              <h3>Obsolete/non-valid configuration properties</h3>
-              <div className="about-table-wrap">
-                <table className="about-table">
-                  <thead>
-                    <tr>
-                      <th>Configuration property</th>
-                      <th>Value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.config.obsoleteProperties.map((prop) => (
-                      <tr key={prop.key}>
-                        <td>{prop.key}</td>
-                        <td>{prop.value}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-
-          {data.statuses.length > 0 && (
-            <>
-              <h3>Extension configuration status</h3>
-              <div className="about-table-wrap">
-                <table className="about-table">
-                  <thead>
-                    <tr>
-                      <th>Configuration</th>
-                      <th>Status</th>
-                      <th>Info</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.statuses.map((status) => (
-                      <tr key={status.name}>
-                        <td>{status.name}</td>
-                        <td style={{ color: STATUS_COLORS[status.status] }}>{status.status}</td>
-                        <td>{status.details}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-
-          {data.documentation && (
-            // Trusted, build-generated HTML from the extension's README; served by /readme.
-            <article className="markdown-body" dangerouslySetInnerHTML={{ __html: data.documentation }} />
-          )}
+  // Three states read better as a sequence than as a nested ternary in the JSX.
+  let content: ReactNode;
+  if (error) {
+    content = <div className="alert alert-error">{error}</div>;
+  } else if (!data) {
+    content = <p>Loading...</p>;
+  } else {
+    content = (
+      <div className="about-page" ref={pageRef}>
+        <div className="about-header">
+          <h3>Extension info</h3>
+          <img className="app-icon" src={appIcon} alt="" />
         </div>
-      )}
-    </PageLayout>
-  );
+        <div className="about-table-wrap">
+          <table className="about-table">
+            <thead>
+              <tr>
+                <th>Manifest entry</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {versionRows(data.version).map((row) => (
+                <tr key={row.label}>
+                  <td>{row.label}</td>
+                  <td>
+                    {row.email ? (
+                      <a target="_blank" rel="noreferrer" href={`mailto:${row.value}`}>
+                        {row.value}
+                      </a>
+                    ) : (
+                      row.value
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Debug-only manual REST token auth test (ported from the generic about.jsp). */}
+        {data.config.properties.some((p) => p.key.endsWith('.debug') && p.value === 'true') && (
+          <RestAuthTest restApiUrl={restApiUrl} />
+        )}
+
+        <h3>Extension configuration properties</h3>
+        <div className="about-table-wrap">
+          <table className="about-table">
+            <thead>
+              <tr>
+                <th>Configuration property</th>
+                <th>Value</th>
+                <th>Default</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.config.properties.map((prop) => (
+                <tr key={prop.key}>
+                  <td>{prop.key}</td>
+                  <td>{prop.value}</td>
+                  <td>{prop.defaultValue ?? ''}</td>
+                  {/* Descriptions are trusted server-authored HTML (they may contain links into the
+                        README anchors below, e.g. #strictdoc-configuration), same as the legacy JSP. */}
+                  <td className="about-description" dangerouslySetInnerHTML={{ __html: prop.description ?? '' }} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {data.config.obsoleteProperties.length > 0 && (
+          <>
+            <h3>Obsolete/non-valid configuration properties</h3>
+            <div className="about-table-wrap">
+              <table className="about-table">
+                <thead>
+                  <tr>
+                    <th>Configuration property</th>
+                    <th>Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.config.obsoleteProperties.map((prop) => (
+                    <tr key={prop.key}>
+                      <td>{prop.key}</td>
+                      <td>{prop.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {data.statuses.length > 0 && (
+          <>
+            <h3>Extension configuration status</h3>
+            <div className="about-table-wrap">
+              <table className="about-table">
+                <thead>
+                  <tr>
+                    <th>Configuration</th>
+                    <th>Status</th>
+                    <th>Info</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.statuses.map((status) => (
+                    <tr key={status.name}>
+                      <td>{status.name}</td>
+                      <td style={{ color: STATUS_COLORS[status.status] }}>{status.status}</td>
+                      <td>{status.details}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {data.documentation && (
+          // Trusted, build-generated HTML from the extension's README; served by /readme.
+          <article className="markdown-body" dangerouslySetInnerHTML={{ __html: data.documentation }} />
+        )}
+      </div>
+    );
+  }
+
+  return <PageLayout title="About">{content}</PageLayout>;
 }
