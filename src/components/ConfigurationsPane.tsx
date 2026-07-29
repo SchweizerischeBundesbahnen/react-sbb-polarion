@@ -252,7 +252,7 @@ export function ConfigurationsPane<T>({
               onClick={() => openEditor('rename')}
             >
               <span className="button-image sbb-icon-edit" aria-hidden="true" />
-              Rename
+              <span>Rename</span>
             </button>
             <button
               type="button"
@@ -262,7 +262,7 @@ export function ConfigurationsPane<T>({
               onClick={handleDelete}
             >
               <span className="button-image sbb-icon-delete" aria-hidden="true" />
-              Delete
+              <span>Delete</span>
             </button>
             <button
               type="button"
@@ -271,7 +271,7 @@ export function ConfigurationsPane<T>({
               onClick={() => openEditor('new')}
             >
               <span className="button-image sbb-icon-table-plus" aria-hidden="true" />
-              Add new
+              <span>Add new</span>
             </button>
           </div>
           {showDefaultNote && (
@@ -302,7 +302,7 @@ export function ConfigurationsPane<T>({
           />
           <button type="button" className="sbb-btn sbb-btn--control" onClick={closeEditor}>
             <span className="button-image sbb-icon-cancel" aria-hidden="true" />
-            Cancel
+            <span>Cancel</span>
           </button>
           <button
             type="button"
