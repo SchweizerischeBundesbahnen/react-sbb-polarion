@@ -7,14 +7,20 @@
 import './generic/css/controls.css';
 
 export { default as PageLayout } from './components/PageLayout';
+// One combobox for both modes: pass `multiple` for checkbox options and removable chips, which also
+// switches `value` / `onChange` from a string to a string list.
 export { default as SearchableSelect } from './components/SearchableSelect';
-export type { SelectOption } from './components/SearchableSelect';
+export type {
+  SelectOption,
+  SearchableSelectProps,
+  SingleSelectProps,
+  MultiSelectProps,
+} from './components/SearchableSelect';
 // The bundled editable (free-text) combobox factory from the vendored generic toolkit, for bespoke
 // editable inputs like excel-importer's ColumnInput. Bundled (no runtime fetch), so it works in tests.
 export { createEditableSelect } from './generic/searchableSelect.js';
-// The bundled non-editable dropdown factory (same toolkit), for a bespoke controlled <select> that
-// needs richer options than SearchableSelect's { id, name } - e.g. xml-repair's entity-type combobox
-// with per-option icons and indented subtypes (data-icon / data-icon-bg attributes + preserveOptionClasses).
+// The bundled non-editable dropdown factory (same toolkit), for a control SearchableSelect does not
+// cover: the class's build mode, its clearable (×) trigger, or a <select> that is not React-controlled.
 export { createSearchableSelect } from './generic/searchableSelect.js';
 export type { SearchableDropdownInstance } from './generic/searchableSelect.js';
 export { default as Tabs } from './components/Tabs';

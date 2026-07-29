@@ -182,6 +182,11 @@ to a local checkout work without touching the config.
 `RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
 `PropertiesEditor`, `AuthorizationSettings`.
 
+`SearchableSelect` is the shared combobox for both selection modes. By default it is a single-select
+(`value: string`); pass `multiple` and it renders checkbox options in the popup and one removable chip
+per selection, with `value` / `onChange` switching to a string list. Options may carry `iconURL`,
+`iconBg` and `indent`, so a nested or icon-bearing list needs no bespoke control.
+
 `Tabs` is the shared tab bar from the generic framework's `tabs.css` - one tab-bar look for every
 extension. It is controlled (`items`, `activeId`, `onSelect`) and selects only: the caller renders
 whatever the active tab stands for. It uses that stylesheet's JS-driven variant, so the tab count is
@@ -199,13 +204,15 @@ supplies the title and its own Quick Help text. Note that
 **Config / helpers**: `configureGenericModules(base)` (sets the base URL for the generic ES modules the
 library still loads at runtime - now only `BreadcrumbBridge.js` via `BreadcrumbInjector`; call once per
 entry point that uses the breadcrumb), `createEditableSelect` / `createSearchableSelect` (the vendored
-generic combobox factories, for bespoke editable / richer-option inputs), `getCookie`/`setCookie`,
+generic combobox factories, for controls `SearchableSelect` does not cover - a free-text editable input,
+the class's build mode or clearable trigger, a non-React-controlled `<select>`), `getCookie`/`setCookie`,
 `isEmbedded()`, `getScope()` / `getProjectIdFromScope(scope)`.
 
 **Functions**: `createAuthorizationService(sendRequest, settingName)`, `tokenizePropertiesLine(line)` - the `.properties` line tokenizer behind
 `PropertiesEditor`, exported so a consumer can highlight the same way outside the editor.
 
-**Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableDropdownInstance`, `ConfigurationsPaneHandle`,
+**Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableSelectProps`, `SingleSelectProps`,
+`MultiSelectProps`, `SearchableDropdownInstance`, `ConfigurationsPaneHandle`,
 `ConfigurationsService<T>`, `AuthorizationService`, `AuthorizationContent`, `RolesInfo`,
 `SettingName`, `Revision`, `Version`, `ConfigurationProperty`, `ConfigurationPropertiesModel`,
 `ConfigurationStatus`, `SendRequest`.

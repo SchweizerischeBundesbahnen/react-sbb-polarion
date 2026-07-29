@@ -1,0 +1,19 @@
+/* Styles owned by the React wrapper, on top of the shared control CSS (generic/css/searchable-dropdown.css
+   paints the trigger, the chips and the popup). Both rules follow from what this component adds: an
+   option flag the shared CSS knows nothing about, and the multi-select mode it puts inside form rows. */
+
+/* `indent: true` renders an option as a child entry under its parent (e.g. a subtype under its entity
+   type). preserveOptionClasses - a factory default - mirrors the class from the <option> onto the
+   rendered popup option. */
+.sd-portal .option.indented {
+  padding-left: 30px;
+}
+
+/* A flex item never shrinks below its content width unless told so, and a multi-select trigger is as
+   wide as its widest chip. Inside a flex row that pushes whatever follows the control out of the
+   container; bounded, the chip labels ellipsize instead (see .sd-chip-label). Multi-select only - the
+   single-select trigger is an <input>, which shrinks on its own - and selected via :has() because the
+   container element is created by the vendored dropdown, so the component cannot put a class on it. */
+.searchable-dropdown:has(> .sd-trigger-multi) {
+  min-width: 0;
+}
