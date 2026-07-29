@@ -1,7 +1,8 @@
 {
   "strictness": 3,
   "commentTypes": ["logic", "syntax", "style"],
-  "triggerOnUpdates": true,
+  "skipReview": "AUTOMATIC",
+  "triggerOnUpdates": false,
   "summarySection": {
     "included": true,
     "collapsible": true
