@@ -1,0 +1,33 @@
+version: 2
+
+updates:
+  # npm. `prefix: build` (and deliberately no `include: scope`) so the generated subject reads
+  # "build: bump x from a to b" - the scopeless `type: subject` convention this repo uses.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+
+    # A playwright bump from here is INCOMPLETE BY CONSTRUCTION. The version is written twice: as the
+    # npm devDependency, and as the `container: mcr.microsoft.com/playwright:v<version>-noble` tag in
+    # ci.yml and release.yml. Dependabot only edits the manifest - it has no notion of that image tag,
+    # and the github-actions ecosystem below does not touch `container:` either.
+    #
+    # The mismatch is loud rather than silent: the container still ships the old browsers while npm ci
+    # installs the new client, so CI fails on the PR instead of quietly drifting the screenshots. Before
+    # merging such a PR, push onto its branch: the two workflow tags, `NODE_VERSION` in release.yml if
+    # the image's node moved, and regenerated references from `npm run test:update:docker`.
+    #
+    # It is left un-ignored on purpose - knowing an update exists is worth the manual step.
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci
