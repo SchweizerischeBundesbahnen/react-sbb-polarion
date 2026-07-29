@@ -43,7 +43,7 @@ jobs:
     env:
       PIXEL_REFERENCES: '1'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: npm ci
       - run: npm test
 
@@ -63,7 +63,7 @@ jobs:
           echo "::error::Releases are cut from main only (got ${{ github.ref_name }})"
           exit 1
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # Full history: the rebase below and `gh release --generate-notes` both need it.
           fetch-depth: 0
