@@ -67,6 +67,13 @@ jobs:
         with:
           # Full history: the rebase below and `gh release --generate-notes` both need it.
           fetch-depth: 0
+          # Push over SSH with a deploy key instead of the default GITHUB_TOKEN. The "main" ruleset
+          # requires a pull request, and the GITHUB_TOKEN cannot be excused from it: a bypass actor has
+          # to be an app installed on the repository, and GitHub Actions is not one on a user-owned
+          # repo. A deploy key can, and it is the narrow exemption - it lets this workflow push the
+          # version commit and tag while direct pushes by a human stay blocked. checkout wires the key
+          # into the local git config and removes it in its post step.
+          ssh-key: ${{ secrets.RELEASE_SSH_KEY }}
 
       - uses: actions/setup-node@v5
         with:
