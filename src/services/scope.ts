@@ -12,6 +12,6 @@ export function getScope(): string {
 
 /** Extracts the project id from a scope string. Handles scope with or without a trailing slash. */
 export function getProjectIdFromScope(scope: string): string {
-  const match = scope.match(/project\/([^/]+)/);
+  const match = /project\/([^/]+)/.exec(scope);
   return match ? match[1] : '';
 }

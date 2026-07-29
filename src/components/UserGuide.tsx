@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import type { SendRequest } from '../types';
 import PageLayout from './PageLayout';
 import './UserGuide.css';
@@ -15,7 +15,7 @@ interface UserGuideProps {
  * comes from the generic `github-markdown-light.css` the consuming app links in its index.html; the
  * heading look comes from the bundled markdown.css.
  */
-export default function UserGuide({ sendRequest }: UserGuideProps) {
+export default function UserGuide({ sendRequest }: Readonly<UserGuideProps>) {
   const [html, setHtml] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,16 +38,16 @@ export default function UserGuide({ sendRequest }: UserGuideProps) {
     };
   }, [sendRequest]);
 
-  return (
-    <PageLayout title="User Guide">
-      {error ? (
-        <div className="alert alert-error">{error}</div>
-      ) : html === null ? (
-        <p>Loading...</p>
-      ) : (
-        // Trusted, build-generated HTML from USER_GUIDE.md; served by /user-guide.
-        <article className="markdown-body user-guide-page" dangerouslySetInnerHTML={{ __html: html }} />
-      )}
-    </PageLayout>
-  );
+  // Three states read better as a sequence than as a nested ternary in the JSX.
+  let content: ReactNode;
+  if (error) {
+    content = <div className="alert alert-error">{error}</div>;
+  } else if (html === null) {
+    content = <p>Loading...</p>;
+  } else {
+    // Trusted, build-generated HTML from USER_GUIDE.md; served by /user-guide.
+    content = <article className="markdown-body user-guide-page" dangerouslySetInnerHTML={{ __html: html }} />;
+  }
+
+  return <PageLayout title="User Guide">{content}</PageLayout>;
 }

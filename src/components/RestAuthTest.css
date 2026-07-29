@@ -16,7 +16,7 @@
   font-size: 12px;
   line-height: 18px;
   white-space: pre-wrap;
-  word-break: break-word;
+  overflow-wrap: break-word;
   border-radius: 3px;
   border: 1px solid #dfe1e6;
   background-color: #f4f5f7;

@@ -12,6 +12,6 @@ import { Toaster as SonnerToaster, type ToasterProps } from 'sonner';
  * Any prop can be overridden (they spread after the defaults), but keep the defaults unless there is a
  * concrete reason to diverge - the point is one consistent toast style across every extension.
  */
-export default function Toaster(props: ToasterProps) {
+export default function Toaster(props: Readonly<ToasterProps>) {
   return <SonnerToaster position="top-center" richColors duration={5000} {...props} />;
 }
