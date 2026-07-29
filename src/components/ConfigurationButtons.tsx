@@ -27,12 +27,12 @@ export default function ConfigurationButtons({
   onRevertToDefault,
   onToggleRevisions,
   revisionsShown,
-}: ConfigurationButtonsProps) {
+}: Readonly<ConfigurationButtonsProps>) {
   return (
     <div className="actions-pane">
       <div className="action-buttons">
-        <button type="button" className="sbb-btn sbb-btn--control" onClick={onSave}>
-          <span className="button-image sbb-icon-save" role="img" aria-label="Save" title="Save data" />
+        <button type="button" className="sbb-btn sbb-btn--control" title="Save data" onClick={onSave}>
+          <span className="button-image sbb-icon-save" aria-hidden="true" />
           Save
         </button>
         <button
@@ -41,7 +41,7 @@ export default function ConfigurationButtons({
           title="Cancel editing and revert to last persisted state"
           onClick={onCancel}
         >
-          <span className="button-image sbb-icon-cancel" role="img" aria-label="Cancel" />
+          <span className="button-image sbb-icon-cancel" aria-hidden="true" />
           Cancel
         </button>
         {onRevertToDefault && (
@@ -51,7 +51,7 @@ export default function ConfigurationButtons({
             title="Load default values"
             onClick={onRevertToDefault}
           >
-            <span className="button-image sbb-icon-revert" role="img" aria-label="Default" />
+            <span className="button-image sbb-icon-revert" aria-hidden="true" />
             Default
           </button>
         )}
@@ -62,7 +62,7 @@ export default function ConfigurationButtons({
           aria-pressed={revisionsShown}
           onClick={onToggleRevisions}
         >
-          <span className="button-image sbb-icon-select-revision" role="img" aria-label="Revisions" />
+          <span className="button-image sbb-icon-select-revision" aria-hidden="true" />
           Revisions
         </button>
       </div>

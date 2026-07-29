@@ -1,8 +1,19 @@
 name: CI
 
-# Runs on every pushed commit (branch pushes also show up as checks on their PRs).
+# `ci` is a required status check on main, so it has to report on the pull request itself: a branch
+# push produces a check run only in the repository that owns the branch, which would leave a fork's PR
+# permanently unmergeable. Hence the pull_request trigger. `push` is narrowed to main so a same-repo
+# branch does not build twice for the same commit (once for the branch, once for its PR).
 on:
   push:
+    branches: [main]
+  pull_request:
+
+# A new push to a PR makes the run in flight pointless; main is left alone so release history is not
+# cancelled halfway.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -19,10 +30,62 @@ jobs:
     env:
       PIXEL_REFERENCES: '1'
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
       - run: npm run typecheck
       - run: npm run build
-      - run: npm test
+
+      # The full suite WITH coverage, not a bare `npm test`: the thresholds in vitest.config.ts are only
+      # applied when --coverage is passed, so without this the gate would live in the pre-commit hook
+      # alone and a push that bypassed it would go green.
+      - run: npm run test:coverage:full
+
+      # Reporting only - the pass/fail decision already happened in the step above. `!cancelled()` so the
+      # report still lands when the suite went red, which is when the PR comment is worth the most, and
+      # fail_ci_if_error stays off so a Codecov outage cannot fail an otherwise good build.
+      - name: Upload coverage to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./coverage/lcov.info
+          disable_search: true
+          fail_ci_if_error: false
+          # A public repo can upload without a token, but unauthenticated uploads are rate-limited and
+          # drop often enough to make the badge stale. The action falls back to tokenless when the
+          # secret is absent, so this is safe to leave in place before CODECOV_TOKEN is configured.
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      # Hand the lcov to the sonar job, which runs outside this container and so cannot see its files.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          retention-days: 1
+
+  sonar:
+    needs: ci
+    runs-on: ubuntu-latest
+    # Deliberately not in the Playwright container: the scanner only needs the sources and the lcov, so
+    # keeping it on a plain runner leaves the required `ci` check independent of Sonar being reachable.
+    #
+    # Secrets are withheld from a pull request opened from a fork, so the scan would fail on something
+    # the contributor cannot fix. Skip it there - the push to main re-analyses everything after merge.
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Sonar decides what counts as "new code" and who to attribute an issue to from the history;
+          # the default shallow clone leaves it guessing.
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: coverage
+          path: coverage
+
+      - uses: SonarSource/sonarqube-scan-action@v8.2.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io

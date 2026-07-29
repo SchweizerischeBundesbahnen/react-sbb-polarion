@@ -31,7 +31,7 @@ export default function Modal({
   onOk,
   onCancel,
   children,
-}: ModalProps) {
+}: Readonly<ModalProps>) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {

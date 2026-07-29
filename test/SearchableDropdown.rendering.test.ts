@@ -177,7 +177,7 @@ describe('multi-select chips', () => {
     const dropdown = new SearchableDropdown({ element: select, multiselect: true, rememberSelection: false });
     dropdown.selectItem(itemByValue(dropdown, 'a'));
     dropdown.selectItem(itemByValue(dropdown, 'b'));
-    expect(dropdown.trigger.querySelectorAll('.sd-chip').length).toBe(2);
+    expect(dropdown.trigger.querySelectorAll('.sd-chip')).toHaveLength(2);
     mousedown(dropdown.trigger.querySelector('.sd-chip .sd-chip-remove')!);
     expect(dropdown.getSelectedValue()).toEqual(['b']);
     expect(select.querySelector<HTMLOptionElement>("option[value='a']")!.selected).toBe(false);
@@ -259,7 +259,7 @@ describe('refresh + syncFromElement', () => {
     dropdown.addOption('a', 'A');
     dropdown.addOption('b', 'B');
     dropdown.refresh();
-    expect(dropdown.items.length).toBe(2);
+    expect(dropdown.items).toHaveLength(2);
     dropdown.destroy();
   });
 

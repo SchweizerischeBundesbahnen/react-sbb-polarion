@@ -1,0 +1,31 @@
+# Codecov reports the numbers; it does not decide the build.
+#
+# The authoritative gate is `thresholds` in vitest.config.ts (100% of lines and functions), enforced by
+# the CI job and by the pre-commit hook. Codecov computes its percentages from the same lcov but rounds
+# and aggregates differently, so letting it post its own pass/fail would put a second, differently-
+# derived red X on a PR that the gate already judged. Hence `informational: true` on both statuses:
+# the numbers and the per-file diff show up, the verdict stays in one place.
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
+
+comment:
+  layout: 'condensed_header, diff, files'
+  # Post even when the diff does not move coverage - "unchanged" is the answer worth seeing on a PR that
+  # touches src/.
+  require_changes: false
+
+# Mirrors coverage.exclude in vitest.config.ts. The lcov already omits these (that config decides what
+# is instrumented), so this only matters if the vitest excludes are ever relaxed - at which point the
+# vendored code would otherwise start dragging the reported number around.
+ignore:
+  - 'src/generic/**' # vendored, transitional foreign code - not RSP-authored
+  - 'src/**/*.d.ts'
+  - 'src/types.ts'
+  - 'src/index.ts' # barrel re-exports only
+  - 'test/**'

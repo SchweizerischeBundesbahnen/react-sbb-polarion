@@ -49,7 +49,7 @@ export type SearchableSelectProps = SingleSelectProps | MultiSelectProps;
  * chip per selection on the trigger. It changes the shape of `value` / `onChange` (a string list instead
  * of a string), which is why the two modes are separate prop types over one component.
  */
-export default function SearchableSelect(props: SearchableSelectProps) {
+export default function SearchableSelect(props: Readonly<SearchableSelectProps>) {
   const { options, placeholder = '', disabled = false, loading = false, id } = props;
   const multiple = props.multiple === true;
   // allowEmpty is meaningless for a multi-select: no selection is already a valid state there.

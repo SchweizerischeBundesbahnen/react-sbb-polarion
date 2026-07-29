@@ -21,7 +21,10 @@ interface RevisionsTableProps {
 /** Group a numeric revision name with spaces as the thousands separator (e.g. 3388 -> "3 388"),
  * mirroring the generic `insertRevisionSpaces`. Non-numeric names are returned unchanged. */
 function formatRevision(name: string): string {
-  return /^\d+$/.test(name) ? name.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : name;
+  // The lookahead is anchored to the end rather than written as `(\d{3})+(?!\d)`: the guard above
+  // already established the whole name is digits, so the two are equivalent, and anchoring keeps the
+  // repeated group from backtracking over every split.
+  return /^\d+$/.test(name) ? name.replace(/\B(?=(?:\d{3})+$)/g, ' ') : name;
 }
 
 /**
@@ -32,7 +35,13 @@ function formatRevision(name: string): string {
  *
  * Decoupled from any specific extension: the REST call comes in through the `loadRevisions` prop.
  */
-export default function RevisionsTable({ name, scope, reloadToken, loadRevisions, onRevert }: RevisionsTableProps) {
+export default function RevisionsTable({
+  name,
+  scope,
+  reloadToken,
+  loadRevisions,
+  onRevert,
+}: Readonly<RevisionsTableProps>) {
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [error, setError] = useState(false);
 

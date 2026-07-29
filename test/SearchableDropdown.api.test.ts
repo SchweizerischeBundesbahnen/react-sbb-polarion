@@ -85,7 +85,7 @@ describe('build-mode API: addOption handle + open re-render', () => {
     dropdown.addOption('a', 'A');
     mousedown(dropdown.trigger);
     dropdown.empty();
-    expect(dropdown.itemsEl.querySelectorAll('.option').length).toBe(0);
+    expect(dropdown.itemsEl.querySelectorAll('.option')).toHaveLength(0);
     expect(dropdown.itemsEl.querySelector('.sd-empty')).not.toBeNull();
     dropdown.destroy();
   });
@@ -125,7 +125,7 @@ describe('selectValue + selectMultipleValues open re-render', () => {
     dropdown.addOption('b', 'B');
     mousedown(dropdown.trigger);
     dropdown.selectMultipleValues(['a', 'b']);
-    expect(dropdown.itemsEl.querySelectorAll('input[type="checkbox"]:checked').length).toBe(2);
+    expect(dropdown.itemsEl.querySelectorAll('input[type="checkbox"]:checked')).toHaveLength(2);
     dropdown.destroy();
   });
 });

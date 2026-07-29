@@ -19,7 +19,7 @@ interface BreadcrumbInjectorProps {
  * "[icon] {title}" while the app URL is active and never touches Polarion's own Administration pages.
  * Renders nothing.
  */
-export default function BreadcrumbInjector({ marker, title, icon }: BreadcrumbInjectorProps) {
+export default function BreadcrumbInjector({ marker, title, icon }: Readonly<BreadcrumbInjectorProps>) {
   useEffect(() => {
     try {
       // Target the top shell window (which owns the app-header breadcrumb), not the immediate parent:
