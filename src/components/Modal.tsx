@@ -67,17 +67,17 @@ export default function Modal({
       aria-label={title}
       // Makes the dialog itself eligible for the focus the layout effect gives it.
       tabIndex={-1}
-      // Escape fires `cancel` before the browser closes the dialog. Preventing that default keeps the
-      // element controlled by the `open` prop, so Escape closes it the same way the buttons do -
-      // through the parent - rather than leaving React believing it is still open.
+      // Light dismiss, done by the browser: a click outside the box is a close request, exactly as
+      // Escape is. That is what removes the need for an onClick that compared event.target with the
+      // dialog - the backdrop is a pseudo-element and was never really clickable in the first place.
+      closedby="any"
+      // Both close requests - Escape and the light dismiss above - fire `cancel` before the browser
+      // closes anything. Preventing that default keeps the element controlled by the `open` prop, so a
+      // dismissal closes it the same way the buttons do, through the parent, rather than leaving React
+      // believing it is still open.
       onCancel={(event) => {
         event.preventDefault();
         onCancel();
-      }}
-      // A click on the backdrop is reported with the dialog itself as the target. The box has no
-      // padding, so anything clicked inside the content hits a child and never matches this.
-      onClick={(event) => {
-        if (event.target === dialogRef.current) onCancel();
       }}
     >
       <header className="rsp-modal-header">

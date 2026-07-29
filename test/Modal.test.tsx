@@ -112,17 +112,26 @@ describe('Modal', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
-  // The backdrop is the dialog's own ::backdrop pseudo-element, so a click on it is reported with the
-  // dialog as the target - there is no separate overlay node to click any more.
-  it('calls onCancel on a backdrop click', () => {
+  // `closedby="any"` makes the browser treat a click outside the box as a close request, so this needs
+  // a real pointer at real coordinates - the backdrop is a pseudo-element and cannot be dispatched at.
+  // The target sits in a corner the dialog never covers; `force` is needed because the backdrop is in
+  // the top layer and would fail the actionability check.
+  it('calls onCancel when the backdrop is clicked', async () => {
     const { onCancel } = openModal();
-    dialog().click();
+    const corner = document.createElement('div');
+    corner.style.cssText = 'position:fixed;left:0;top:0;width:4px;height:4px;';
+    document.body.appendChild(corner);
+    try {
+      await userEvent.click(corner, { force: true });
+    } finally {
+      corner.remove();
+    }
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
-  it('does NOT close when the content inside the dialog is clicked', () => {
+  it('does NOT close when the content inside the dialog is clicked', async () => {
     const { onCancel } = openModal();
-    q<HTMLElement>('.rsp-modal-content').click();
+    await userEvent.click(q<HTMLElement>('.rsp-modal-content'));
     expect(onCancel).not.toHaveBeenCalled();
   });
 
@@ -148,13 +157,12 @@ describe('Modal', () => {
     expect(onOk).not.toHaveBeenCalled();
   });
 
-  // Typing inside the dialog must not dismiss it - only Escape does, and only because the browser
-  // turns it into a `cancel` event. Enter and Space are deliberately not in this list: showModal()
-  // puts focus on the close button, so those two activate it, which is the correct behaviour and a
-  // different test from this one.
+  // Only a close request dismisses the dialog. Enter and Space are in this list precisely because
+  // focus rests on the dialog itself rather than on the close button the focusing steps would have
+  // picked - so neither activates anything, which is the point of focusing the container.
   it('ignores keys other than Escape', async () => {
     const { onCancel } = openModal();
-    await userEvent.keyboard('a{ArrowDown}{Tab}');
+    await userEvent.keyboard('a{Enter}{ }{ArrowDown}{Tab}');
     expect(onCancel).not.toHaveBeenCalled();
   });
 });
