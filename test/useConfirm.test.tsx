@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { flushSync } from 'react-dom';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import useConfirm from '../src/hooks/useConfirm';
 import type { ConfirmOptions } from '../src/hooks/useConfirm';
 
@@ -88,7 +89,9 @@ describe('useConfirm', () => {
     const answer = host.ask('Delete it?');
     await vi.waitFor(() => expect(dialog()).not.toBeNull());
 
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    // A real key press: the modal <dialog> is dismissed by the browser, which turns Escape into a
+    // `cancel` event on the element. A hand-dispatched KeyboardEvent never produces one.
+    await userEvent.keyboard('{Escape}');
 
     await expect(answer).resolves.toBe(false);
   });

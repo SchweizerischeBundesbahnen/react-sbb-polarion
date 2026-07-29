@@ -1,16 +1,27 @@
 /* Shared modal - the SBB 2606 look (dark header, white body). Colors read the generic design tokens
    where relevant, with literal fallbacks so the modal is styled even standalone (vite dev). */
-.rsp-modal-overlay {
-  position: fixed;
-  inset: 0;
+/* The dialog lives in the top layer, so it needs neither a positioned overlay element nor a z-index -
+   nothing on the page can paint over it. */
+.rsp-modal::backdrop {
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+}
+
+/* The dialog takes focus itself on open (tabindex -1), which the UA would draw a ring around. The ring
+   is meaningful on controls a keyboard user moved to; this container is not reachable by Tab and was
+   focused programmatically, so the ring here only says "the dialog opened", which the dialog already
+   says by existing. The controls inside keep their own focus indicators. */
+.rsp-modal:focus {
+  outline: none;
 }
 
 .rsp-modal {
+  /* A <dialog> arrives with a 2px inset border and 1em of padding from the UA stylesheet. Both are
+     reset: the dark header has to meet the edges, and any padding would belong to the dialog element
+     itself, so clicking it would read as a backdrop click and dismiss the dialog. `margin: auto`
+     is what centres it in the top layer. */
+  border: none;
+  padding: 0;
+  margin: auto;
   background: #fff;
   color: var(--sbb-color-text, #1a1a1a);
   border-radius: 6px;

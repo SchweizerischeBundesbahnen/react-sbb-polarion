@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import Modal from '../src/components/Modal';
-import { keydown } from './helpers';
 
 // Behavior tests for the shared Modal (screenshot-free, so they run on Windows and Docker alike).
 // Appearance is covered in Modal.visual.test.tsx.
@@ -17,7 +17,6 @@ const q = <T extends Element>(sel: string): T => {
   if (!el) throw new Error(`not found: ${sel}`);
   return el;
 };
-const overlay = () => q<HTMLElement>('.rsp-modal-overlay');
 const dialog = () => q<HTMLElement>('.rsp-modal');
 const closeBtn = () => q<HTMLButtonElement>('.rsp-modal-close');
 const cancelBtn = () => q<HTMLButtonElement>('.rsp-modal-footer .sbb-btn--secondary');
@@ -94,29 +93,36 @@ describe('Modal', () => {
     expect(okBtn().textContent).toBe('Export');
   });
 
-  it('exposes dialog ARIA semantics', () => {
+  // The dialog role and aria-modal are implicit in a <dialog> shown with showModal(), so they are not
+  // present as attributes - asserting on them would only re-test redundant ARIA we deliberately do not
+  // write. What matters is that it really is a modal dialog element, open, and named by its title.
+  it('exposes dialog semantics natively', () => {
     openModal({ title: 'Paper size' });
-    const d = dialog();
-    expect(d.getAttribute('role')).toBe('dialog');
-    expect(d.getAttribute('aria-modal')).toBe('true');
+    const d = dialog() as HTMLDialogElement;
+    expect(d.tagName).toBe('DIALOG');
+    expect(d.open).toBe(true);
     expect(d.getAttribute('aria-label')).toBe('Paper size');
   });
 
-  it('calls onCancel on Escape', () => {
+  // A real key press, not a synthetic keydown: Escape on a modal <dialog> is handled by the browser,
+  // which fires `cancel` on the element. Dispatching a KeyboardEvent by hand would not produce it.
+  it('calls onCancel on Escape', async () => {
     const { onCancel } = openModal();
-    keydown(document.body, 'Escape');
+    await userEvent.keyboard('{Escape}');
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onCancel on an overlay click', () => {
-    const { onCancel } = openModal();
-    overlay().click();
-    expect(onCancel).toHaveBeenCalledTimes(1);
-  });
-
-  it('does NOT close when the dialog body is clicked (click does not bubble to the overlay)', () => {
+  // The backdrop is the dialog's own ::backdrop pseudo-element, so a click on it is reported with the
+  // dialog as the target - there is no separate overlay node to click any more.
+  it('calls onCancel on a backdrop click', () => {
     const { onCancel } = openModal();
     dialog().click();
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT close when the content inside the dialog is clicked', () => {
+    const { onCancel } = openModal();
+    q<HTMLElement>('.rsp-modal-content').click();
     expect(onCancel).not.toHaveBeenCalled();
   });
 
@@ -142,11 +148,13 @@ describe('Modal', () => {
     expect(onOk).not.toHaveBeenCalled();
   });
 
-  // The document-level listener sees every keystroke while the dialog is open, so it must react to
-  // Escape alone - typing into a field inside the dialog cannot be allowed to close it.
-  it('ignores keys other than Escape', () => {
+  // Typing inside the dialog must not dismiss it - only Escape does, and only because the browser
+  // turns it into a `cancel` event. Enter and Space are deliberately not in this list: showModal()
+  // puts focus on the close button, so those two activate it, which is the correct behaviour and a
+  // different test from this one.
+  it('ignores keys other than Escape', async () => {
     const { onCancel } = openModal();
-    ['Enter', 'a', 'Tab', ' ', 'ArrowDown'].forEach((key) => keydown(document.body, key));
+    await userEvent.keyboard('a{ArrowDown}{Tab}');
     expect(onCancel).not.toHaveBeenCalled();
   });
 });

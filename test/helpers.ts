@@ -42,7 +42,10 @@ export async function parkPointer(): Promise<void> {
   spot.style.cssText = 'position:fixed;right:0;bottom:0;width:4px;height:4px;z-index:2147483647;';
   document.body.appendChild(spot);
   try {
-    await userEvent.hover(spot);
+    // `force` skips the actionability check, which would otherwise hang here: a modal <dialog> puts its
+    // ::backdrop in the top layer, above every z-index, so nothing behind it can be "hit" by a pointer.
+    // The mouse still moves to the spot, which is all this needs.
+    await userEvent.hover(spot, { force: true });
   } finally {
     spot.remove();
   }
