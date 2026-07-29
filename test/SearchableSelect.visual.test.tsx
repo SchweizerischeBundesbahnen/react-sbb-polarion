@@ -1,5 +1,7 @@
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
+import SearchableSelect, { type SelectOption } from '../src/components/SearchableSelect';
 import SearchableDropdown from '../src/generic/SearchableDropdown.js';
 import { mousedown } from './helpers';
 
@@ -17,9 +19,11 @@ beforeAll(() => {
 // Windows/macOS), so isolating the screenshots here keeps the behavior suites passing everywhere.
 // References live in test/expected/ and MUST be generated in Docker (npm run test:update:docker).
 //
-// Every state is rendered via the vendored class into a .sbb-ui host - the single-select appearance is
-// identical whether entered through the React <SearchableSelect> wrapper or the class, so this stays
-// uniform and React-free. Closed states screenshot the host; open states screenshot the .sd-portal.
+// Most states are rendered via the vendored class into a .sbb-ui host - the appearance is identical
+// whether entered through the React <SearchableSelect> wrapper or the class, so those stay uniform and
+// React-free. Closed states screenshot the host; open states screenshot the .sd-portal. The last group
+// is the exception: the two rules SearchableSelect.css owns live in the wrapper's own stylesheet, which
+// only loads when the component is imported, so those states render the React component.
 
 // SBB-red rounded square, url-encoded so it is safe as an <img> data: URI (stable, no network).
 const ICON =
@@ -226,5 +230,58 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - long va
       rememberSelection: false,
     });
     await expect(page.getByTestId('editable-overflow')).toMatchScreenshot('editable-overflow-value');
+  });
+});
+
+// The two states styled by SearchableSelect.css, the wrapper's own stylesheet. They render the React
+// component, because importing it is what loads that stylesheet.
+const DECORATED: SelectOption[] = [
+  { id: 'a', name: 'Parent', iconURL: ICON },
+  { id: 'b', name: 'Child', iconURL: ICON, indent: true },
+  { id: 'c', name: 'Another parent' },
+];
+
+// The dropdown keeps a backreference on the element it wrapped, which is how a React-rendered control
+// reaches its instance for openStable().
+const instanceOf = (select: HTMLSelectElement) =>
+  (select as HTMLSelectElement & { _searchableDropdown: SearchableDropdown })._searchableDropdown;
+
+describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper stylesheet', () => {
+  afterEach(cleanup);
+
+  it('open list with an indented child option', async () => {
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect value="a" onChange={() => {}} options={DECORATED} />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('indented-option-open-list');
+  });
+
+  it('multi-select chips in a flex row keep the trailing control visible', async () => {
+    // Fixates the min-width guard: without it the chips box keeps the width of its widest chip and
+    // pushes the button out of the row, which is the regression the rule exists for.
+    render(
+      <div className="sbb-ui visual-host" data-testid="multi-flex-row" style={{ width: 240, padding: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+          <SearchableSelect
+            multiple
+            value={['a', 'c']}
+            onChange={() => {}}
+            options={[
+              { id: 'a', name: 'First' },
+              { id: 'c', name: LONG },
+            ]}
+          />
+          <button type="button" style={{ flex: '0 0 auto' }}>
+            ...
+          </button>
+        </div>
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelectorAll('.sd-chip').length).toBe(2));
+    await expect(page.getByTestId('multi-flex-row')).toMatchScreenshot('multi-in-flex-row');
   });
 });

@@ -4,10 +4,11 @@ import { cleanup, render } from 'vitest-browser-react';
 import SearchableSelect, { type SelectOption } from '../src/components/SearchableSelect';
 import { flush, keydown, mousedown, typeInto } from './helpers';
 
-// Single-select behavior tests driven through the REAL React wrapper (the feature RSP exposes), asserting
-// observable DOM - so they survive the eventual move of SearchableDropdown.js's logic into
-// SearchableSelect.tsx. Vanilla-only features (multiselect, build mode, icons, ...) are covered against
-// the vendored class in SearchableDropdown.test.ts.
+// Behavior tests driven through the REAL React wrapper (the feature RSP exposes), asserting observable
+// DOM - so they survive the eventual move of SearchableDropdown.js's logic into SearchableSelect.tsx.
+// Both modes of the component live here: single-select first, then the `multiple` mode (chips, checkbox
+// options) and the per-option icon / indent props. Features reachable only through the class (build mode,
+// editable mode, ...) stay covered in SearchableDropdown.test.ts.
 
 const OPTIONS: SelectOption[] = [
   { id: 'a', name: 'First' },
@@ -60,6 +61,36 @@ function GrowableHost() {
   );
 }
 
+// Multi-select host: the same component, the array-shaped contract.
+function MultiControlled(props: {
+  initial?: string[];
+  options?: SelectOption[];
+  placeholder?: string;
+  loading?: boolean;
+  onValues?: (v: string[]) => void;
+}) {
+  const { initial = [], options = OPTIONS, placeholder = '', loading = false, onValues } = props;
+  const [values, setValues] = useState<string[]>(initial);
+  return (
+    <div className="sbb-ui" style={{ width: 240, padding: 16 }}>
+      <SearchableSelect
+        multiple
+        value={values}
+        onChange={(v) => {
+          setValues(v);
+          onValues?.(v);
+        }}
+        options={options}
+        placeholder={placeholder}
+        loading={loading}
+      />
+      <button type="button" data-testid="select-bc" onClick={() => setValues(['b', 'c'])}>
+        pick b + c
+      </button>
+    </div>
+  );
+}
+
 const q = <T extends Element>(sel: string): T => {
   const el = document.querySelector<T>(sel);
   if (!el) throw new Error(`not found: ${sel}`);
@@ -77,9 +108,18 @@ const optionByText = (text: string): HTMLElement => {
   return found;
 };
 
+const multiTrigger = () => q<HTMLElement>('.searchable-dropdown .sd-trigger-multi');
+const chips = () => Array.from(document.querySelectorAll<HTMLElement>('.sd-chip .sd-chip-label'));
+const chipLabels = () => chips().map((c) => (c.textContent ?? '').trim());
+
 async function mount(props: Parameters<typeof Controlled>[0] = {}): Promise<void> {
   render(<Controlled {...props} />);
   await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+}
+
+async function mountMulti(props: Parameters<typeof MultiControlled>[0] = {}): Promise<void> {
+  render(<MultiControlled {...props} />);
+  await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger-multi')).not.toBeNull());
 }
 
 afterEach(() => {
@@ -204,5 +244,148 @@ describe('SearchableSelect (React wrapper, single-select)', () => {
 
     mousedown(trigger());
     expect(labels()).toEqual(['First', 'Second', 'Third']);
+  });
+});
+
+describe('SearchableSelect (React wrapper, multi-select)', () => {
+  it('renders the placeholder while nothing is selected', async () => {
+    await mountMulti({ placeholder: 'All items' });
+    expect(chipLabels()).toEqual([]);
+    expect(q('.sd-trigger-multi .sd-placeholder').textContent).toBe('All items');
+  });
+
+  it('renders one chip per selected value, in option order', async () => {
+    await mountMulti({ initial: ['c', 'a'] });
+    // The chips follow the option list, not the order the values were passed in.
+    expect(chipLabels()).toEqual(['First', 'Third']);
+  });
+
+  it('checking an option adds it to the value list and keeps the popup open', async () => {
+    const onValues = vi.fn();
+    await mountMulti({ initial: ['a'], onValues });
+    mousedown(multiTrigger());
+    mousedown(optionByText('Second'));
+    expect(onValues).toHaveBeenCalledWith(['a', 'b']);
+    // Picking one of several is the normal case, so the list stays open (unlike single-select).
+    expect(container().classList.contains('open')).toBe(true);
+    await vi.waitFor(() => expect(chipLabels()).toEqual(['First', 'Second']));
+  });
+
+  it('checking a selected option again removes it from the value list', async () => {
+    const onValues = vi.fn();
+    await mountMulti({ initial: ['a', 'b'], onValues });
+    mousedown(multiTrigger());
+    mousedown(optionByText('First'));
+    expect(onValues).toHaveBeenCalledWith(['b']);
+  });
+
+  it('renders the popup options as checkboxes reflecting the selection', async () => {
+    await mountMulti({ initial: ['b'] });
+    mousedown(multiTrigger());
+    const boxes = options().map((o) => o.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
+    expect(boxes.map((b) => b.checked)).toEqual([false, true, false]);
+  });
+
+  it('removing a chip drops that value and leaves the others', async () => {
+    const onValues = vi.fn();
+    await mountMulti({ initial: ['a', 'b'], onValues });
+    mousedown(q<HTMLElement>('.sd-chip .sd-chip-remove'));
+    expect(onValues).toHaveBeenCalledWith(['b']);
+    await vi.waitFor(() => expect(chipLabels()).toEqual(['Second']));
+  });
+
+  it('repaints the chips when the selection is driven from React state', async () => {
+    await mountMulti({ initial: ['a'] });
+    expect(chipLabels()).toEqual(['First']);
+    q<HTMLButtonElement>('[data-testid="select-bc"]').click();
+    await vi.waitFor(() => expect(chipLabels()).toEqual(['Second', 'Third']));
+  });
+
+  it('shows a chip for a selected value whose option arrives after mount', async () => {
+    // The async-load case: the selection is restored (from a cookie, say) before the option list is
+    // fetched. React marks the late option as selected and the dropdown's own observer re-reads it, so
+    // the wrapper needs no extra work - this test is what guarantees that.
+    function LateOptionsHost() {
+      const [options, setOptions] = useState<SelectOption[]>([{ id: 'a', name: 'First' }]);
+      const [values, setValues] = useState<string[]>(['b']);
+      return (
+        <div className="sbb-ui">
+          <button type="button" data-testid="load" onClick={() => setOptions(OPTIONS)}>
+            load
+          </button>
+          <SearchableSelect multiple value={values} onChange={setValues} options={options} />
+        </div>
+      );
+    }
+    render(<LateOptionsHost />);
+    await vi.waitFor(() => expect(document.querySelector('.sd-trigger-multi')).not.toBeNull());
+    expect(chipLabels()).toEqual([]);
+
+    q<HTMLButtonElement>('[data-testid="load"]').click();
+    await vi.waitFor(() => expect(chipLabels()).toEqual(['Second']));
+  });
+
+  it('renders disabled while the option list is loading', async () => {
+    await mountMulti({ loading: true });
+    expect(wrappedSelect().disabled).toBe(true);
+    expect(container().classList.contains('disabled')).toBe(true);
+  });
+
+  it('rebuilds the control when the mode is flipped', async () => {
+    // The dropdown takes `multiselect` at construction time, so the wrapper keys the instance on the
+    // prop: without the rebuild the control would keep showing a single-select trigger.
+    function ModeHost() {
+      const [multiple, setMultiple] = useState(false);
+      const [value, setValue] = useState('a');
+      const [values, setValues] = useState<string[]>(['a', 'b']);
+      return (
+        <div className="sbb-ui">
+          <button type="button" data-testid="flip" onClick={() => setMultiple(true)}>
+            flip
+          </button>
+          {multiple ? (
+            <SearchableSelect multiple value={values} onChange={setValues} options={OPTIONS} />
+          ) : (
+            <SearchableSelect value={value} onChange={setValue} options={OPTIONS} />
+          )}
+        </div>
+      );
+    }
+    render(<ModeHost />);
+    await vi.waitFor(() => expect(document.querySelector('.sd-trigger')).not.toBeNull());
+    expect(trigger()).toHaveValue('First');
+    expect(document.querySelector('.sd-trigger-multi')).toBeNull();
+
+    q<HTMLButtonElement>('[data-testid="flip"]').click();
+    await vi.waitFor(() => expect(document.querySelector('.sd-trigger-multi')).not.toBeNull());
+    expect(chipLabels()).toEqual(['First', 'Second']);
+    // Exactly one control: the previous instance was destroyed, not left behind.
+    expect(document.querySelectorAll('.searchable-dropdown').length).toBe(1);
+  });
+});
+
+describe('SearchableSelect option decorations', () => {
+  const ICON = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E';
+  const DECORATED: SelectOption[] = [
+    { id: 'a', name: 'Parent', iconURL: ICON, iconBg: '#1a3a5c' },
+    { id: 'b', name: 'Child', iconURL: ICON, indent: true },
+    { id: 'c', name: 'Plain' },
+  ];
+
+  it('carries the icon, its background and the indent class onto the popup options', async () => {
+    await mount({ options: DECORATED });
+    mousedown(trigger());
+    const [parent, child, plain] = options();
+    expect(parent.querySelector<HTMLImageElement>('img.option-icon')?.src).toContain('svg');
+    expect(parent.querySelector<HTMLImageElement>('img.option-icon')?.style.backgroundColor).toBe('rgb(26, 58, 92)');
+    expect(child.classList.contains('indented')).toBe(true);
+    expect(parent.classList.contains('indented')).toBe(false);
+    // An option without decorations renders no icon at all.
+    expect(plain.querySelector('img.option-icon')).toBeNull();
+  });
+
+  it('shows the icon of the selected option on the multi-select chip', async () => {
+    await mountMulti({ initial: ['a'], options: DECORATED });
+    expect(q<HTMLImageElement>('.sd-chip img.sd-chip-icon').src).toContain('svg');
   });
 });

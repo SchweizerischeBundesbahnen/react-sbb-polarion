@@ -8,9 +8,10 @@ const clearCookies = () => {
   }
 };
 
-// Behavior tests for vendored-class features the React SearchableSelect wrapper does NOT expose:
-// build mode (CustomSelect-compatible addOption API), multi-select, and the clearable (×) button.
-// Single-select behaviors are covered through the wrapper in SearchableSelect.test.tsx.
+// Behavior tests at the vendored-class level: build mode (CustomSelect-compatible addOption API), the
+// clearable (×) button - neither reachable through the React wrapper - and the class-level contract of
+// multi-select, which the wrapper does expose but drives through a <select multiple>. Everything the
+// wrapper exposes is covered through it in SearchableSelect.test.tsx.
 //
 // Ported behavior-level from generic's Mocha/Chai/jsdom suite
 // (ch.sbb.polarion.extension.generic, app/src/test/js/modules/SearchableDropdownTest.js) into Vitest
@@ -43,7 +44,7 @@ afterEach(() => {
   clearCookies();
 });
 
-describe('SearchableDropdown - vanilla-only features (ported from generic)', () => {
+describe('SearchableDropdown - class-level features (ported from generic)', () => {
   describe('build mode (CustomSelect-compatible API)', () => {
     const build = () =>
       new SearchableDropdown({
