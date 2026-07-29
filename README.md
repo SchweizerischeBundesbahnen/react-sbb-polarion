@@ -1,5 +1,7 @@
 # @grigoriev/react-sbb-polarion
 
+[![codecov](https://codecov.io/gh/grigoriev/react-sbb-polarion/graph/badge.svg)](https://codecov.io/gh/grigoriev/react-sbb-polarion)
+
 Shared React UI components for the SBB Polarion extensions' React admin apps. Local prototype: not yet
 published to a registry.
 
