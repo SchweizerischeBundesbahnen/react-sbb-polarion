@@ -28,6 +28,10 @@ npm run build   # -> dist/index.js (ESM) + dist/*.d.ts
 `react` / `react-dom` are **peer dependencies** and are left external in the bundle, so the consuming
 app supplies the single React instance at runtime.
 
+`refractor` (the Prism grammars behind `CodeEditor`) is a regular **dependency**, so npm installs it for
+the consumer automatically - but it is left external too, so `dist/index.js` carries an import of it
+rather than a second copy of the grammars, and the consuming app's own Vite build tree-shakes it.
+
 ## Testing
 
 Behavior **and** visual-regression tests run in real Chromium via **Vitest browser mode**. Reference
@@ -192,6 +196,27 @@ extension. It is controlled (`items`, `activeId`, `onSelect`) and selects only: 
 whatever the active tab stands for. It uses that stylesheet's JS-driven variant, so the tab count is
 free; generic's pure-CSS variant caps at four. The tabs stay real radio inputs, visually hidden rather
 than removed, so the bar is still keyboard-reachable and arrow keys switch tabs.
+
+`CodeEditor` is the editor for a settings page whose content is a document rather than a form - a
+textarea with a syntax-highlighted layer painted underneath it. It is controlled (`value`, `onChange`)
+and needs a `language`:
+
+| `language`     | for                                                              |
+| -------------- | ---------------------------------------------------------------- |
+| `'properties'` | a `.properties` configuration (the DMS connectors)               |
+| `'css'`        | a stylesheet (the exporters' CSS and style packages)             |
+| `'html'`       | a markup fragment                                                |
+| `'velocity'`   | a Velocity template, markup and all (filename, cover, header)    |
+
+`'velocity'` is Velocity **inside markup** - the grammar is `'html'` extended with directives,
+`$variables` and `#* *#` comments, which is exactly what an exporter template is. So there is no
+`'html+velocity'`: use `'velocity'` whenever a template may contain directives, `'html'` only for a
+fragment that never does.
+
+The grammars are Prism's own, through [`refractor`](https://github.com/wooorm/refractor), and the colors
+are Prism's default theme - the one the legacy `<code-input>` pages loaded, so a migrated page keeps the
+highlighting its users know. Give the wrapper a height through `className`; it carries only a minimum of
+its own.
 
 `AuthorizationSettings` is the whole "which roles may do this" administration page - the global and
 project roles of the current scope as checkboxes, the Save / Cancel / Default / Revisions toolbar and
