@@ -1,4 +1,5 @@
 import type { Revision, SendRequest } from '../types';
+import { jsonOrThrow, okOrThrow } from './rest';
 
 /** The single, always-present setting name the generic framework uses when there are no named configs. */
 const DEFAULT_NAME = 'Default';
@@ -23,34 +24,6 @@ export interface AuthorizationService {
   loadDefaultContent(): Promise<AuthorizationContent>;
   loadRevisions(name: string, scope: string): Promise<Revision[]>;
   defaultName: string;
-}
-
-/** Extracts a human-readable message from a failed response. */
-async function errorMessage(response: Response): Promise<string> {
-  const text = await response.text().catch(() => '');
-  if (text) {
-    try {
-      const parsed = JSON.parse(text) as { message?: string; errorMessage?: string };
-      if (parsed?.message) return parsed.message;
-      if (parsed?.errorMessage) return parsed.errorMessage;
-    } catch {
-      return text;
-    }
-  }
-  return `HTTP ${response.status}`;
-}
-
-async function jsonOrThrow<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    throw new Error(await errorMessage(response));
-  }
-  return (await response.json()) as T;
-}
-
-async function okOrThrow(response: Response): Promise<void> {
-  if (!response.ok) {
-    throw new Error(await errorMessage(response));
-  }
 }
 
 /**
