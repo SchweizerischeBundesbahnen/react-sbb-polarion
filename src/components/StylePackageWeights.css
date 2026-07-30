@@ -83,8 +83,13 @@
   line-height: 0;
 }
 
+/* #767676 where generic has #9a9a9a, the third of this file's contrast deviations (see the read-only row
+   below). The dots are the only thing saying a row can be dragged, so they are a graphical object that
+   has to convey itself: generic's grey is 2.8:1 on the row and 2.6:1 once the row takes its hover tint,
+   under the 3:1 graphics needs. This clears both at 4.5:1 and 4.2:1 and still reads as light grey next to
+   the near-black name. */
 .style-package-weights .weight-item .drag-handle {
-  color: #9a9a9a;
+  color: #767676;
   cursor: grab;
   border-radius: 3px;
 }
