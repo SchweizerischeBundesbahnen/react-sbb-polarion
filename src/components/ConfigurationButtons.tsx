@@ -8,7 +8,12 @@ interface ConfigurationButtonsProps {
    * provided, so a page that has no default (e.g. excel-importer's Mappings) hides it by omitting it.
    */
   onRevertToDefault?: () => void;
-  onToggleRevisions: () => void;
+  /**
+   * "Show revisions" handler. Optional for the same reason as `onRevertToDefault`: a page whose setting
+   * keeps no revisions (StylePackageWeights, whose endpoint is only GET and POST) hides the button by
+   * omitting it.
+   */
+  onToggleRevisions?: () => void;
   /** Whether the revisions table is currently shown; drives the Revisions button's aria-pressed. */
   revisionsShown?: boolean;
 }
@@ -19,7 +24,8 @@ interface ConfigurationButtonsProps {
  * ported settings page shares one toolbar. The buttons are the unified control look (`sbb-btn
  * sbb-btn--control`) with the same `.sbb-icon-*` glyphs as the legacy JSP; the `--sbb-*` button tokens
  * resolve from the app's `body.sbb-ui` / `.standard-admin-page` scope. Each action is a callback prop;
- * the component holds no state. The Default button is optional (see `onRevertToDefault`).
+ * the component holds no state. Save and Cancel are always there; Default and Revisions render only
+ * when their handler is given, since not every settings page has either.
  */
 export default function ConfigurationButtons({
   onSave,
@@ -55,16 +61,18 @@ export default function ConfigurationButtons({
             <span>Default</span>
           </button>
         )}
-        <button
-          type="button"
-          className="sbb-btn sbb-btn--control"
-          title="Toggle list of revisions"
-          aria-pressed={revisionsShown}
-          onClick={onToggleRevisions}
-        >
-          <span className="button-image sbb-icon-select-revision" aria-hidden="true" />
-          <span>Revisions</span>
-        </button>
+        {onToggleRevisions && (
+          <button
+            type="button"
+            className="sbb-btn sbb-btn--control"
+            title="Toggle list of revisions"
+            aria-pressed={revisionsShown}
+            onClick={onToggleRevisions}
+          >
+            <span className="button-image sbb-icon-select-revision" aria-hidden="true" />
+            <span>Revisions</span>
+          </button>
+        )}
       </div>
     </div>
   );

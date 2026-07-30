@@ -43,13 +43,15 @@ function renderButtons(
     revisionsShown?: boolean;
     /** Render without onRevertToDefault so the Default button is hidden. */
     omitDefault?: boolean;
+    /** Render without onToggleRevisions so the Revisions button is hidden. */
+    omitRevisions?: boolean;
   } = {},
 ) {
   teardown();
   const onSave = overrides.onSave ?? vi.fn();
   const onCancel = overrides.onCancel ?? vi.fn();
   const onRevertToDefault = overrides.omitDefault ? undefined : (overrides.onRevertToDefault ?? vi.fn());
-  const onToggleRevisions = overrides.onToggleRevisions ?? vi.fn();
+  const onToggleRevisions = overrides.omitRevisions ? undefined : (overrides.onToggleRevisions ?? vi.fn());
   container = document.createElement('div');
   container.className = 'sbb-ui';
   document.body.appendChild(container);
@@ -79,6 +81,18 @@ describe('ConfigurationButtons', () => {
     renderButtons({ omitDefault: true });
     expect(buttons().map((b) => (b.textContent ?? '').trim())).toEqual(['Save', 'Cancel', 'Revisions']);
     expect(document.querySelector('.sbb-icon-revert')).toBeNull();
+  });
+
+  it('hides the Revisions button when onToggleRevisions is not provided', () => {
+    // StylePackageWeights: its endpoint is GET and POST only, so there are no revisions to show.
+    renderButtons({ omitRevisions: true });
+    expect(buttons().map((b) => (b.textContent ?? '').trim())).toEqual(['Save', 'Cancel', 'Default']);
+    expect(document.querySelector('.sbb-icon-select-revision')).toBeNull();
+  });
+
+  it('leaves only Save and Cancel when neither optional handler is given', () => {
+    renderButtons({ omitDefault: true, omitRevisions: true });
+    expect(buttons().map((b) => (b.textContent ?? '').trim())).toEqual(['Save', 'Cancel']);
   });
 
   it('renders each button with its .sbb-icon-* glyph', () => {
