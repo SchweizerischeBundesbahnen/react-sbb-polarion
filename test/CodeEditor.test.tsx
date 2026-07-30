@@ -2,7 +2,7 @@ import { flushSync } from 'react-dom';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import CodeEditor, { type CodeLanguage } from '../src/components/CodeEditor';
+import CodeEditor, { type CodeLanguage, renderNode } from '../src/components/CodeEditor';
 
 // Behavior tests for the code editor (screenshot-free, so they run on any host). The look - token
 // colors and the highlight layer sitting exactly under the text - is covered in
@@ -74,6 +74,53 @@ function renderEditor(
       ),
   };
 }
+
+describe('renderNode', () => {
+  // Driven directly, because refractor's own tree never takes these two paths - it holds nothing but
+  // text and `<span>`s whose className is a list. hast's node and property types are wider than that,
+  // so the narrowing has to be there; these cases pin down what it does with the rest instead of
+  // leaving it to be discovered by a blank editor one day.
+  const renderToDom = (node: Parameters<typeof renderNode>[0]): string => {
+    teardown();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    flushSync(() => root!.render(<>{renderNode(node, 0)}</>));
+    return container.innerHTML;
+  };
+
+  it('renders a text node as its text', () => {
+    expect(renderToDom({ type: 'text', value: 'key=value' })).toBe('key=value');
+  });
+
+  it('renders an element as a span carrying its class names', () => {
+    expect(
+      renderToDom({
+        type: 'element',
+        tagName: 'span',
+        properties: { className: ['token', 'comment'] },
+        children: [{ type: 'text', value: '# c' }],
+      }),
+    ).toBe('<span class="token comment"># c</span>');
+  });
+
+  it('renders an element whose class names are missing as an unclassed span', () => {
+    expect(
+      renderToDom({
+        type: 'element',
+        tagName: 'span',
+        properties: {},
+        children: [{ type: 'text', value: 'plain' }],
+      }),
+    ).toBe('<span>plain</span>');
+  });
+
+  it('drops a node that is neither text nor an element', () => {
+    // A hast comment: representable by the type, never produced by prism. Dropped, not rendered as
+    // text - a stray "<!-- -->" in the highlight layer would push every glyph after it out of line.
+    expect(renderToDom({ type: 'comment', value: 'not from prism' })).toBe('');
+  });
+});
 
 describe('CodeEditor languages', () => {
   it('highlights a .properties document as comment, key, separator and value', () => {

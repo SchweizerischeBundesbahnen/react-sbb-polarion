@@ -55,8 +55,12 @@ interface CodeEditorProps {
  * Rendering the tree as React elements - rather than feeding `Prism.highlight()`'s HTML string to
  * `dangerouslySetInnerHTML` - is the reason refractor is used at all: no innerHTML in a library whose
  * components render inside Polarion's iframe under a strict CSP.
+ *
+ * Exported for the unit tests, which reach the two defensive paths that refractor's own output never
+ * takes (a node that is neither text nor an element, a `className` that is not a list); consumers use
+ * the component.
  */
-function renderNode(node: RootContent, key: number): ReactNode {
+export function renderNode(node: RootContent, key: number): ReactNode {
   if (node.type === 'text') {
     return node.value;
   }

@@ -59,7 +59,7 @@ export default defineConfig({
       // its tests are still being written, without the build stopping.
       //
       // Read the printed report, not just the exit code. Passing the gate says nothing was catastrophic;
-      // it does not say the new code is covered. What the floor cannot express is that five guards are
+      // it does not say the new code is covered. What the floor cannot express is that four guards are
       // unreachable from a test and always will be, so 100% is not attainable anyway:
       //   - BreadcrumbInjector `!shellDocument?.head` - only true for a cross-origin top window, and
       //     the runner is same-origin with its own shell.
@@ -68,10 +68,10 @@ export default defineConfig({
       //     replacing it with a non-null assertion would turn a no-op into a crash.
       //   - About `getAttribute('href') ?? ''` - the querySelector is `a[href^="#"]`, so the attribute
       //     is always there.
-      //   - CodeEditor `node.type !== 'element'` (and the non-array `className` beside it) - refractor's
-      //     tree holds nothing but text and `<span>`s, but hast's RootContent also admits comment and
-      //     doctype nodes, so narrowing to Element needs the guard. A cast instead would trade a
-      //     dead branch for a lie to the type checker.
+      //
+      // CodeEditor's own two defensive paths - a hast node that is neither text nor element, a
+      // `className` that is not a list - are NOT in that category: `renderNode` is exported, so the
+      // tests drive them directly instead of leaving them to the report.
       //
       // Behavior-only and full-suite give the same numbers (the visual tests render components the
       // behavior tests already exercise), so the gate holds for both the local behavior-only run and
