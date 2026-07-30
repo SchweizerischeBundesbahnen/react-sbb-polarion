@@ -15,7 +15,12 @@ export default defineConfig({
       cssFileName: 'style',
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', 'sonner'],
+      // `refractor` (CodeEditor's Prism grammars) is a real dependency rather than a peer one, but it
+      // stays external all the same: bundling it would ship a second copy inside dist/index.js on top
+      // of the one npm installs into the consumer's node_modules, and the consuming app's own Vite build
+      // tree-shakes it better than this one can. The regex covers its subpath entries (refractor/core,
+      // refractor/velocity, ...), which are separate module ids to rollup.
+      external: [/^refractor(\/|$)/, 'react', 'react-dom', 'react/jsx-runtime', 'sonner'],
     },
     // Inline all bundled assets (the control-token SVG icons) as base64 into style.css, so the
     // emitted stylesheet is fully self-contained - no separate asset files to serve alongside it.

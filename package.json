@@ -77,5 +77,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "refractor": "^5.0.0"
   }
 }

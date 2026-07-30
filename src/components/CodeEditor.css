@@ -1,5 +1,5 @@
 /*
- * .properties editor - a textarea with a syntax-highlighted layer painted underneath it.
+ * Code editor - a textarea with a syntax-highlighted layer painted underneath it.
  *
  * The two layers MUST agree on every metric that affects where a glyph lands (font, size, line
  * height, tab size, padding, white-space) or the highlight drifts away from the text the user sees.
@@ -102,20 +102,77 @@
   color: #a0a0a0;
 }
 
-/* Token colors, matching prism's default theme (comment / attr-name / punctuation / attr-value), which
-   is the theme the legacy admin pages loaded. */
-.code-editor__comment {
+/* Token colors: prism's default theme, the one the legacy <code-input> admin pages loaded, so a page
+   moved to React keeps the colors its users know. The class names are prism's own (the component
+   renders refractor's tree verbatim), which is why every rule below is scoped to the highlight layer -
+   a bare `.token.string` from a library stylesheet would collide with anything else on the page that
+   also highlights code.
+
+   Grouped exactly as prism.css groups them; a group lists the token types our four grammars can emit,
+   so the theme's entries for languages we do not register are left out. Two deliberate omissions from
+   the upstream theme: the translucent white `background` on the operator group (a painted band under
+   transparent textarea text reads as a rendering artifact, not as highlighting) and `cursor: help` on
+   entities (the layer is `pointer-events: none`, so no cursor of its own ever shows). */
+.code-editor__highlight .token.comment,
+.code-editor__highlight .token.prolog,
+.code-editor__highlight .token.doctype,
+.code-editor__highlight .token.cdata {
   color: #708090;
 }
 
-.code-editor__key {
-  color: #690;
-}
-
-.code-editor__separator {
+.code-editor__highlight .token.punctuation {
   color: #999;
 }
 
-.code-editor__value {
+.code-editor__highlight .token.namespace {
+  opacity: 0.7;
+}
+
+/* CSS `property`, markup `tag`, and the numbers/booleans inside Velocity directives. */
+.code-editor__highlight .token.property,
+.code-editor__highlight .token.tag,
+.code-editor__highlight .token.boolean,
+.code-editor__highlight .token.number {
+  color: #905;
+}
+
+/* CSS `selector`, markup `attr-name`, the key of a .properties line, and every string. */
+.code-editor__highlight .token.selector,
+.code-editor__highlight .token.attr-name,
+.code-editor__highlight .token.string,
+.code-editor__highlight .token.builtin {
+  color: #690;
+}
+
+.code-editor__highlight .token.operator,
+.code-editor__highlight .token.entity,
+.code-editor__highlight .token.url {
+  color: #9a6e3a;
+}
+
+/* CSS at-rules, markup `attr-value`, the value of a .properties line, and the `#if` / `#foreach`
+   keyword of a Velocity directive. */
+.code-editor__highlight .token.atrule,
+.code-editor__highlight .token.attr-value,
+.code-editor__highlight .token.keyword {
   color: #07a;
+}
+
+.code-editor__highlight .token.function {
+  color: #dd4a68;
+}
+
+/* Velocity `$variable` references, and CSS `!important`. */
+.code-editor__highlight .token.variable,
+.code-editor__highlight .token.important {
+  color: #e90;
+}
+
+.code-editor__highlight .token.important,
+.code-editor__highlight .token.bold {
+  font-weight: 700;
+}
+
+.code-editor__highlight .token.italic {
+  font-style: italic;
 }

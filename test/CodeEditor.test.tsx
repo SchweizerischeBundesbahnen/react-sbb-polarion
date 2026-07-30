@@ -2,11 +2,15 @@ import { flushSync } from 'react-dom';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import CodeEditor, { tokenizePropertiesLine } from '../src/components/CodeEditor';
+import CodeEditor, { type CodeLanguage } from '../src/components/CodeEditor';
 
-// Behavior tests for the .properties editor (screenshot-free, so they run on any host). The look -
-// token colors and the highlight layer sitting exactly under the text - is covered in
+// Behavior tests for the code editor (screenshot-free, so they run on any host). The look - token
+// colors and the highlight layer sitting exactly under the text - is covered in
 // CodeEditor.visual.test.tsx.
+//
+// The token assertions name prism's own class names, because the component renders refractor's tree
+// verbatim. They are behavior, not implementation detail: which class a run of text lands in is exactly
+// what decides its color, and it is the contract CodeEditor.css styles against.
 
 let container: HTMLDivElement | undefined;
 let root: Root | undefined;
@@ -32,12 +36,16 @@ const highlight = (): HTMLPreElement => {
   if (!el) throw new Error('highlight layer not rendered');
   return el;
 };
-const tokenTexts = (kind: string): string[] =>
-  Array.from(document.querySelectorAll(`.code-editor__${kind}`)).map((el) => el.textContent ?? '');
+/** Texts of the outermost tokens of one prism type - nested ones are skipped, so `<div ...>` counts once. */
+const tokenTexts = (type: string): string[] =>
+  Array.from(document.querySelectorAll<HTMLElement>(`.code-editor__highlight .token.${type}`))
+    .filter((el) => !el.parentElement?.classList.contains(type))
+    .map((el) => el.textContent ?? '');
 
 /** Renders the editor as a controlled component whose value is kept in a local variable. */
 function renderEditor(
   props: Partial<{
+    language: CodeLanguage;
     value: string;
     onChange: (value: string) => void;
     id: string;
@@ -54,65 +62,86 @@ function renderEditor(
   document.body.appendChild(container);
   root = createRoot(container);
   const onChange = props.onChange ?? vi.fn();
+  const language = props.language ?? 'properties';
   flushSync(() => {
-    root!.render(<CodeEditor {...props} value={props.value ?? ''} onChange={onChange} />);
+    root!.render(<CodeEditor {...props} language={language} value={props.value ?? ''} onChange={onChange} />);
   });
   return {
     onChange,
-    rerender: (value: string) =>
-      flushSync(() => root!.render(<CodeEditor {...props} value={value} onChange={onChange} />)),
+    rerender: (value: string, nextLanguage: CodeLanguage = language) =>
+      flushSync(() =>
+        root!.render(<CodeEditor {...props} language={nextLanguage} value={value} onChange={onChange} />),
+      ),
   };
 }
 
-describe('tokenizePropertiesLine', () => {
-  it('returns nothing for an empty line', () => {
-    expect(tokenizePropertiesLine('')).toEqual([]);
+describe('CodeEditor languages', () => {
+  it('highlights a .properties document as comment, key, separator and value', () => {
+    renderEditor({ language: 'properties', value: '# comment\nkey=value\ntimeout : 30' });
+
+    expect(tokenTexts('comment')).toEqual(['# comment']);
+    expect(tokenTexts('attr-name')).toEqual(['key', 'timeout']);
+    expect(tokenTexts('attr-value')).toEqual(['value', '30']);
+    expect(tokenTexts('punctuation')).toEqual(['=', ':']);
   });
 
-  it.each(['# a hash comment', '! a bang comment', '   # indented'])('treats %s as one comment token', (line) => {
-    expect(tokenizePropertiesLine(line)).toEqual([{ kind: 'comment', text: line }]);
+  it('highlights CSS as selectors, properties and at-rules', () => {
+    renderEditor({
+      language: 'css',
+      value: '/* c */\n.cover h1 { color: red }\n@media print { .cover { display: none } }',
+    });
+
+    expect(tokenTexts('comment')).toEqual(['/* c */']);
+    expect(tokenTexts('selector')).toEqual(['.cover h1', '.cover']);
+    expect(tokenTexts('property')).toEqual(['color', 'display']);
+    expect(tokenTexts('atrule')).toEqual(['@media print']);
   });
 
-  it('splits key, separator and value on =', () => {
-    expect(tokenizePropertiesLine('polarion_url=https://example.org')).toEqual([
-      { kind: 'key', text: 'polarion_url' },
-      { kind: 'separator', text: '=' },
-      { kind: 'value', text: 'https://example.org' },
-    ]);
+  it('highlights HTML as tags, attributes and comments', () => {
+    renderEditor({ language: 'html', value: '<!-- c -->\n<div class="cover">text</div>' });
+
+    expect(tokenTexts('comment')).toEqual(['<!-- c -->']);
+    expect(tokenTexts('tag')).toEqual(['<div class="cover">', '</div>']);
+    expect(tokenTexts('attr-name')).toEqual(['class']);
+    expect(tokenTexts('attr-value')).toEqual(['="cover"']);
   });
 
-  it('splits on a colon and keeps the whitespace around the separator with it', () => {
-    expect(tokenizePropertiesLine('key : value')).toEqual([
-      { kind: 'key', text: 'key' },
-      { kind: 'separator', text: ' : ' },
-      { kind: 'value', text: 'value' },
-    ]);
+  it('highlights Velocity directives, variables and its own comment syntax', () => {
+    renderEditor({ language: 'velocity', value: '#* c *#\n#if($doc.title)\n${revision}\n#end' });
+
+    // The #* *# comment carries prism's `comment` alias, so it is themed like any other comment.
+    expect(tokenTexts('comment')).toEqual(['#* c *#']);
+    expect(tokenTexts('keyword')).toEqual(['#if', '#end']);
+    expect(tokenTexts('variable')).toEqual(['$doc.title', '${revision}']);
   });
 
-  it('does not split on an escaped separator inside the key', () => {
-    expect(tokenizePropertiesLine('a\\=b=c')).toEqual([
-      { kind: 'key', text: 'a\\=b' },
-      { kind: 'separator', text: '=' },
-      { kind: 'value', text: 'c' },
-    ]);
+  it('treats markup as markup in the velocity grammar too - the templates are HTML with variables in it', () => {
+    // Same source, two languages: the one distinction that makes a separate `html+velocity` value
+    // unnecessary. `velocity` is the markup grammar extended, so it highlights both.
+    renderEditor({ language: 'html', value: '<b>$doc.id</b>' });
+    expect(tokenTexts('tag')).toEqual(['<b>', '</b>']);
+    expect(tokenTexts('variable')).toEqual([]);
+
+    renderEditor({ language: 'velocity', value: '<b>$doc.id</b>' });
+    expect(tokenTexts('tag')).toEqual(['<b>', '</b>']);
+    expect(tokenTexts('variable')).toEqual(['$doc.id']);
   });
 
-  it('treats a line without a separator as a bare key (a property being typed)', () => {
-    expect(tokenizePropertiesLine('half_typed_key')).toEqual([{ kind: 'key', text: 'half_typed_key' }]);
+  it('re-highlights the same document when only the language changes', () => {
+    const { rerender } = renderEditor({ language: 'html', value: '<b>$doc.id</b>' });
+    expect(tokenTexts('variable')).toEqual([]);
+
+    // Guards the memo key: highlighting is cached, and caching it on the value alone would leave the
+    // markup-only tokens in place here.
+    rerender('<b>$doc.id</b>', 'velocity');
+    expect(tokenTexts('variable')).toEqual(['$doc.id']);
   });
 
-  it('omits the empty key of a line that starts with the separator', () => {
-    expect(tokenizePropertiesLine('=orphan')).toEqual([
-      { kind: 'separator', text: '=' },
-      { kind: 'value', text: 'orphan' },
-    ]);
-  });
+  it('keeps a token that spans newlines in one piece', () => {
+    // Why the highlight layer is not split into one element per line: this comment is a single token.
+    renderEditor({ language: 'css', value: '/* two\n   lines */\n.a { color: red }' });
 
-  it('omits the value of a key with none', () => {
-    expect(tokenizePropertiesLine('empty=')).toEqual([
-      { kind: 'key', text: 'empty' },
-      { kind: 'separator', text: '=' },
-    ]);
+    expect(tokenTexts('comment')).toEqual(['/* two\n   lines */']);
   });
 });
 
@@ -122,18 +151,21 @@ describe('CodeEditor', () => {
 
     expect(textarea().value).toBe('# comment\nkey=value');
     expect(tokenTexts('comment')).toEqual(['# comment']);
-    expect(tokenTexts('key')).toEqual(['key']);
-    expect(tokenTexts('separator')).toEqual(['=']);
-    expect(tokenTexts('value')).toEqual(['value']);
+    expect(tokenTexts('attr-value')).toEqual(['value']);
   });
 
-  it('keeps the highlight layer line count in step with the textarea, trailing newline included', () => {
+  it('paints the layer text as the value plus the single sentinel newline', () => {
     renderEditor({ value: 'a=1\n\nb=2\n' });
 
-    // One rendered line per visual line of the textarea, and the layer's text is the value plus the
-    // single sentinel newline that gives the trailing blank line a line box in the <pre>.
-    expect(document.querySelectorAll('.code-editor__line')).toHaveLength(4);
+    // The sentinel gives the trailing blank line a line box in the <pre>, so the two layers keep the
+    // same height; without it they drift apart by one line.
     expect(highlight().textContent).toBe('a=1\n\nb=2\n\n');
+  });
+
+  it('renders an empty document as just the sentinel', () => {
+    renderEditor({ value: '' });
+
+    expect(highlight().textContent).toBe('\n');
   });
 
   it('reports every edit through onChange', async () => {
@@ -146,7 +178,7 @@ describe('CodeEditor', () => {
 
     // Controlled: the highlight follows only once the parent feeds the new value back in.
     rerender('key=value');
-    expect(tokenTexts('value')).toEqual(['value']);
+    expect(tokenTexts('attr-value')).toEqual(['value']);
   });
 
   it('scrolls the highlight layer to follow the textarea', () => {

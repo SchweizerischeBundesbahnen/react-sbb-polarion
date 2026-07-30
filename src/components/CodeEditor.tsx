@@ -1,9 +1,40 @@
-import { useRef } from 'react';
-import type { ChangeEvent, UIEvent } from 'react';
+import { useMemo, useRef } from 'react';
+import type { ChangeEvent, ReactNode, UIEvent } from 'react';
+import type { Element, RootContent } from 'hast';
+import { refractor } from 'refractor/core';
+import css from 'refractor/css';
+import markup from 'refractor/markup';
+import properties from 'refractor/properties';
+import velocity from 'refractor/velocity';
 import './CodeEditor.css';
 
+/**
+ * The languages the editor can highlight, named as the consuming page thinks of its content.
+ *
+ * `velocity` is Apache Velocity **inside markup** - that is what the grammar is (`markup` extended
+ * with directives, variables and `#* *#` comments), and it is what the exporters' templates are: a
+ * cover page or a header cell is HTML with `$variables` in it. A pure-Velocity mode (tags left as
+ * plain text) would need a grammar derived by hand and no page wants one, so there is deliberately no
+ * separate `html+velocity` value - `velocity` already covers both.
+ */
+export type CodeLanguage = 'css' | 'html' | 'properties' | 'velocity';
+
+// Registering `velocity` also registers `markup` (its grammar is `markup` extended), and `markup`
+// carries the `html` alias, so every CodeLanguage value above resolves to a registered grammar and
+// `language` can be handed to refractor unmapped. Module scope on purpose: registration mutates one
+// shared refractor instance and is idempotent, so it does not belong in a component body.
+refractor.register(css);
+refractor.register(markup);
+refractor.register(properties);
+refractor.register(velocity);
+
 interface CodeEditorProps {
-  /** Current editor content (a Java `.properties` document). Fully controlled. */
+  /**
+   * Which grammar to highlight with. Required: there is no sensible default now that the editor serves
+   * markup, stylesheets, templates and property files alike.
+   */
+  language: CodeLanguage;
+  /** Current editor content. Fully controlled. */
   value: string;
   onChange: (value: string) => void;
   /** DOM id of the textarea, so a `<label htmlFor>` can point at it. */
@@ -16,99 +47,49 @@ interface CodeEditorProps {
   className?: string;
 }
 
-/** One highlighted run of text within a line. */
-interface Token {
-  kind: 'comment' | 'key' | 'separator' | 'value';
-  text: string;
-}
-
-// A comment line starts with # or ! after optional leading whitespace (java.util.Properties).
-const COMMENT = /^\s*[#!]/;
-const IS_SPACE = /\s/;
-
 /**
- * Splits a line at its first unescaped `=` or `:`, with the whitespace around that character counted
- * as part of the separator. Returns null when the line has no separator at all.
+ * Turns one refractor node into React. Prism emits nothing but text and nested `<span>`s carrying
+ * `token <type>` class names, so those are the only two cases; anything else (a hast comment, a
+ * doctype node) cannot occur here and is dropped rather than guessed at.
  *
- * Scanned by hand rather than matched with `/^((?:\\.|[^\\=:])*?)(\s*[=:]\s*)([\s\S]*)$/`: expressing
- * "up to the first unescaped separator" needs a lazy quantifier over an alternation, which backtracks
- * over every position on a line that has no separator. The scan below is single-pass. It is also the
- * only formulation that keeps the whitespace on the separator - making that quantifier greedy pulls a
- * trailing space into the key instead ("key " rather than "key" for `key : value`).
+ * Rendering the tree as React elements - rather than feeding `Prism.highlight()`'s HTML string to
+ * `dangerouslySetInnerHTML` - is the reason refractor is used at all: no innerHTML in a library whose
+ * components render inside Polarion's iframe under a strict CSP.
  */
-function splitAtSeparator(line: string): { key: string; separator: string; value: string } | null {
-  let index = 0;
-  let separatorAt = -1;
-  // Positions holding the second character of a `\x` pair; such a character is part of the key even
-  // when it is whitespace or a separator character.
-  const escaped = new Set<number>();
-  while (index < line.length) {
-    const char = line[index];
-    if (char === '\\') {
-      // A trailing lone backslash cannot start a pair, so the line has no usable separator.
-      if (index + 1 >= line.length) return null;
-      escaped.add(index + 1);
-      index += 2;
-      continue;
-    }
-    if (char === '=' || char === ':') {
-      separatorAt = index;
-      break;
-    }
-    index += 1;
+function renderNode(node: RootContent, key: number): ReactNode {
+  if (node.type === 'text') {
+    return node.value;
   }
-  if (separatorAt === -1) return null;
-
-  let start = separatorAt;
-  while (start > 0 && IS_SPACE.test(line[start - 1]) && !escaped.has(start - 1)) start -= 1;
-  let end = separatorAt + 1;
-  while (end < line.length && IS_SPACE.test(line[end])) end += 1;
-
-  return { key: line.slice(0, start), separator: line.slice(start, end), value: line.slice(end) };
+  if (node.type !== 'element') {
+    return null;
+  }
+  const element: Element = node;
+  const classNames = element.properties?.className;
+  return (
+    <span className={Array.isArray(classNames) ? classNames.join(' ') : undefined} key={key}>
+      {element.children.map(renderNode)}
+    </span>
+  );
 }
 
 /**
- * Splits one `.properties` line into highlight tokens. A line is either a comment, a
- * key/separator/value triple, or - when it has no separator - a bare key (a property being typed).
- * Exported for the unit tests; consumers use the component.
- */
-export function tokenizePropertiesLine(line: string): Token[] {
-  if (line === '') {
-    return [];
-  }
-  if (COMMENT.test(line)) {
-    return [{ kind: 'comment', text: line }];
-  }
-  const split = splitAtSeparator(line);
-  if (!split) {
-    return [{ kind: 'key', text: line }];
-  }
-  const { key, separator, value } = split;
-  const tokens: Token[] = [];
-  if (key !== '') {
-    tokens.push({ kind: 'key', text: key });
-  }
-  tokens.push({ kind: 'separator', text: separator });
-  if (value !== '') {
-    tokens.push({ kind: 'value', text: value });
-  }
-  return tokens;
-}
-
-/**
- * A `.properties` editor: a plain textarea for editing, with a syntax-highlighted `<pre>` painted
- * underneath it (the textarea's own text is transparent, its caret and selection are not). This is the
- * React replacement for the legacy admin pages' `<code-input lang="properties">` web component, which
- * pulled in the generic framework's `code-input.min.js` + `prism.js` at runtime. Two reasons not to
- * port that: the bundled prism build ships only markup/css/clike/javascript, so `lang="properties"`
- * highlighted nothing in the first place, and a runtime `<script>` from Polarion cannot be loaded in
- * the test browser. The tokenizer below is ~30 lines and needs no dependency; the colors match prism's
- * default theme, so the result reads like the highlighting those pages were meant to have.
+ * A code editor: a plain textarea for editing, with a syntax-highlighted `<pre>` painted underneath it
+ * (the textarea's own text is transparent, its caret and selection are not). This is the React
+ * replacement for the legacy admin pages' `<code-input>` web component, which pulled the generic
+ * framework's `code-input.min.js` + `prism.js` in at runtime - a runtime `<script>` served by Polarion
+ * can be loaded neither under a strict CSP nor in the test browser.
  *
- * The wrapper carries no height of its own beyond a minimum - give it one through `className` (the
- * DMS connector pages let it flex to fill the page).
+ * The grammars are Prism's own, through refractor (same grammars as an ESM package: no global `Prism`,
+ * no innerHTML), so the highlighting is what those pages were built against - Velocity included, whose
+ * grammar the extensions used to vendor as a `prism-velocity.min.js` of their own. The token class
+ * names are Prism's too (`token comment`, `token attr-name`, ...), which is why the colors in
+ * CodeEditor.css are the default Prism theme that those pages loaded.
+ *
+ * The wrapper carries no height of its own beyond a minimum - give it one through `className` (the DMS
+ * connector pages let it flex to fill the page).
  */
 export default function CodeEditor({
+  language,
   value,
   onChange,
   id,
@@ -131,27 +112,23 @@ export default function CodeEditor({
 
   const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => onChange(event.target.value);
 
-  // Each line is rendered with its own trailing "\n", so the layer's text is exactly `value` plus one
-  // newline. That last one matters: a textarea shows an empty line after a trailing newline, while a
-  // <pre> whose text ends there does not - without the sentinel the two layers differ by a line height
-  // as soon as the document ends with a blank line.
-  const lines = value.split('\n');
+  // Memoised because a controlled editor re-renders on every keystroke while these documents are not
+  // small: the exporters' default stylesheet is hundreds of lines, and its read-only pane shows all of
+  // it.
+  const tokens = useMemo(() => refractor.highlight(value, language).children, [value, language]);
 
   return (
     <div className={className ? `code-editor ${className}` : 'code-editor'}>
       <pre className="code-editor__highlight" ref={highlightRef} aria-hidden="true">
+        {/* The layer's text is exactly `value` plus the one trailing newline below. That newline
+            matters: a textarea shows an empty line after a trailing newline, while a <pre> whose text
+            ends there does not - without the sentinel the two layers differ by a line height as soon as
+            the document ends with a blank line. One sentinel for the whole document, not one per line:
+            a Prism token can span newlines (a CSS block comment, a Velocity #* *# comment), so the tree
+            cannot be cut into lines. */}
         <code>
-          {lines.map((line, lineIndex) => (
-            // Lines have no identity of their own - the index IS the identity here.
-            <span className="code-editor__line" key={lineIndex}>
-              {tokenizePropertiesLine(line).map((token, tokenIndex) => (
-                <span className={`code-editor__${token.kind}`} key={tokenIndex}>
-                  {token.text}
-                </span>
-              ))}
-              {'\n'}
-            </span>
-          ))}
+          {tokens.map(renderNode)}
+          {'\n'}
         </code>
       </pre>
       <textarea

@@ -208,11 +208,10 @@ generic combobox factories, for controls `SearchableSelect` does not cover - a f
 the class's build mode or clearable trigger, a non-React-controlled `<select>`), `getCookie`/`setCookie`,
 `isEmbedded()`, `getScope()` / `getProjectIdFromScope(scope)`.
 
-**Functions**: `createAuthorizationService(sendRequest, settingName)`, `tokenizePropertiesLine(line)` - the `.properties` line tokenizer behind
-`CodeEditor`, exported so a consumer can highlight the same way outside the editor.
+**Functions**: `createAuthorizationService(sendRequest, settingName)`.
 
 **Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableSelectProps`, `SingleSelectProps`,
-`MultiSelectProps`, `SearchableDropdownInstance`, `ConfigurationsPaneHandle`,
+`MultiSelectProps`, `SearchableDropdownInstance`, `CodeLanguage`, `ConfigurationsPaneHandle`,
 `ConfigurationsService<T>`, `AuthorizationService`, `AuthorizationContent`, `RolesInfo`,
 `SettingName`, `Revision`, `Version`, `ConfigurationProperty`, `ConfigurationPropertiesModel`,
 `ConfigurationStatus`, `SendRequest`.
