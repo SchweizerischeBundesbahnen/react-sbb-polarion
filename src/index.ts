@@ -50,6 +50,13 @@ export { default as ConfigurationButtons } from './components/ConfigurationButto
 // createAuthorizationService, which builds the calls over generic's own endpoints.
 export { default as AuthorizationSettings } from './components/AuthorizationSettings';
 export { createAuthorizationService } from './services/authorizationSettings';
+// The exporters' style-package ordering page: a weighted, reorderable list where higher weight means
+// higher position. Shared here rather than per extension - it was already one class in generic, driven
+// by each exporter's own weights endpoint, which is what createStylePackageWeightsService builds.
+export { default as StylePackageWeights } from './components/StylePackageWeights';
+export type { WeightEntry } from './components/StylePackageWeights';
+export { createStylePackageWeightsService } from './services/stylePackageWeights';
+export type { StylePackageWeight, StylePackageWeightsService } from './services/stylePackageWeights';
 export type { AuthorizationContent, AuthorizationService, RolesInfo } from './services/authorizationSettings';
 export { configureGenericModules } from './config/genericModules';
 export { getCookie, setCookie } from './services/cookies';

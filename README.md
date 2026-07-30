@@ -184,7 +184,7 @@ to a local checkout work without touching the config.
 
 **Components**: `PageLayout`, `SearchableSelect`, `Tabs`, `Modal`, `Toaster`, `BreadcrumbInjector`,
 `RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
-`CodeEditor`, `AuthorizationSettings`.
+`CodeEditor`, `AuthorizationSettings`, `StylePackageWeights`.
 
 `SearchableSelect` is the shared combobox for both selection modes. By default it is a single-select
 (`value: string`); pass `multiple` and it renders checkbox options in the popup and one removable chip
@@ -218,6 +218,15 @@ are Prism's default theme - the one the legacy `<code-input>` pages loaded, so a
 highlighting its users know. Give the wrapper a height through `className`; it carries only a minimum of
 its own.
 
+`StylePackageWeights` is the exporters' style-package ordering page: a weighted list where higher weight
+means higher position and the top entry is the one preselected in the export panel. Rows reorder by drag
+and drop or by the caret buttons, and either way the weights are rewritten to match - an entry keeps the
+weight it had whenever that still fits between its new neighbours. A package defined at the global scope
+shows read-only in a project scope (lock icon, greyed field) and acts as a fixed reference point that
+others can be dropped above or below. Pair it with `createStylePackageWeightsService(sendRequest)`; the
+endpoint is the extension's own. Its toolbar is Save / Cancel only, since that endpoint has neither
+default values nor revisions.
+
 `AuthorizationSettings` is the whole "which roles may do this" administration page - the global and
 project roles of the current scope as checkboxes, the Save / Cancel / Default / Revisions toolbar and
 the revision table. Pair it with `createAuthorizationService(sendRequest, settingName)`, which builds
@@ -233,11 +242,13 @@ generic combobox factories, for controls `SearchableSelect` does not cover - a f
 the class's build mode or clearable trigger, a non-React-controlled `<select>`), `getCookie`/`setCookie`,
 `isEmbedded()`, `getScope()` / `getProjectIdFromScope(scope)`.
 
-**Functions**: `createAuthorizationService(sendRequest, settingName)`.
+**Functions**: `createAuthorizationService(sendRequest, settingName)`,
+`createStylePackageWeightsService(sendRequest)`.
 
 **Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableSelectProps`, `SingleSelectProps`,
 `MultiSelectProps`, `SearchableDropdownInstance`, `CodeLanguage`, `ConfigurationsPaneHandle`,
 `ConfigurationsService<T>`, `AuthorizationService`, `AuthorizationContent`, `RolesInfo`,
+`StylePackageWeight`, `StylePackageWeightsService`, `WeightEntry`,
 `SettingName`, `Revision`, `Version`, `ConfigurationProperty`, `ConfigurationPropertiesModel`,
 `ConfigurationStatus`, `SendRequest`.
 
