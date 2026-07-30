@@ -8,7 +8,7 @@
  * wrapping, a narrower box changes nothing about where the line breaks are. The horizontal and
  * vertical scroll offsets are synced in the component.
  */
-.properties-editor {
+.code-editor {
   position: relative;
   box-sizing: border-box;
   height: 100%;
@@ -22,13 +22,13 @@
     border-color 0.15s ease;
 }
 
-.properties-editor:hover {
+.code-editor:hover {
   box-shadow: var(--sbb-control-shadow-hover);
 }
 
 /* The focus ring belongs to the wrapper: the textarea itself is transparent and edge-to-edge, so its
    own outline would be clipped by the wrapper's overflow. */
-.properties-editor:focus-within {
+.code-editor:focus-within {
   border-color: var(--sbb-control-border-focus);
   box-shadow: var(--sbb-control-shadow-hover);
 }
@@ -42,8 +42,8 @@
    screenshots failed intermittently on CI - twice on the same commit, once green, once 4554 pixels
    off. 'Liberation Mono' is present in the image and pins the choice; DejaVu Sans Mono precedes it
    for real Linux desktops, Consolas/Monaco still win on Windows/macOS. */
-.properties-editor__highlight,
-.properties-editor__input {
+.code-editor__highlight,
+.code-editor__input {
   position: absolute;
   inset: 0;
   box-sizing: border-box;
@@ -61,7 +61,7 @@
   overflow-wrap: normal;
 }
 
-.properties-editor__highlight {
+.code-editor__highlight {
   /* Scrolled programmatically to follow the textarea; never scrolls on its own, and never eats a
      click meant for the textarea above it. */
   overflow: hidden;
@@ -74,7 +74,7 @@
    That selector would otherwise reach the highlight layer's own <code>, boxing every line AND shrinking
    its text out of alignment with the textarea above. Neutralised here: a class+element selector wins
    over the app's bare element rule. */
-.properties-editor__highlight code {
+.code-editor__highlight code {
   font: inherit;
   padding: 0;
   border: 0;
@@ -83,7 +83,7 @@
   color: inherit;
 }
 
-.properties-editor__input {
+.code-editor__input {
   overflow: auto;
   resize: none;
   outline: none;
@@ -93,29 +93,29 @@
   caret-color: #1a1a1a;
 }
 
-.properties-editor__input::selection {
+.code-editor__input::selection {
   /* Selecting transparent text would otherwise show as an empty band. */
   background: #b3d4fc;
 }
 
-.properties-editor__input::placeholder {
+.code-editor__input::placeholder {
   color: #a0a0a0;
 }
 
 /* Token colors, matching prism's default theme (comment / attr-name / punctuation / attr-value), which
    is the theme the legacy admin pages loaded. */
-.properties-editor__comment {
+.code-editor__comment {
   color: #708090;
 }
 
-.properties-editor__key {
+.code-editor__key {
   color: #690;
 }
 
-.properties-editor__separator {
+.code-editor__separator {
   color: #999;
 }
 
-.properties-editor__value {
+.code-editor__value {
   color: #07a;
 }

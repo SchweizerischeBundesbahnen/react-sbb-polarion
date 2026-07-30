@@ -2,11 +2,11 @@ import { flushSync } from 'react-dom';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
-import PropertiesEditor, { tokenizePropertiesLine } from '../src/components/PropertiesEditor';
+import CodeEditor, { tokenizePropertiesLine } from '../src/components/CodeEditor';
 
 // Behavior tests for the .properties editor (screenshot-free, so they run on any host). The look -
 // token colors and the highlight layer sitting exactly under the text - is covered in
-// PropertiesEditor.visual.test.tsx.
+// CodeEditor.visual.test.tsx.
 
 let container: HTMLDivElement | undefined;
 let root: Root | undefined;
@@ -23,17 +23,17 @@ function teardown() {
 afterEach(teardown);
 
 const textarea = (): HTMLTextAreaElement => {
-  const el = document.querySelector<HTMLTextAreaElement>('.properties-editor__input');
+  const el = document.querySelector<HTMLTextAreaElement>('.code-editor__input');
   if (!el) throw new Error('editor not rendered');
   return el;
 };
 const highlight = (): HTMLPreElement => {
-  const el = document.querySelector<HTMLPreElement>('.properties-editor__highlight');
+  const el = document.querySelector<HTMLPreElement>('.code-editor__highlight');
   if (!el) throw new Error('highlight layer not rendered');
   return el;
 };
 const tokenTexts = (kind: string): string[] =>
-  Array.from(document.querySelectorAll(`.properties-editor__${kind}`)).map((el) => el.textContent ?? '');
+  Array.from(document.querySelectorAll(`.code-editor__${kind}`)).map((el) => el.textContent ?? '');
 
 /** Renders the editor as a controlled component whose value is kept in a local variable. */
 function renderEditor(
@@ -55,12 +55,12 @@ function renderEditor(
   root = createRoot(container);
   const onChange = props.onChange ?? vi.fn();
   flushSync(() => {
-    root!.render(<PropertiesEditor {...props} value={props.value ?? ''} onChange={onChange} />);
+    root!.render(<CodeEditor {...props} value={props.value ?? ''} onChange={onChange} />);
   });
   return {
     onChange,
     rerender: (value: string) =>
-      flushSync(() => root!.render(<PropertiesEditor {...props} value={value} onChange={onChange} />)),
+      flushSync(() => root!.render(<CodeEditor {...props} value={value} onChange={onChange} />)),
   };
 }
 
@@ -116,7 +116,7 @@ describe('tokenizePropertiesLine', () => {
   });
 });
 
-describe('PropertiesEditor', () => {
+describe('CodeEditor', () => {
   it('shows the value in the textarea and highlights it underneath', () => {
     renderEditor({ value: '# comment\nkey=value' });
 
@@ -132,7 +132,7 @@ describe('PropertiesEditor', () => {
 
     // One rendered line per visual line of the textarea, and the layer's text is the value plus the
     // single sentinel newline that gives the trailing blank line a line box in the <pre>.
-    expect(document.querySelectorAll('.properties-editor__line')).toHaveLength(4);
+    expect(document.querySelectorAll('.code-editor__line')).toHaveLength(4);
     expect(highlight().textContent).toBe('a=1\n\nb=2\n\n');
   });
 
@@ -200,13 +200,13 @@ describe('PropertiesEditor', () => {
   it('appends the consumer class to the wrapper and keeps the base class', () => {
     renderEditor({ className: 'fills-page' });
 
-    const wrapper = document.querySelector('.properties-editor');
-    expect(wrapper).toHaveClass('properties-editor', 'fills-page');
+    const wrapper = document.querySelector('.code-editor');
+    expect(wrapper).toHaveClass('code-editor', 'fills-page');
   });
 
   it('has no consumer class on the wrapper when none is given', () => {
     renderEditor({});
 
-    expect(document.querySelector('.properties-editor')!.className).toBe('properties-editor');
+    expect(document.querySelector('.code-editor')!.className).toBe('code-editor');
   });
 });

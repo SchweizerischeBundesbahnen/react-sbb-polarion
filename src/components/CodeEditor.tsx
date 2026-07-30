@@ -1,8 +1,8 @@
 import { useRef } from 'react';
 import type { ChangeEvent, UIEvent } from 'react';
-import './PropertiesEditor.css';
+import './CodeEditor.css';
 
-interface PropertiesEditorProps {
+interface CodeEditorProps {
   /** Current editor content (a Java `.properties` document). Fully controlled. */
   value: string;
   onChange: (value: string) => void;
@@ -108,7 +108,7 @@ export function tokenizePropertiesLine(line: string): Token[] {
  * The wrapper carries no height of its own beyond a minimum - give it one through `className` (the
  * DMS connector pages let it flex to fill the page).
  */
-export default function PropertiesEditor({
+export default function CodeEditor({
   value,
   onChange,
   id,
@@ -116,7 +116,7 @@ export default function PropertiesEditor({
   placeholder,
   readOnly,
   className,
-}: Readonly<PropertiesEditorProps>) {
+}: Readonly<CodeEditorProps>) {
   const highlightRef = useRef<HTMLPreElement>(null);
 
   // The highlight layer does not scroll on its own (it has no scrollbars); it follows the textarea.
@@ -138,14 +138,14 @@ export default function PropertiesEditor({
   const lines = value.split('\n');
 
   return (
-    <div className={className ? `properties-editor ${className}` : 'properties-editor'}>
-      <pre className="properties-editor__highlight" ref={highlightRef} aria-hidden="true">
+    <div className={className ? `code-editor ${className}` : 'code-editor'}>
+      <pre className="code-editor__highlight" ref={highlightRef} aria-hidden="true">
         <code>
           {lines.map((line, lineIndex) => (
             // Lines have no identity of their own - the index IS the identity here.
-            <span className="properties-editor__line" key={lineIndex}>
+            <span className="code-editor__line" key={lineIndex}>
               {tokenizePropertiesLine(line).map((token, tokenIndex) => (
-                <span className={`properties-editor__${token.kind}`} key={tokenIndex}>
+                <span className={`code-editor__${token.kind}`} key={tokenIndex}>
                   {token.text}
                 </span>
               ))}
@@ -155,7 +155,7 @@ export default function PropertiesEditor({
         </code>
       </pre>
       <textarea
-        className="properties-editor__input"
+        className="code-editor__input"
         id={id}
         aria-label={ariaLabel}
         placeholder={placeholder}

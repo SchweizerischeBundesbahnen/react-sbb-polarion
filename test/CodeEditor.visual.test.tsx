@@ -2,13 +2,13 @@ import { flushSync } from 'react-dom';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { page } from 'vitest/browser';
-import PropertiesEditor from '../src/components/PropertiesEditor';
+import CodeEditor from '../src/components/CodeEditor';
 import { parkPointer } from './helpers';
 
 // Visual-regression states for the .properties editor: the token colors and, more importantly, that the
 // highlighted layer sits exactly under the textarea's text (a metric that drifts apart is invisible to
 // the behavior tests but obvious in a screenshot). Docker-only - see ConfigurationButtons.visual.test.tsx.
-// References live in test/expected/PropertiesEditor/ (npm run test:update:docker).
+// References live in test/expected/CodeEditor/ (npm run test:update:docker).
 
 const SAMPLE = [
   '# vault key for polarion credentials',
@@ -44,29 +44,29 @@ function renderEditor(value: string) {
   document.body.appendChild(container);
   root = createRoot(container);
   flushSync(() => {
-    root!.render(<PropertiesEditor value={value} onChange={() => {}} />);
+    root!.render(<CodeEditor value={value} onChange={() => {}} />);
   });
 }
 
 const editorShot = (name: string) =>
   parkPointer().then(() =>
-    expect(page.elementLocator(document.querySelector('.properties-editor') as HTMLElement)).toMatchScreenshot(name),
+    expect(page.elementLocator(document.querySelector('.code-editor') as HTMLElement)).toMatchScreenshot(name),
   );
 
-describe.skipIf(!__PIXEL_REFERENCES__)('PropertiesEditor visual states', () => {
+describe.skipIf(!__PIXEL_REFERENCES__)('CodeEditor visual states', () => {
   it('highlights comments, keys, separators and values', async () => {
     renderEditor(SAMPLE);
-    await editorShot('properties-editor-highlighted');
+    await editorShot('code-editor-highlighted');
   });
 
   it('empty (placeholder-less, just the framed box)', async () => {
     renderEditor('');
-    await editorShot('properties-editor-empty');
+    await editorShot('code-editor-empty');
   });
 
   it('focused (blue border, caret in the text)', async () => {
     renderEditor(SAMPLE);
-    document.querySelector<HTMLTextAreaElement>('.properties-editor__input')!.focus();
-    await editorShot('properties-editor-focused');
+    document.querySelector<HTMLTextAreaElement>('.code-editor__input')!.focus();
+    await editorShot('code-editor-focused');
   });
 });

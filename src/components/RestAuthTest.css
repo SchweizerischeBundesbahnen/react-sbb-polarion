@@ -1,6 +1,6 @@
 /* Output box for the REST token auth test (ported from the generic about.css .rest-auth-test-output). */
 
-/* Same stack as PropertiesEditor: a bare `monospace` is not safe here. The pinned Playwright image
+/* Same stack as CodeEditor: a bare `monospace` is not safe here. The pinned Playwright image
    ships three faces that match the generic keyword (WenQuanYi Zen Hei Mono, Liberation Mono, FreeMono)
    with no stable winner, so the reference screenshot would flip between CI runs on an unchanged
    component. Ending on a face the image actually has makes the pick deterministic; the Windows-only

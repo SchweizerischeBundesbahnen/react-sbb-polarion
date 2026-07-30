@@ -63,7 +63,7 @@ export default defineConfig({
       // unreachable from a test and always will be, so 100% is not attainable anyway:
       //   - BreadcrumbInjector `!shellDocument?.head` - only true for a cross-origin top window, and
       //     the runner is same-origin with its own shell.
-      //   - SearchableSelect `!element` and PropertiesEditor `!highlight` - refs that are always
+      //   - SearchableSelect `!element` and CodeEditor `!highlight` - refs that are always
       //     attached by the time the effect/handler runs; the check exists to satisfy the type, and
       //     replacing it with a non-null assertion would turn a no-op into a crash.
       //   - About `getAttribute('href') ?? ''` - the querySelector is `a[href^="#"]`, so the attribute

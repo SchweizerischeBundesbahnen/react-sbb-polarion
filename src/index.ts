@@ -41,7 +41,7 @@ export type { ConfigurationsPaneHandle, ConfigurationsService } from './componen
 export { default as RevisionsTable } from './components/RevisionsTable';
 // The .properties editor for settings pages whose whole configuration is one properties document
 // (the DMS connectors). Replaces the legacy <code-input lang="properties"> web component.
-export { default as PropertiesEditor, tokenizePropertiesLine } from './components/PropertiesEditor';
+export { default as CodeEditor, tokenizePropertiesLine } from './components/CodeEditor';
 export { default as ConfigurationButtons } from './components/ConfigurationButtons';
 // The role-checkbox administration page (xml-repair, api-extender, diff-tool): global and project
 // roles as checkboxes over one named setting, with the standard toolbar and revisions. Pair it with

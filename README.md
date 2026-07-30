@@ -180,7 +180,7 @@ to a local checkout work without touching the config.
 
 **Components**: `PageLayout`, `SearchableSelect`, `Tabs`, `Modal`, `Toaster`, `BreadcrumbInjector`,
 `RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
-`PropertiesEditor`, `AuthorizationSettings`.
+`CodeEditor`, `AuthorizationSettings`.
 
 `SearchableSelect` is the shared combobox for both selection modes. By default it is a single-select
 (`value: string`); pass `multiple` and it renders checkbox options in the popup and one removable chip
@@ -209,7 +209,7 @@ the class's build mode or clearable trigger, a non-React-controlled `<select>`),
 `isEmbedded()`, `getScope()` / `getProjectIdFromScope(scope)`.
 
 **Functions**: `createAuthorizationService(sendRequest, settingName)`, `tokenizePropertiesLine(line)` - the `.properties` line tokenizer behind
-`PropertiesEditor`, exported so a consumer can highlight the same way outside the editor.
+`CodeEditor`, exported so a consumer can highlight the same way outside the editor.
 
 **Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableSelectProps`, `SingleSelectProps`,
 `MultiSelectProps`, `SearchableDropdownInstance`, `ConfigurationsPaneHandle`,
