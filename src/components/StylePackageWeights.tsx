@@ -107,7 +107,9 @@ export function computeWeightForPosition(entries: WeightEntry[], index: number):
     const previous = entries[index - 1].weight;
     const next = entries[index + 1].weight;
     value =
-      preferred > next && preferred < previous ? preferred : parseFloat((previous + (next - previous) / 2).toFixed(1));
+      preferred > next && preferred < previous
+        ? preferred
+        : Number.parseFloat((previous + (next - previous) / 2).toFixed(1));
   }
   return Math.max(MIN_WEIGHT, Math.min(MAX_WEIGHT, value));
 }
@@ -146,7 +148,7 @@ export function placeAt(entries: WeightEntry[], fromIndex: number, insertIndex: 
  * to the bottom of the list.
  */
 export function normalizeWeight(raw: string | number): number {
-  let value = typeof raw === 'number' ? raw : parseFloat(raw);
+  let value = typeof raw === 'number' ? raw : Number.parseFloat(raw);
   if (value > MAX_WEIGHT) {
     value = MAX_WEIGHT;
   }
@@ -154,7 +156,7 @@ export function normalizeWeight(raw: string | number): number {
     value = MIN_WEIGHT;
   }
   if (value % 1 !== 0) {
-    value = parseFloat(value.toFixed(1));
+    value = Number.parseFloat(value.toFixed(1));
   }
   if (!/^\d{1,3}(\.\d)?$/.test(String(value))) {
     value = FALLBACK_WEIGHT;

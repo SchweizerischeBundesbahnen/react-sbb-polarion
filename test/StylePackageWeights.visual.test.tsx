@@ -55,7 +55,7 @@ async function mount(weights = WEIGHTS) {
   render(<StylePackageWeights title="PDF Exporter: Style Package Weights" service={service(weights)} />, {
     container,
   });
-  await vi.waitFor(() => expect(document.querySelectorAll('.weight-item').length).toBe(weights.length));
+  await vi.waitFor(() => expect(document.querySelectorAll('.weight-item')).toHaveLength(weights.length));
 }
 
 afterEach(() => {
