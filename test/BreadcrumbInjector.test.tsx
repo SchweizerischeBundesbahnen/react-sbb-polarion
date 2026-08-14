@@ -82,12 +82,47 @@ describe('BreadcrumbInjector', () => {
     expect(topHead().querySelectorAll('#pend-breadcrumb-bridge')).toHaveLength(1);
   });
 
+  it('renders a sub-topic breadcrumb when a parent is given', async () => {
+    render(<BreadcrumbInjector marker="sub" title="Collections" parent="Diff Tool" icon="/i.svg" />);
+    await vi.waitFor(() => expect(script('sub')).not.toBeNull());
+    expect(script('sub')!.dataset.parent).toBe('Diff Tool');
+  });
+
+  it('omits data-parent for a root topic, which is how the bridge tells the two apart', async () => {
+    render(<BreadcrumbInjector marker="root" title="Diff Tool" icon="/i.svg" />);
+    await vi.waitFor(() => expect(script('root')).not.toBeNull());
+    expect(script('root')!.hasAttribute('data-parent')).toBe(false);
+  });
+
+  it('clears the parent when navigating from a sub-topic back to a root one', async () => {
+    // A host that drops the parent on click, which is the sub-topic -> root navigation.
+    function Host() {
+      const [root, setRoot] = useState(false);
+      return (
+        <div>
+          <button type="button" data-testid="to-root" onClick={() => setRoot(true)}>
+            root
+          </button>
+          <BreadcrumbInjector marker="nav" title="Diff Tool" parent={root ? undefined : 'Parent'} icon="/i.svg" />
+        </div>
+      );
+    }
+    render(<Host />);
+    await vi.waitFor(() => expect(script('nav')!.dataset.parent).toBe('Parent'));
+
+    document.querySelector<HTMLButtonElement>('[data-testid="to-root"]')!.click();
+
+    await vi.waitFor(() => expect(script('nav')!.hasAttribute('data-parent')).toBe(false));
+  });
+
   it('re-installs through the loaded bridge instead of injecting again', async () => {
     const install = vi.fn();
     window.top!.SbbBreadcrumbBridge = { install };
 
     render(<BreadcrumbInjector marker="live" title="Live" icon="/i.svg" />);
-    await vi.waitFor(() => expect(install).toHaveBeenCalledWith({ marker: 'live', title: 'Live', icon: '/i.svg' }));
+    await vi.waitFor(() =>
+      expect(install).toHaveBeenCalledWith({ marker: 'live', title: 'Live', icon: '/i.svg', parent: undefined }),
+    );
     // The bridge is already there, so no script is added for it.
     expect(script('live')).toBeNull();
   });
