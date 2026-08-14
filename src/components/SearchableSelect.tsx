@@ -19,6 +19,8 @@ interface BaseProps {
   disabled?: boolean;
   /** Renders the control disabled, for an option list that is still loading. */
   loading?: boolean;
+  /** Shows the search box in the popup. Pass false for a short list, where filtering is only noise. */
+  searchable?: boolean;
   /** Optional id set on the underlying <select> (some legacy per-extension CSS targets the control by id). */
   id?: string;
 }
@@ -57,7 +59,7 @@ function toValues(props: SearchableSelectProps): string[] {
  * of a string), which is why the two modes are separate prop types over one component.
  */
 export default function SearchableSelect(props: Readonly<SearchableSelectProps>) {
-  const { options, placeholder = '', disabled = false, loading = false, id } = props;
+  const { options, placeholder = '', disabled = false, loading = false, searchable = true, id } = props;
   const multiple = props.multiple === true;
   // allowEmpty is meaningless for a multi-select: no selection is already a valid state there.
   const allowEmpty = props.multiple ? false : props.allowEmpty === true;
@@ -96,7 +98,7 @@ export default function SearchableSelect(props: Readonly<SearchableSelectProps>)
     const element = selectRef.current;
     if (!element) return;
     try {
-      sdRef.current = createSearchableSelect(element, { multiselect: multiple, allowEmpty, placeholder });
+      sdRef.current = createSearchableSelect(element, { multiselect: multiple, allowEmpty, placeholder, searchable });
       // Apply the current selection right after creation. The dropdown only honors an option's
       // `selected` HTML attribute, which a React controlled <select> never sets, and with `allowEmpty`
       // it actively resets to unselected on init - so a component mounting with a preset value and all
