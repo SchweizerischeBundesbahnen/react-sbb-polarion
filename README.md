@@ -22,8 +22,12 @@ public, Apache-2.0, with npm provenance on every release.
 
 ```bash
 npm install
-npm run build   # -> dist/index.js (ESM) + dist/*.d.ts
+npm run build   # -> dist/index.js (ESM) + dist/*.d.ts + dist/breadcrumb-bridge.js
 ```
+
+`dist/breadcrumb-bridge.js` is a second, separate build (`vite.bridge.config.ts`). It is not part of
+the ES bundle: it runs in the Polarion shell window rather than in the app, so it has to be a classic
+script a consumer serves. See [Shell scripts](#shell-scripts).
 
 `react` / `react-dom` are **peer dependencies** and are left external in the bundle, so the consuming
 app supplies the single React instance at runtime.
@@ -170,8 +174,8 @@ from that commit.
 > `none`), and renovate could never track a URL anyway. The release asset is still published for the
 > versions pinned to it, but new consumers use the registry.
 
-Nothing about the application code changes between the two - the imports,
-`configureGenericModules(...)` and the `style.css` import stay exactly as they are.
+Nothing about the application code changes between the two - the imports and the `style.css` import
+stay exactly as they are.
 
 The `resolve.dedupe: ['react', 'react-dom']` in `vite.config.js` (and `vite.formext.config.js` where
 present) only mattered for the `file:` symlink, which nests its own React. A registry install has no
@@ -235,9 +239,7 @@ supplies the title and its own Quick Help text. Note that
 `/roles` is opt-in on the Java side: the extension has to name generic's `RolesInternalController` and
 `RolesApiController` in its REST application.
 
-**Config / helpers**: `configureGenericModules(base)` (sets the base URL for the generic ES modules the
-library still loads at runtime - now only `BreadcrumbBridge.js` via `BreadcrumbInjector`; call once per
-entry point that uses the breadcrumb), `createEditableSelect` / `createSearchableSelect` (the vendored
+**Config / helpers**: `createEditableSelect` / `createSearchableSelect` (the vendored
 generic combobox factories, for controls `SearchableSelect` does not cover - a free-text editable input,
 the class's build mode or clearable trigger, a non-React-controlled `<select>`), `getCookie`/`setCookie`,
 `isEmbedded()`, `getScope()` / `getProjectIdFromScope(scope)`.
@@ -275,3 +277,39 @@ Polarion-served generic bundle at runtime:
 Consuming SPA apps import `style.css` once in `main.tsx` and no longer link the generic control CSS in
 `index.html`. Surfaces without an index.html (form-extension panels injected into the Polarion editor)
 inject the stylesheet via a `?inline` import in the dependent extension's form-extension entry.
+
+## Shell scripts
+
+Almost everything here is bundled. One file cannot be: `src/shell/BreadcrumbBridge.js`, which
+`BreadcrumbInjector` runs in the **Polarion shell window** (`window.top`), not in the app's own frame.
+It has to outlive that frame and it has to be a classic script, so it is neither an ES module nor part
+of `dist/index.js`. `npm run build` emits it separately as `dist/breadcrumb-bridge.js`, exposed as the
+`@grigoriev/react-sbb-polarion/breadcrumb-bridge.js` export.
+
+A consuming extension copies that file into the folder Polarion serves its app from, next to the app
+bundle. Add this to the extension's `ui/vite.config.js`:
+
+```js
+import { copyFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+// Copy the shell-window breadcrumb bridge next to the built app, where BreadcrumbInjector looks for
+// it. It cannot be bundled: it runs in the Polarion shell window, outside this app's frame.
+function copyBreadcrumbBridge() {
+  return {
+    name: 'copy-breadcrumb-bridge',
+    writeBundle(options) {
+      const require = createRequire(import.meta.url);
+      const from = require.resolve('@grigoriev/react-sbb-polarion/breadcrumb-bridge.js');
+      copyFileSync(from, `${options.dir}/breadcrumb-bridge.js`);
+    },
+  };
+}
+```
+
+then add `copyBreadcrumbBridge()` to `plugins`. `BreadcrumbInjector` resolves the URL relative to the
+running app, so nothing else needs configuring. Pass its `src` prop only if the extension serves the
+file from somewhere else.
+
+In `vite dev` the file is not copied and the request 404s, so the breadcrumb stays Polarion's own. That
+is harmless: the shell app header does not exist in the dev server anyway.

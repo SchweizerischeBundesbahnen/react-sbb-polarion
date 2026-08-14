@@ -44,6 +44,18 @@ export default tseslint.config(
       globals: { ...globals.node },
     },
   },
+  // Scripts this library ships to run in the Polarion shell window instead of in its own bundle
+  // (BreadcrumbBridge.js). They are delivered as classic <script> files, not ES modules, and they see
+  // the browser globals rather than Node's - so neither of the blocks above describes them.
+  {
+    files: ['src/shell/**/*.js'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: { ...globals.browser },
+    },
+  },
   // Keep last: turns off ESLint rules that would conflict with Prettier's formatting.
   prettier,
 );
