@@ -37,7 +37,7 @@ jobs:
   test:
     # Same pinned Playwright image as ci.yml - see the comment there.
     runs-on: ubuntu-latest
-    container: mcr.microsoft.com/playwright:v1.62.0-noble
+    container: mcr.microsoft.com/playwright:v1.62.1-noble
     # This IS the reference environment for the committed screenshots, so the visual suites must
     # assert here (they skip themselves anywhere else - see vitest.config.ts).
     env:
