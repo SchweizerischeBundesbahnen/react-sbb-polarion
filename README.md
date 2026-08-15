@@ -6,13 +6,12 @@
 [![license](https://img.shields.io/npm/l/@grigoriev/react-sbb-polarion)](./LICENSE)
 
 [![codecov](https://codecov.io/gh/grigoriev/react-sbb-polarion/graph/badge.svg)](https://codecov.io/gh/grigoriev/react-sbb-polarion)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
-
-[![Reliability](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
-[![Security](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
-[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
-[![Duplicated Lines](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_react-sbb-polarion&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=grigoriev_react-sbb-polarion)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
+[![Reliability](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
+[![Security](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
+[![Duplicated Lines](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
 
 Shared React UI components for the SBB Polarion extensions' React admin apps. Published to npmjs as
 [`@grigoriev/react-sbb-polarion`](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion) —
