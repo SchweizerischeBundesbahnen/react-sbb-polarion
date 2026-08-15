@@ -23,9 +23,18 @@ function Controlled(props: {
   allowEmpty?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  searchable?: boolean;
   onValue?: (v: string) => void;
 }) {
-  const { initial = 'a', options = OPTIONS, allowEmpty = false, disabled = false, placeholder = '', onValue } = props;
+  const {
+    initial = 'a',
+    options = OPTIONS,
+    allowEmpty = false,
+    disabled = false,
+    placeholder = '',
+    searchable,
+    onValue,
+  } = props;
   const [value, setValue] = useState(initial);
   return (
     <div className="sbb-ui" style={{ width: 240, padding: 16 }}>
@@ -39,6 +48,7 @@ function Controlled(props: {
         allowEmpty={allowEmpty}
         disabled={disabled}
         placeholder={placeholder}
+        searchable={searchable}
       />
     </div>
   );
@@ -181,6 +191,38 @@ describe('SearchableSelect (React wrapper, single-select)', () => {
     mousedown(trigger());
     typeInto(searchBox(), 'seco');
     expect(labels()).toEqual(['Second']);
+  });
+
+  it('renders the search box by default', async () => {
+    // `searchable` is omitted by the host, so this asserts the default and not a passed-through true.
+    await mount();
+    mousedown(trigger());
+    expect(document.querySelector('.sd-portal .search-box')).not.toBeNull();
+  });
+
+  it('searchable={false} drops the search box but keeps the list usable', async () => {
+    // The short-list case: filtering three items is only noise, so the popup opens straight onto the
+    // options and the keyboard is driven from the trigger instead of the (absent) search box.
+    const onValue = vi.fn();
+    await mount({ searchable: false, onValue });
+    mousedown(trigger());
+    expect(document.querySelector('.sd-portal .search-box')).toBeNull();
+    expect(labels()).toEqual(['First', 'Second', 'Third']);
+    mousedown(optionByText('Second'));
+    expect(onValue).toHaveBeenCalledWith('b');
+    expect(trigger()).toHaveValue('Second');
+  });
+
+  it('searchable={false} still selects the highlighted option via ArrowDown + Enter', async () => {
+    const onValue = vi.fn();
+    await mount({ searchable: false, onValue });
+    mousedown(trigger());
+    keydown(trigger(), 'ArrowDown');
+    const active = q<HTMLElement>('.sd-portal .items .option.active');
+    const expectedId = OPTIONS.find((o) => o.name === (active.textContent ?? '').trim())!.id;
+    keydown(trigger(), 'Enter');
+    expect(onValue).toHaveBeenCalledWith(expectedId);
+    expect(container().classList.contains('open')).toBe(false);
   });
 
   it('selects the highlighted option via ArrowDown + Enter and closes', async () => {
