@@ -278,14 +278,20 @@ import toolbarStyles from './dleToolbar.css?inline';
         </table>`;
     }
 
+    // Polarion's own project-id charset: letters, digits, underscore, dot, hyphen. Anything else in
+    // the hash segment is not a project id, so it is rejected rather than passed on to the server.
+    const PROJECT_ID_PATTERN = /^[\w.-]+$/;
+
     // The current project id, parsed from Polarion's location hash (…#/project/<id>/…). Read from the
     // top frame, since this runs in the editor iframe. Null when there is no project scope, in which
     // case only global roles apply. Every exporter duplicated this; it lives here now.
+    // The hash is user-controlled, so the parsed segment is validated before it reaches a request URL.
     function currentProjectId() {
         try {
             const hash = (top && top.location && top.location.hash) || window.location.hash || '';
             const match = /project\/([^/]+)\//.exec(decodeURI(hash));
-            return match ? match[1] : null;
+            const projectId = match ? match[1] : null;
+            return projectId && PROJECT_ID_PATTERN.test(projectId) ? projectId : null;
         } catch {
             return null;
         }

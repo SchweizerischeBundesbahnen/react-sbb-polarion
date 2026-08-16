@@ -868,6 +868,19 @@ describe('CommonDleToolbarStarter', () => {
       );
     });
 
+    it('omits the project when the hash segment is not a valid project id', async () => {
+      setHtml(dleHtml());
+      const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ permitted: true }) });
+      vi.stubGlobal('fetch', fetchMock);
+      // The hash is user-controlled: a crafted segment must not reach the request URL.
+      window.location.hash = '#/project/evil%20id?x=1/wiki/Page';
+
+      engine().addButton({ ...BUTTON, permissionUrl: '/perm' });
+      await flushPromises();
+
+      expect(fetchMock.mock.calls[0][0]).toBe('/perm');
+    });
+
     it('omits the project when the URL carries no project scope', async () => {
       setHtml(dleHtml());
       const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ permitted: true }) });
