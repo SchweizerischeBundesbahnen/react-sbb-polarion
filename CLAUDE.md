@@ -24,6 +24,10 @@ the standalone class goes away). So:
   - `control-tokens.css` - generic's `inline:` icon placeholders are rewritten to real
     `url(../images/…)` (Vite inlines them at build); `ensureSharedStyles.js` is a local no-op (the CSS
     is bundled, not injected at runtime).
+  - `github-markdown-light.css` - generic's copy is **not** upstream `github-markdown-css`: `color`,
+    `background-color`, `font-family`, `font-size` and `line-height` are commented out so a help
+    article inherits Polarion's typography, and `.markdown-body` gains 25px vertical margins. Taking
+    the npm package instead would restyle every About and User Guide page.
   - `control-tokens.css` - the two Selawik **`@font-face`** blocks (400 + 700, pointing at Polarion's
     own `/polarion/ria/fonts/selawik/*.ttf`). Added in v0.0.2; generic's copy has **none**, and this is
     deliberate and permanent: Polarion's native pages already load Selawik through the petrel theme, so
