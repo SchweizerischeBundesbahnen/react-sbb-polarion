@@ -1,0 +1,45 @@
+/*
+ * Shared styling for buttons injected into Polarion's native document (DLE) and Rich Page toolbars
+ * by the self-healing engine (DleToolbarStarter.js). Previously each exporter extension shipped its
+ * own private copy of these rules; because the class names are global, those copies overrode each
+ * other in the same page. This is the single source of truth, bundled into the engine, so every
+ * consumer inherits identical (and fixable-in-one-place) toolbar-button styling.
+ */
+
+.dleToolBarTable {
+  align-self: center;
+  border-spacing: 0;
+}
+
+.dleToolBarRow {
+  display: table-row;
+  vertical-align: middle;
+}
+
+.dleToolBarTableCell {
+  padding: 0;
+}
+
+.dleToolBarButton {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.dleToolBarButton:hover {
+  opacity: 1;
+}
+
+.dleToolBarSingleButton {
+  border: 1px solid #dedede;
+  padding: 5px;
+  border-radius: 2px;
+}
+
+/* Disabled state (e.g. when the user is not permitted to export). The engine adds this class to
+   the injected container; pointer-events: none blocks the click regardless of the onclick baked
+   into the button markup, and the faded look matches Polarion's own disabled toolbar buttons. */
+.dleToolBarDisabled {
+  opacity: 0.4;
+  pointer-events: none;
+  cursor: default;
+}
