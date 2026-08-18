@@ -1,11 +1,11 @@
-# @grigoriev/react-sbb-polarion
+# @sbb-polarion/react-sbb-polarion
 
-[![npm version](https://img.shields.io/npm/v/@grigoriev/react-sbb-polarion)](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion)
-[![npm downloads](https://img.shields.io/npm/dm/@grigoriev/react-sbb-polarion)](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion)
-[![node](https://img.shields.io/node/v/@grigoriev/react-sbb-polarion)](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion)
-[![license](https://img.shields.io/npm/l/@grigoriev/react-sbb-polarion)](./LICENSE)
+[![npm version](https://img.shields.io/npm/v/@sbb-polarion/react-sbb-polarion)](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion)
+[![npm downloads](https://img.shields.io/npm/dm/@sbb-polarion/react-sbb-polarion)](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion)
+[![node](https://img.shields.io/node/v/@sbb-polarion/react-sbb-polarion)](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion)
+[![license](https://img.shields.io/npm/l/@sbb-polarion/react-sbb-polarion)](./LICENSE)
 
-[![codecov](https://codecov.io/gh/grigoriev/react-sbb-polarion/graph/badge.svg)](https://codecov.io/gh/grigoriev/react-sbb-polarion)
+[![codecov](https://codecov.io/gh/SchweizerischeBundesbahnen/react-sbb-polarion/graph/badge.svg)](https://codecov.io/gh/SchweizerischeBundesbahnen/react-sbb-polarion)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
 [![Reliability](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
 [![Security](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
@@ -14,7 +14,7 @@
 [![Duplicated Lines](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
 
 Shared React UI components for the SBB Polarion extensions' React admin apps. Published to npmjs as
-[`@grigoriev/react-sbb-polarion`](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion) —
+[`@sbb-polarion/react-sbb-polarion`](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion) —
 public, Apache-2.0, with npm provenance on every release.
 
 ## Build
@@ -127,7 +127,7 @@ In an extension's `ui/` folder:
 npm install file:../../react-sbb-polarion
 ```
 
-npm records `"@grigoriev/react-sbb-polarion": "file:../../react-sbb-polarion"` and symlinks it into
+npm records `"@sbb-polarion/react-sbb-polarion": "file:../../react-sbb-polarion"` and symlinks it into
 `node_modules`. Because the symlinked package carries its own dev copy of React, add a dedupe rule to
 the consumer's `vite.config.js` so both sides share one React:
 
@@ -140,7 +140,7 @@ resolve: {
 Then import from the package name:
 
 ```tsx
-import { PageLayout } from '@grigoriev/react-sbb-polarion';
+import { PageLayout } from '@sbb-polarion/react-sbb-polarion';
 ```
 
 Rebuild the library (`npm run build`, or `npm run dev` for watch mode) after changing a component;
@@ -148,14 +148,14 @@ the symlinked consumer picks up the new `dist/`.
 
 ## How consumers depend on this package
 
-Published to **npmjs** as [`@grigoriev/react-sbb-polarion`](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion),
+Published to **npmjs** as [`@sbb-polarion/react-sbb-polarion`](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion),
 public, Apache-2.0. A consuming extension declares a plain semver range and needs nothing else - no
 `.npmrc`, no token, no registry configuration, because npmjs is npm's default registry:
 
 ```jsonc
 // <ext>/ui/package.json
 "dependencies": {
-  "@grigoriev/react-sbb-polarion": "^0.0.7"
+  "@sbb-polarion/react-sbb-polarion": "^0.0.7"
 }
 ```
 
@@ -164,7 +164,7 @@ attestation, issued from the release workflow's OIDC token, that the tarball was
 from that commit.
 
 > Earlier versions were consumed as a **GitHub release tarball URL**
-> (`https://github.com/grigoriev/react-sbb-polarion/releases/download/vX/…tgz`). That is no longer
+> (`https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/releases/download/vX/…tgz`). That is no longer
 > possible: **npm 12 refuses "remote" dependencies** outright (`EALLOWREMOTE`, `allow-remote` defaults to
 > `none`), and renovate could never track a URL anyway. The release asset is still published for the
 > versions pinned to it, but new consumers use the registry.
@@ -252,7 +252,7 @@ the class's build mode or clearable trigger, a non-React-controlled `<select>`),
 `ConfigurationStatus`, `SendRequest`.
 
 Component **and** generic control CSS are bundled into one stylesheet, imported once by the consumer:
-`import '@grigoriev/react-sbb-polarion/style.css'`.
+`import '@sbb-polarion/react-sbb-polarion/style.css'`.
 
 ## Bundled generic assets
 
