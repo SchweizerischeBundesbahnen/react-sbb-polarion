@@ -1,11 +1,11 @@
-# @grigoriev/react-sbb-polarion
+# @sbb-polarion/react-sbb-polarion
 
-[![npm version](https://img.shields.io/npm/v/@grigoriev/react-sbb-polarion)](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion)
-[![npm downloads](https://img.shields.io/npm/dm/@grigoriev/react-sbb-polarion)](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion)
-[![node](https://img.shields.io/node/v/@grigoriev/react-sbb-polarion)](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion)
-[![license](https://img.shields.io/npm/l/@grigoriev/react-sbb-polarion)](./LICENSE)
+[![npm version](https://img.shields.io/npm/v/@sbb-polarion/react-sbb-polarion)](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion)
+[![npm downloads](https://img.shields.io/npm/dm/@sbb-polarion/react-sbb-polarion)](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion)
+[![node](https://img.shields.io/node/v/@sbb-polarion/react-sbb-polarion)](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion)
+[![license](https://img.shields.io/npm/l/@sbb-polarion/react-sbb-polarion)](./LICENSE)
 
-[![codecov](https://codecov.io/gh/grigoriev/react-sbb-polarion/graph/badge.svg)](https://codecov.io/gh/grigoriev/react-sbb-polarion)
+[![codecov](https://codecov.io/gh/SchweizerischeBundesbahnen/react-sbb-polarion/graph/badge.svg)](https://codecov.io/gh/SchweizerischeBundesbahnen/react-sbb-polarion)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
 [![Reliability](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
 [![Security](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
@@ -14,7 +14,7 @@
 [![Duplicated Lines](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
 
 Shared React UI components for the SBB Polarion extensions' React admin apps. Published to npmjs as
-[`@grigoriev/react-sbb-polarion`](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion) —
+[`@sbb-polarion/react-sbb-polarion`](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion) —
 public, Apache-2.0, with npm provenance on every release.
 
 ## Build
@@ -136,15 +136,15 @@ npm pack --pack-destination ../<extension>/ui
 
 ```jsonc
 // <extension>/ui/package.json
-"@grigoriev/react-sbb-polarion": "file:grigoriev-react-sbb-polarion-<version>.tgz"
+"@sbb-polarion/react-sbb-polarion": "file:sbb-polarion-react-sbb-polarion-<version>.tgz"
 ```
 
 then `npm install` in `ui/`. After every later change here, repack and force the consumer's lockfile
 entry to be re-derived:
 
 ```bash
-node -e "const f='package-lock.json',fs=require('fs'),l=JSON.parse(fs.readFileSync(f,'utf8'));delete l.packages['node_modules/@grigoriev/react-sbb-polarion'];fs.writeFileSync(f,JSON.stringify(l,null,2)+'\n')"
-rm -rf node_modules/@grigoriev && npm install
+node -e "const f='package-lock.json',fs=require('fs'),l=JSON.parse(fs.readFileSync(f,'utf8'));delete l.packages['node_modules/@sbb-polarion/react-sbb-polarion'];fs.writeFileSync(f,JSON.stringify(l,null,2)+'\n')"
+rm -rf node_modules/@sbb-polarion && npm install
 ```
 
 A plain `npm install` is not enough. The dependency spec string is unchanged, so npm installs the new
@@ -163,21 +163,21 @@ nothing on disk.
 Then import from the package name:
 
 ```tsx
-import { PageLayout } from '@grigoriev/react-sbb-polarion';
+import { PageLayout } from '@sbb-polarion/react-sbb-polarion';
 ```
 
 Restore the published version range and the tarball-free lockfile before committing in the extension.
 
 ## How consumers depend on this package
 
-Published to **npmjs** as [`@grigoriev/react-sbb-polarion`](https://www.npmjs.com/package/@grigoriev/react-sbb-polarion),
+Published to **npmjs** as [`@sbb-polarion/react-sbb-polarion`](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion),
 public, Apache-2.0. A consuming extension declares a plain semver range and needs nothing else - no
 `.npmrc`, no token, no registry configuration, because npmjs is npm's default registry:
 
 ```jsonc
 // <ext>/ui/package.json
 "dependencies": {
-  "@grigoriev/react-sbb-polarion": "^0.0.7"
+  "@sbb-polarion/react-sbb-polarion": "^0.0.7"
 }
 ```
 
@@ -186,7 +186,7 @@ attestation, issued from the release workflow's OIDC token, that the tarball was
 from that commit.
 
 > Earlier versions were consumed as a **GitHub release tarball URL**
-> (`https://github.com/grigoriev/react-sbb-polarion/releases/download/vX/…tgz`). That is no longer
+> (`https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/releases/download/vX/…tgz`). That is no longer
 > possible: **npm 12 refuses "remote" dependencies** outright (`EALLOWREMOTE`, `allow-remote` defaults to
 > `none`), and renovate could never track a URL anyway. The release asset is still published for the
 > versions pinned to it, but new consumers use the registry.
@@ -198,6 +198,28 @@ The `resolve.dedupe: ['react', 'react-dom']` in `vite.config.js` (and `vite.form
 present) only mattered for the `file:` symlink, which nests its own React. A registry install has no
 nested React, so the dedupe is a no-op - harmless to keep, and it is what makes a temporary switch back
 to a local checkout work without touching the config.
+
+## Releasing
+
+Releases are driven by [release-please](https://github.com/googleapis/release-please), through the SBB
+Polarion org's shared reusable workflow, the same way every `ch.sbb.polarion.extension.*` repository
+does it. There is no button to press and no version to type:
+
+1. Merge conventional commits to `main`. `feat:` moves the minor, `fix:` the patch, a
+   `BREAKING CHANGE:` footer the major.
+2. release-please keeps a **release PR** open with the version bump and the generated `CHANGELOG.md`.
+   Review it like any other PR.
+3. Merging it creates the tag and the GitHub release, which triggers the publish job: the suite runs
+   once more in the pinned Playwright image, then the package goes to npmjs and the tarball is attached
+   to the release.
+
+`.release-please-manifest.json` holds the last released version - it, not the git history, is the
+source of truth for what comes next.
+
+The publish authenticates with the workflow's OIDC identity (npm **trusted publishing**), so there is
+no npm token anywhere, and every release carries a provenance attestation. That binding names both this
+repository and the workflow's file name; see the note at the top of `.github/workflows/release-please.yml`
+before renaming or moving either.
 
 ## Exports
 
@@ -272,7 +294,7 @@ the class's build mode or clearable trigger, a non-React-controlled `<select>`),
 `ConfigurationStatus`, `SendRequest`.
 
 Component **and** generic control CSS are bundled into one stylesheet, imported once by the consumer:
-`import '@grigoriev/react-sbb-polarion/style.css'`.
+`import '@sbb-polarion/react-sbb-polarion/style.css'`.
 
 ## Bundled generic assets
 
@@ -321,8 +343,8 @@ there is no stylesheet to serve alongside it.
 > the registries and break button ordering across the old/new boundary. See the NAMING note at the top
 > of `src/shell/DleToolbarStarter.js`.
 
-Each is exposed as an export: `@grigoriev/react-sbb-polarion/breadcrumb-bridge.js` and
-`@grigoriev/react-sbb-polarion/dle-toolbar-starter.js`.
+Each is exposed as an export: `@sbb-polarion/react-sbb-polarion/breadcrumb-bridge.js` and
+`@sbb-polarion/react-sbb-polarion/dle-toolbar-starter.js`.
 
 A consuming extension copies the ones it uses into the folder Polarion serves its app from, next to the
 app bundle. Add this to the extension's `ui/vite.config.js`:
@@ -341,7 +363,7 @@ function copyRspShellScripts() {
     writeBundle(options) {
       const require = createRequire(import.meta.url);
       for (const name of RSP_SHELL_SCRIPTS) {
-        copyFileSync(require.resolve(`@grigoriev/react-sbb-polarion/${name}`), `${options.dir}/${name}`);
+        copyFileSync(require.resolve(`@sbb-polarion/react-sbb-polarion/${name}`), `${options.dir}/${name}`);
       }
     },
   };

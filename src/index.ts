@@ -1,6 +1,6 @@
 // Public entry point of the shared library. Everything a consuming extension app can import from
-// `@grigoriev/react-sbb-polarion` is re-exported here. Component CSS is bundled into
-// a single stylesheet consumers import once: `import '@grigoriev/react-sbb-polarion/style.css'`.
+// `@sbb-polarion/react-sbb-polarion` is re-exported here. Component CSS is bundled into
+// a single stylesheet consumers import once: `import '@sbb-polarion/react-sbb-polarion/style.css'`.
 // The generic control CSS (tokens + checkboxes/radios/inputs/searchable-dropdown/buttons/alerts),
 // copied from the generic framework, imported first so the --sbb-* tokens are defined before any
 // component styles. This makes the library self-styled (no runtime dependency on Polarion-served CSS).
