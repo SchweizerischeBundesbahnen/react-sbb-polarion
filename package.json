@@ -1,11 +1,11 @@
 {
-  "name": "@grigoriev/react-sbb-polarion",
+  "name": "@sbb-polarion/react-sbb-polarion",
   "version": "0.2.0",
   "description": "Shared React UI components for SBB Polarion extension apps.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/grigoriev/react-sbb-polarion.git"
+    "url": "git+https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion.git"
   },
   "type": "module",
   "files": [

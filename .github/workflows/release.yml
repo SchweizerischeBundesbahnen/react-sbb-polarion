@@ -4,8 +4,11 @@ name: Release
 # successful publish is recorded in git (commit, tag, GitHub release). The reverse order is what left
 # v0.0.7 and v0.0.8 tagged for versions that exist in no registry.
 #
-# NOTE: npmjs binds its trusted publisher to this file's name. Renaming release.yml breaks publishing
-# silently - update the trusted publisher configuration on npmjs in the same change.
+# NOTE: npmjs binds its trusted publisher to this repository AND this file's name. Renaming release.yml
+# or moving the repository breaks publishing silently - update the trusted publisher configuration on
+# npmjs in the same change:
+#   npm trust github @sbb-polarion/react-sbb-polarion --file release.yml \
+#     --repo SchweizerischeBundesbahnen/react-sbb-polarion --allow-publish
 on:
   workflow_dispatch:
     inputs:
