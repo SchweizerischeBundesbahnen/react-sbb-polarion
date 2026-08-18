@@ -5,7 +5,6 @@
 [![node](https://img.shields.io/node/v/@sbb-polarion/react-sbb-polarion)](https://www.npmjs.com/package/@sbb-polarion/react-sbb-polarion)
 [![license](https://img.shields.io/npm/l/@sbb-polarion/react-sbb-polarion)](./LICENSE)
 
-[![codecov](https://codecov.io/gh/SchweizerischeBundesbahnen/react-sbb-polarion/graph/badge.svg)](https://codecov.io/gh/SchweizerischeBundesbahnen/react-sbb-polarion)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
 [![Reliability](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)
 [![Security](https://sonarcloud.io/api/project_badges/measure?project=SchweizerischeBundesbahnen_react-sbb-polarion&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=SchweizerischeBundesbahnen_react-sbb-polarion)

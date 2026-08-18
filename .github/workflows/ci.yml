@@ -42,21 +42,6 @@ jobs:
       # alone and a push that bypassed it would go green.
       - run: npm run test:coverage:full
 
-      # Reporting only - the pass/fail decision already happened in the step above. `!cancelled()` so the
-      # report still lands when the suite went red, which is when the PR comment is worth the most, and
-      # fail_ci_if_error stays off so a Codecov outage cannot fail an otherwise good build.
-      - name: Upload coverage to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
-        with:
-          files: ./coverage/lcov.info
-          disable_search: true
-          fail_ci_if_error: false
-          # A public repo can upload without a token, but unauthenticated uploads are rate-limited and
-          # drop often enough to make the badge stale. The action falls back to tokenless when the
-          # secret is absent, so this is safe to leave in place before CODECOV_TOKEN is configured.
-          token: ${{ secrets.CODECOV_TOKEN }}
-
       # Hand the lcov to the sonar job, which runs outside this container and so cannot see its files.
       - uses: actions/upload-artifact@v7
         with:
