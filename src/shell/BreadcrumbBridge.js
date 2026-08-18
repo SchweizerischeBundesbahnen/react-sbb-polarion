@@ -71,9 +71,7 @@
 
     function disableHiding() {
       var style = document.getElementById(styleId);
-      if (style && style.parentNode) {
-        style.parentNode.removeChild(style);
-      }
+      style?.remove();
     }
 
     function findOriginal() {
@@ -114,7 +112,7 @@
       var wrap = document.createElement('div');
       wrap.className = 'polarion-ApplicationHeader-breadcrumb';
       // Marks this as our replacement so findOriginal() never mistakes it for the GWT element.
-      wrap.setAttribute('data-sbb-bridge', '');
+      wrap.dataset.sbbBridge = '';
 
       var isSub = !!current.parent;
       if (isSub) {
@@ -144,12 +142,12 @@
     function ensureCustom(original) {
       var custom = document.getElementById(customId);
       if (!custom) {
-        if (!original || !original.parentNode) {
+        if (!original?.parentNode) {
           return null;
         }
         custom = document.createElement('div');
         custom.id = customId;
-        original.insertAdjacentElement('afterend', custom);
+        original.after(custom);
         custom.style.font = 'inherit';
         custom.style.whiteSpace = 'nowrap';
         custom.style.display = 'none';
@@ -169,10 +167,10 @@
       var hash = loc.hash || '';
       // Polarion's Administration renders the correct breadcrumb itself — never override it there
       // (the admin URL is `#/administration/<ext>/...`, which also contains our marker).
-      if (hash.indexOf('/administration') !== -1 || loc.href.indexOf('/#/administration') !== -1) {
+      if (hash.includes('/administration') || loc.href.includes('/#/administration')) {
         return false;
       }
-      return hash.indexOf(marker) !== -1 || loc.href.indexOf(marker) !== -1;
+      return hash.includes(marker) || loc.href.includes(marker);
     }
 
     function sync() {
@@ -242,9 +240,7 @@
         // Remove the hiding rule so the GWT breadcrumb comes back (rather than leaving a blank slot).
         disableHiding();
         var custom = document.getElementById(customId);
-        if (custom && custom.parentNode) {
-          custom.parentNode.removeChild(custom);
-        }
+        custom?.remove();
         delete window[installedFlag];
       }
     };
@@ -257,12 +253,12 @@
 
   // Auto-install when injected as a classic <script> carrying data-* config.
   var script = (typeof document !== 'undefined') ? document.currentScript : null;
-  if (script && script.getAttribute('data-marker')) {
+  if (script?.dataset.marker) {
     installBreadcrumbBridge({
-      marker: script.getAttribute('data-marker'),
-      title: script.getAttribute('data-title'),
-      parent: script.getAttribute('data-parent') || '',
-      icon: script.getAttribute('data-icon') || ''
+      marker: script.dataset.marker,
+      title: script.dataset.title,
+      parent: script.dataset.parent || '',
+      icon: script.dataset.icon || ''
     });
   }
 })();

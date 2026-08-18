@@ -111,11 +111,11 @@ import toolbarStyles from './dleToolbar.css?inline';
             interactive.forEach(el => {
                 // Remember the element's own aria-disabled / tabindex (if any) so re-enabling
                 // restores the markup's values instead of clobbering them.
-                if (!el.hasAttribute('data-common-prev-aria-disabled')) {
-                    el.setAttribute('data-common-prev-aria-disabled', el.getAttribute('aria-disabled') || '');
+                if (!('commonPrevAriaDisabled' in el.dataset)) {
+                    el.dataset.commonPrevAriaDisabled = el.getAttribute('aria-disabled') || '';
                 }
-                if (!el.hasAttribute('data-common-prev-tabindex')) {
-                    el.setAttribute('data-common-prev-tabindex', el.getAttribute('tabindex') || '');
+                if (!('commonPrevTabindex' in el.dataset)) {
+                    el.dataset.commonPrevTabindex = el.getAttribute('tabindex') || '';
                 }
                 el.setAttribute('aria-disabled', 'true');
                 el.setAttribute('tabindex', '-1');
@@ -124,20 +124,21 @@ import toolbarStyles from './dleToolbar.css?inline';
             container.classList.remove('dleToolBarDisabled');
             container.removeAttribute('aria-disabled');
             interactive.forEach(el => {
-                restoreAttr(el, 'aria-disabled', 'data-common-prev-aria-disabled');
-                restoreAttr(el, 'tabindex', 'data-common-prev-tabindex');
+                restoreAttr(el, 'aria-disabled', 'commonPrevAriaDisabled');
+                restoreAttr(el, 'tabindex', 'commonPrevTabindex');
             });
         }
     }
 
     // Restore an attribute the engine overrode from its saved-original data attribute: put back the
     // original value, or remove the attribute if it had none originally. No-op if nothing was saved.
-    function restoreAttr(el, attr, savedAttr) {
-        if (!el.hasAttribute(savedAttr)) {
+    // savedKey is the dataset key of the marker, i.e. data-common-prev-tabindex is 'commonPrevTabindex'.
+    function restoreAttr(el, attr, savedKey) {
+        if (!(savedKey in el.dataset)) {
             return;
         }
-        const prev = el.getAttribute(savedAttr);
-        el.removeAttribute(savedAttr);
+        const prev = el.dataset[savedKey];
+        delete el.dataset[savedKey];
         if (prev === '') {
             el.removeAttribute(attr);
         } else {
@@ -149,7 +150,7 @@ import toolbarStyles from './dleToolbar.css?inline';
     // ancestor carries inline display:none / visibility:hidden (e.g. a stale Rich Page panel kept
     // in the DOM during an SPA transition).
     function isInlineVisible(el) {
-        for (let node = el; node && node.style; node = node.parentElement) {
+        for (let node = el; node?.style; node = node.parentElement) {
             if (node.style.display === 'none' || node.style.visibility === 'hidden') {
                 return false;
             }
@@ -224,7 +225,7 @@ import toolbarStyles from './dleToolbar.css?inline';
                 continue;
             }
             const match = EXT_CONTEXT_RE.exec(src);
-            const ctx = match && match[1];
+            const ctx = match?.[1];
             if (ctx && !seen.has(ctx)) {
                 seen.add(ctx);
                 contexts.push(ctx);
@@ -253,10 +254,10 @@ import toolbarStyles from './dleToolbar.css?inline';
     // this so a stray quote cannot break out of the attribute.
     function escapeAttr(value) {
         return String(value == null ? '' : value)
-            .replace(/&/g, '&amp;')
-            .replace(/"/g, '&quot;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+            .replaceAll('&', '&amp;')
+            .replaceAll('"', '&quot;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;');
     }
 
     // The standard document-editor toolbar button, identical for every extension: Polarion's own
@@ -288,7 +289,7 @@ import toolbarStyles from './dleToolbar.css?inline';
     // The hash is user-controlled, so the parsed segment is validated before it reaches a request URL.
     function currentProjectId() {
         try {
-            const hash = (top && top.location && top.location.hash) || window.location.hash || '';
+            const hash = top?.location?.hash || window.location.hash || '';
             const match = /project\/([^/]+)\//.exec(decodeURI(hash));
             const projectId = match ? match[1] : null;
             return projectId && PROJECT_ID_PATTERN.test(projectId) ? projectId : null;
@@ -372,7 +373,7 @@ import toolbarStyles from './dleToolbar.css?inline';
                 return Promise.resolve()
                     .then(() => fetch(config.permissionCheckUrl, { credentials: 'same-origin' }))
                     .then(response => response.ok ? response.json() : { permitted: false })
-                    .then(data => !!(data && data.permitted));
+                    .then(data => !!data?.permitted);
             }
 
             // Idempotent: only inject if the toolbar exists and our button isn't already there.
@@ -392,7 +393,7 @@ import toolbarStyles from './dleToolbar.css?inline';
                 // so injected buttons line up with the native ones.
                 toolbarContainer.style.verticalAlign = 'middle';
                 toolbarContainer.innerHTML = config.html;
-                applyDisabled(toolbarContainer, params && params.disabled);
+                applyDisabled(toolbarContainer, params?.disabled);
                 const spacer = toolbarParent.querySelector('td[width="100%"]');
                 if (!spacer) {
                     // Polarion DOM changed (e.g. after an upgrade) — fall back to appending at the
@@ -409,7 +410,11 @@ import toolbarStyles from './dleToolbar.css?inline';
                         break;
                     }
                 }
-                toolbarParent.insertBefore(toolbarContainer, reference);
+                if (reference) {
+                    reference.before(toolbarContainer);
+                } else {
+                    toolbarParent.append(toolbarContainer);
+                }
             }
 
             let observerSetUp = false;
@@ -431,7 +436,7 @@ import toolbarStyles from './dleToolbar.css?inline';
                 if (!isCurrentOwner()) {
                     return; // a newer starter instance owns this markerId — don't fight it
                 }
-                lastParams = Object.assign({}, lastParams, { disabled: disabled });
+                lastParams = { ...lastParams, disabled: disabled };
                 applyDisabled(top.document.getElementById(config.markerId), disabled);
             }
 
@@ -440,12 +445,12 @@ import toolbarStyles from './dleToolbar.css?inline';
                     // When a permission check is configured, inject disabled first (no
                     // enabled→disabled flicker) and resolve the real state asynchronously.
                     if (hasPermissionCheck && !permissionCheckStarted) {
-                        params = Object.assign({}, params, { disabled: true });
+                        params = { ...params, disabled: true };
                     }
                     // Merge onto the previous params (don't replace) so a disabled state set via
                     // setDisabled() or the pending permission check isn't dropped by a later
                     // injectToolbar() that omits `disabled`. Self-heal re-injects with the merged set.
-                    lastParams = Object.assign({}, lastParams, params);
+                    lastParams = { ...lastParams, ...params };
                     inject(lastParams);
 
                     // Kick off the global permission check once; on error keep it disabled
@@ -603,7 +608,7 @@ import toolbarStyles from './dleToolbar.css?inline';
     // Without data-marker nothing happens, so the engine stays usable as a plain API too (the Live
     // Report injector loads it and calls create() itself).
     const self = document.currentScript;
-    if (self && self.dataset.marker) {
+    if (self?.dataset.marker) {
         window.CommonDleToolbarStarter.addButton({
             marker: self.dataset.marker,
             title: self.dataset.title,
