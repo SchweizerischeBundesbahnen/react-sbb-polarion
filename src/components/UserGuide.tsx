@@ -11,9 +11,8 @@ interface UserGuideProps {
 
 /**
  * Shared User Guide page. Like the About page's help article, it renders the build-generated help
- * HTML (from USER_GUIDE.md) served by the generic `/user-guide` endpoint. The base markdown styling
- * comes from the generic `github-markdown-light.css` the consuming app links in its index.html; the
- * heading look comes from the bundled markdown.css.
+ * HTML (from USER_GUIDE.md) served by the generic `/user-guide` endpoint. Both the base markdown
+ * styling and the Polarion heading look come from the bundled markdown.css.
  */
 export default function UserGuide({ sendRequest }: Readonly<UserGuideProps>) {
   const [html, setHtml] = useState<string | null>(null);
