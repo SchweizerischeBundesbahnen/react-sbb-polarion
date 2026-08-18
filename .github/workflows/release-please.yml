@@ -1,0 +1,108 @@
+---
+# Release Please Workflow
+#
+# The version bump arrives as a pull request, so main's required `ci` check is satisfied the normal
+# way and nothing pushes to the protected branch. Merging that PR makes release-please create the tag
+# and the GitHub release through the API, from a commit that is on main by construction. The previous
+# workflow bumped the version in the job and pushed it, which the "main-requires-status-checks" ruleset
+# rejects - and since `git push --follow-tags` is not atomic, the tag went through anyway and stayed
+# on a commit no branch reaches. The "release tags" ruleset then forbids deleting or moving it.
+#
+# NOTE: npmjs binds its trusted publisher to this repository AND this file's name. Renaming this file
+# or moving the repository breaks publishing silently - re-bind it in the same change:
+#   npm trust github @sbb-polarion/react-sbb-polarion --file release-please.yml \
+#     --repo SchweizerischeBundesbahnen/react-sbb-polarion --allow-publish
+# The publish job has to stay in this repository's own workflow file: npm matches the trusted publisher
+# against the workflow that presents the OIDC token, and a job delegated to the reusable workflow below
+# presents github-workflows-polarion's identity instead of this one.
+name: release-please
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege by default; each job widens it for itself.
+permissions: {}
+
+defaults:
+  run:
+    # GitHub's default is `bash -e`: a failing command inside a pipeline would otherwise pass.
+    shell: bash -euo pipefail {0}
+
+env:
+  # Must match the node in the Playwright image below, so what gets published is what was tested.
+  NODE_VERSION: 24.18.0
+
+jobs:
+  release-please:
+    uses: SchweizerischeBundesbahnen/github-workflows-polarion/.github/workflows/reusable-release-please.yml@main
+    permissions:
+      contents: write
+      pull-requests: write
+    with:
+      config-file: release-please-config.json
+      manifest-file: .release-please-manifest.json
+
+  # Same pinned Playwright image as ci.yml - see the comment there. `ci` already ran on the release PR;
+  # this repeats the suite on the merge commit so the tarball is never published from an untested tree.
+  test:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.62.1-noble
+    # This IS the reference environment for the committed screenshots, so the visual suites must
+    # assert here (they skip themselves anywhere else - see vitest.config.ts).
+    env:
+      PIXEL_REFERENCES: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - run: npm ci
+      - run: npm test
+
+  publish:
+    needs: [release-please, test]
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      # Attach the tarball to the release release-please created.
+      contents: write
+      # The OIDC identity npm authenticates with (trusted publishing) and signs provenance with.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          # Points npm at npmjs and writes the .npmrc the OIDC exchange needs.
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      # The registry is the distribution channel: consumers depend on a semver range, which npm 12
+      # requires (it refuses "remote" tarball-URL dependencies outright) and which renovate can track.
+      #
+      # No token: npmjs trusts this repository's release workflow, so npm authenticates with its OIDC
+      # identity - which also produces the provenance attestation, hence no --provenance flag. A token
+      # could not be used anyway: the account requires 2FA for writes, so publishing with one fails on
+      # EOTP, and npm is retiring 2FA-bypassing tokens for direct publishing.
+      - name: Publish to npmjs
+        run: npm publish --access public
+
+      # Kept for the versions that were pinned to a release asset; new consumers use the registry.
+      - name: Attach the tarball to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+          VERSION: ${{ needs.release-please.outputs.version }}
+        run: |
+          # npm pack names the tarball after the scoped package; the release asset drops the scope.
+          TARBALL="$(npm pack --silent)"
+          ASSET="react-sbb-polarion-${VERSION}.tgz"
+          mv "$TARBALL" "$ASSET"
+          gh release upload "$RELEASE_TAG" "$ASSET"

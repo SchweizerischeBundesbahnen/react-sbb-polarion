@@ -177,6 +177,28 @@ present) only mattered for the `file:` symlink, which nests its own React. A reg
 nested React, so the dedupe is a no-op - harmless to keep, and it is what makes a temporary switch back
 to a local checkout work without touching the config.
 
+## Releasing
+
+Releases are driven by [release-please](https://github.com/googleapis/release-please), through the SBB
+Polarion org's shared reusable workflow, the same way every `ch.sbb.polarion.extension.*` repository
+does it. There is no button to press and no version to type:
+
+1. Merge conventional commits to `main`. `feat:` moves the minor, `fix:` the patch, a
+   `BREAKING CHANGE:` footer the major.
+2. release-please keeps a **release PR** open with the version bump and the generated `CHANGELOG.md`.
+   Review it like any other PR.
+3. Merging it creates the tag and the GitHub release, which triggers the publish job: the suite runs
+   once more in the pinned Playwright image, then the package goes to npmjs and the tarball is attached
+   to the release.
+
+`.release-please-manifest.json` holds the last released version - it, not the git history, is the
+source of truth for what comes next.
+
+The publish authenticates with the workflow's OIDC identity (npm **trusted publishing**), so there is
+no npm token anywhere, and every release carries a provenance attestation. That binding names both this
+repository and the workflow's file name; see the note at the top of `.github/workflows/release-please.yml`
+before renaming or moving either.
+
 ## Exports
 
 **Hooks**: `useConfirm()` — `window.confirm` as a real dialog: returns a promise-returning `confirm(message, options?)` plus the `confirmDialog` element to render.
