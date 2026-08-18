@@ -307,8 +307,10 @@ Polarion-served generic bundle at runtime:
   is a local **no-op** (CSS is bundled here rather than injected at runtime). Do not hand-edit these;
   re-copy from generic to update.
 - `src/generic/css/*` - the generic control stylesheets (`control-tokens`, `checkboxes`, `radios`,
-  `inputs`, `searchable-dropdown`, `buttons`, `alerts`), aggregated by `controls.css` and bundled into
-  `dist/style.css`. The `control-tokens` icon SVGs (`src/generic/images/`) are inlined as data URIs at
+  `inputs`, `searchable-dropdown`, `buttons`, `alerts`, `tabs`, `tables`, `configurations`), aggregated
+  by `controls.css` and bundled into `dist/style.css`. `tables.css` styles no component here - it is
+  the shared `.sbb-table` look an extension opts into for its own result grids, and bundling it is what
+  makes that class work without the extension linking anything. The `control-tokens` icon SVGs (`src/generic/images/`) are inlined as data URIs at
   build (`assetsInlineLimit`), so `style.css` is fully self-contained; generic's build-time `inline:`
   placeholders were rewritten to real `url()` for Vite to inline.
 - `src/generic/css/github-markdown-light.css` - the base `.markdown-body` styling `About` and
