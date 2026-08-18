@@ -9,8 +9,8 @@
 
 /* The buttons sit in an inline flow; .sbb-btn--control already carries the legacy 5px inter-button
    spacing (buttons.css), so no gap is needed here. The descendant selector (higher specificity than a
-   bare .action-buttons) is deliberate: the generic configurations.css an app may still runtime-link
-   sets `.action-buttons { display: inline-block; margin-left: 2em }`, which would otherwise indent the
+   bare .action-buttons) is deliberate: the bundled generic configurations.css sets
+   `.action-buttons { display: inline-block; margin-left: 2em }`, which would otherwise indent the
    toolbar ~2em past the intended 8px bar padding. This overrides it regardless of stylesheet order. */
 .actions-pane .action-buttons {
   display: inline-flex;
