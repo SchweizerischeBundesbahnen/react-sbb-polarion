@@ -311,9 +311,16 @@ Polarion-served generic bundle at runtime:
   `dist/style.css`. The `control-tokens` icon SVGs (`src/generic/images/`) are inlined as data URIs at
   build (`assetsInlineLimit`), so `style.css` is fully self-contained; generic's build-time `inline:`
   placeholders were rewritten to real `url()` for Vite to inline.
+- `src/generic/css/github-markdown-light.css` - the base `.markdown-body` styling `About` and
+  `UserGuide` render help articles with, imported by `src/components/markdown.css`, which layers the
+  Polarion heading look on top. Copied from generic rather than from the upstream
+  `github-markdown-css` package: generic's copy comments out `color`, `background-color`,
+  `font-family`, `font-size` and `line-height` so the article inherits Polarion's typography instead
+  of GitHub's, and adds vertical margins. Upstream would restyle every help page.
 
 Consuming SPA apps import `style.css` once in `main.tsx` and no longer link the generic control CSS in
-`index.html`. Surfaces without an index.html (form-extension panels injected into the Polarion editor)
+`index.html`. The `github-markdown-light.css` link an app still carries is now a duplicate fetch and
+can be dropped. Surfaces without an index.html (form-extension panels injected into the Polarion editor)
 inject the stylesheet via a `?inline` import in the dependent extension's form-extension entry.
 
 ## Shell scripts
