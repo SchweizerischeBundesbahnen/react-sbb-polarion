@@ -19,11 +19,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./style.css": "./dist/style.css"
+    "./style.css": "./dist/style.css",
+    "./breadcrumb-bridge.js": "./dist/breadcrumb-bridge.js",
+    "./dle-toolbar-starter.js": "./dist/dle-toolbar-starter.js"
   },
   "style": "./dist/style.css",
   "scripts": {
-    "build": "vite build && tsc -p tsconfig.build.json",
+    "build": "vite build && vite build --config vite.bridge.config.ts && vite build --config vite.toolbar.config.ts && tsc -p tsconfig.build.json",
     "dev": "vite build --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

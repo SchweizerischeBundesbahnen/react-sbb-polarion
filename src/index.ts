@@ -58,7 +58,6 @@ export type { WeightEntry } from './components/StylePackageWeights';
 export { createStylePackageWeightsService } from './services/stylePackageWeights';
 export type { StylePackageWeight, StylePackageWeightsService } from './services/stylePackageWeights';
 export type { AuthorizationContent, AuthorizationService, RolesInfo } from './services/authorizationSettings';
-export { configureGenericModules } from './config/genericModules';
 export { getCookie, setCookie } from './services/cookies';
 export { isEmbedded } from './services/params';
 export { getScope, getProjectIdFromScope } from './services/scope';

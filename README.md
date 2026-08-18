@@ -20,8 +20,13 @@ public, Apache-2.0, with npm provenance on every release.
 
 ```bash
 npm install
-npm run build   # -> dist/index.js (ESM) + dist/*.d.ts
+npm run build   # -> dist/index.js (ESM) + dist/*.d.ts + the two shell scripts
 ```
+
+`dist/breadcrumb-bridge.js` and `dist/dle-toolbar-starter.js` come from two further, separate builds
+(`vite.bridge.config.ts`, `vite.toolbar.config.ts`). They are not part of the ES bundle: they run in a
+Polarion page rather than in the app, so each has to be a classic script a consumer serves. See
+[Shell scripts](#shell-scripts).
 
 `react` / `react-dom` are **peer dependencies** and are left external in the bundle, so the consuming
 app supplies the single React instance at runtime.
@@ -120,21 +125,39 @@ pre-commit run --all-files    # optional: run every hook once
 
 ## Consume it from a local checkout
 
-In an extension's `ui/` folder:
+To test an extension against an unreleased build of this library, pack it and install the tarball from
+inside the extension's `ui/` folder:
 
 ```bash
-npm install file:../../react-sbb-polarion
+# in this repo, after npm run build
+npm pack --pack-destination ../<extension>/ui
 ```
 
-npm records `"@sbb-polarion/react-sbb-polarion": "file:../../react-sbb-polarion"` and symlinks it into
-`node_modules`. Because the symlinked package carries its own dev copy of React, add a dedupe rule to
-the consumer's `vite.config.js` so both sides share one React:
-
-```js
-resolve: {
-  dedupe: ['react', 'react-dom'];
-}
+```jsonc
+// <extension>/ui/package.json
+"@sbb-polarion/react-sbb-polarion": "file:sbb-polarion-react-sbb-polarion-<version>.tgz"
 ```
+
+then `npm install` in `ui/`. After every later change here, repack and force the consumer's lockfile
+entry to be re-derived:
+
+```bash
+node -e "const f='package-lock.json',fs=require('fs'),l=JSON.parse(fs.readFileSync(f,'utf8'));delete l.packages['node_modules/@sbb-polarion/react-sbb-polarion'];fs.writeFileSync(f,JSON.stringify(l,null,2)+'\n')"
+rm -rf node_modules/@sbb-polarion && npm install
+```
+
+A plain `npm install` is not enough. The dependency spec string is unchanged, so npm installs the new
+tarball contents but leaves the **old** integrity hash in the lockfile. The host build then passes
+while `npm ci` in the extension's test container dies with `EINTEGRITY`, naming a hash that matches
+nothing on disk.
+
+> [!WARNING]
+> Do **not** use `npm install file:../../react-sbb-polarion`. The symlink it creates works for
+> `npm test` on the host but breaks the extension's `npm run test:docker`, which mounts `ui/` alone
+> into the container: the link target sits outside the mount, so `npm ci` fails with `EUSAGE`. A linked
+> package also contributes none of this library's own dependencies, so `refractor` silently goes
+> missing from the consumer's tree. A tarball inside `ui/` resolves inside the mount and installs the
+> real dependency graph.
 
 Then import from the package name:
 
@@ -142,8 +165,7 @@ Then import from the package name:
 import { PageLayout } from '@sbb-polarion/react-sbb-polarion';
 ```
 
-Rebuild the library (`npm run build`, or `npm run dev` for watch mode) after changing a component;
-the symlinked consumer picks up the new `dist/`.
+Restore the published version range and the tarball-free lockfile before committing in the extension.
 
 ## How consumers depend on this package
 
@@ -168,8 +190,8 @@ from that commit.
 > `none`), and renovate could never track a URL anyway. The release asset is still published for the
 > versions pinned to it, but new consumers use the registry.
 
-Nothing about the application code changes between the two - the imports,
-`configureGenericModules(...)` and the `style.css` import stay exactly as they are.
+Nothing about the application code changes between the two - the imports and the `style.css` import
+stay exactly as they are.
 
 The `resolve.dedupe: ['react', 'react-dom']` in `vite.config.js` (and `vite.formext.config.js` where
 present) only mattered for the `file:` symlink, which nests its own React. A registry install has no
@@ -255,9 +277,7 @@ supplies the title and its own Quick Help text. Note that
 `/roles` is opt-in on the Java side: the extension has to name generic's `RolesInternalController` and
 `RolesApiController` in its REST application.
 
-**Config / helpers**: `configureGenericModules(base)` (sets the base URL for the generic ES modules the
-library still loads at runtime - now only `BreadcrumbBridge.js` via `BreadcrumbInjector`; call once per
-entry point that uses the breadcrumb), `createEditableSelect` / `createSearchableSelect` (the vendored
+**Config / helpers**: `createEditableSelect` / `createSearchableSelect` (the vendored
 generic combobox factories, for controls `SearchableSelect` does not cover - a free-text editable input,
 the class's build mode or clearable trigger, a non-React-controlled `<select>`), `getCookie`/`setCookie`,
 `isEmbedded()`, `getScope()` / `getProjectIdFromScope(scope)`.
@@ -295,3 +315,74 @@ Polarion-served generic bundle at runtime:
 Consuming SPA apps import `style.css` once in `main.tsx` and no longer link the generic control CSS in
 `index.html`. Surfaces without an index.html (form-extension panels injected into the Polarion editor)
 inject the stylesheet via a `?inline` import in the dependent extension's form-extension entry.
+
+## Shell scripts
+
+Almost everything here is bundled. Two files cannot be, because they do not run in the app's own frame
+at all. Both are classic scripts, so neither is an ES module nor part of `dist/index.js`; `npm run
+build` emits each as its own self-contained file.
+
+| File | Emitted as | Runs in | Loaded by |
+| --- | --- | --- | --- |
+| `src/shell/BreadcrumbBridge.js` | `dist/breadcrumb-bridge.js` | the Polarion shell window (`window.top`) | this library's `BreadcrumbInjector` |
+| `src/shell/DleToolbarStarter.js` | `dist/dle-toolbar-starter.js` | Polarion's document-editor iframe, driving `top` | the extension's own `starter.js` / `dle-toolbar.js`, via `scriptInjection.dleEditorHead` |
+
+`DleToolbarStarter` is the self-healing toolbar-button engine: it injects an extension's button into
+Polarion's native document (DLE) or Rich Page toolbar and re-injects it whenever GWT re-renders the
+toolbar. It registers itself as `window.CommonDleToolbarStarter`, which every extension's `starter.js`
+reads, so that name is the contract. Its CSS is imported `?inline` and bundled into the same file, so
+there is no stylesheet to serve alongside it.
+
+> [!NOTE]
+> This engine began life in `ch.sbb.polarion.extension.generic` as `GenericDleToolbarStarter`. The
+> global was renamed, but everything **shared between extensions on one page** deliberately keeps its
+> original names: the `top.__genericDleToolbar*` registries, `top.__genericRpeAutoExpandObserver` and
+> the `generic-dle-toolbar-styles` element id. Those are a wire format, not a name. An extension still
+> loading generic's older engine coordinates through exactly those keys, so renaming them would split
+> the registries and break button ordering across the old/new boundary. See the NAMING note at the top
+> of `src/shell/DleToolbarStarter.js`.
+
+Each is exposed as an export: `@sbb-polarion/react-sbb-polarion/breadcrumb-bridge.js` and
+`@sbb-polarion/react-sbb-polarion/dle-toolbar-starter.js`.
+
+A consuming extension copies the ones it uses into the folder Polarion serves its app from, next to the
+app bundle. Add this to the extension's `ui/vite.config.js`:
+
+```js
+import { copyFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+// Copy the shell scripts next to the built app. They cannot be bundled: they run in a Polarion page,
+// outside this app's frame, and have to stay classic scripts.
+const RSP_SHELL_SCRIPTS = ['dle-toolbar-starter.js', 'breadcrumb-bridge.js'];
+
+function copyRspShellScripts() {
+  return {
+    name: 'copy-rsp-shell-scripts',
+    writeBundle(options) {
+      const require = createRequire(import.meta.url);
+      for (const name of RSP_SHELL_SCRIPTS) {
+        copyFileSync(require.resolve(`@sbb-polarion/react-sbb-polarion/${name}`), `${options.dir}/${name}`);
+      }
+    },
+  };
+}
+```
+
+then add `copyRspShellScripts()` to `plugins`.
+
+> [!NOTE]
+> The toolbar engine coordinates button order, observers and ownership through registries on the top
+> window, shared by every extension in one Polarion page. Those registry names are kept compatible with
+> generic's older engine, so an extension on the old version and one on this engine still order their
+> buttons against each other and share a single injected stylesheet. Keep it that way: see the NAMING
+> note in `src/shell/DleToolbarStarter.js`.
+
+`BreadcrumbInjector` resolves its URL relative to the running app, so nothing else needs configuring;
+pass its `src` prop only if the extension serves the file from somewhere else. For the toolbar engine
+the extension's own `starter.js` names the URL, so point it at the app base rather than at generic's
+webapp (`/polarion/<ext>-app/ui/app/dle-toolbar-starter.js`). The administrator-facing
+`scriptInjection.dleEditorHead` value does not change.
+
+In `vite dev` neither file is copied and the requests 404. That is harmless: the shell app header and
+the document editor do not exist in the dev server anyway.

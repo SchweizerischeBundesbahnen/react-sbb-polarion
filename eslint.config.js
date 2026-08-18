@@ -44,6 +44,20 @@ export default tseslint.config(
       globals: { ...globals.node },
     },
   },
+  // Scripts this library ships to run in a Polarion page instead of in its own bundle
+  // (BreadcrumbBridge.js, DleToolbarStarter.js). They see the browser globals rather than Node's, so
+  // neither of the blocks above describes them. They are *delivered* as classic <script> files, but
+  // the sources are parsed as modules because Vite bundles them (DleToolbarStarter imports its CSS
+  // `?inline`); each build emits a self-contained IIFE.
+  {
+    files: ['src/shell/**/*.js'],
+    extends: [js.configs.recommended],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: { ...globals.browser, top: 'readonly' },
+    },
+  },
   // Keep last: turns off ESLint rules that would conflict with Prettier's formatting.
   prettier,
 );
