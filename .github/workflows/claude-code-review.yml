@@ -12,6 +12,13 @@
 # the bot can clear.
 name: Claude Code Review
 
+# The action refuses to run at all when this file differs from the copy on the default branch - it
+# logs "Workflow validation failed", then exits 0, so the check goes green having done nothing. That is
+# deliberate: it stops a pull request from rewriting the review workflow and having the modified version
+# run with the repository's secrets. The consequence to remember is that a pull request which edits this
+# file can never demonstrate its own change; the new behaviour starts on the next pull request after it
+# merges.
+#
 # Deliberately no `synchronize`: a full review per push is expensive, and `dismiss_stale_reviews_on_push`
 # discards the previous one anyway. Ask for another round with `@claude` in a comment (see claude.yml).
 on:
