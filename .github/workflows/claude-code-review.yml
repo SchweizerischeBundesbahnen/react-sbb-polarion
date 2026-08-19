@@ -1,45 +1,69 @@
+---
+# Delegates to the organisation's shared review workflow.
+#
+# The starter-template workflow this replaces never produced a review in any of its runs: the action
+# refuses a bot-authored pull request but fails the job instead of skipping it, so every Renovate
+# pull request carried a red check ("Workflow initiated by non-human actor"), and on human pull
+# requests the job held read-only `pull-requests`/`issues` permissions, which cannot write a review
+# back. The shared workflow carries the bot and fork guard, the write permissions, the cross-round
+# thread bookkeeping (it resolves what has been fixed instead of re-reporting it), triage of other
+# review bots and of human feedback, and the guard that keeps a bot from submitting `APPROVE` or
+# `REQUEST_CHANGES` - the first would satisfy branch protection, the second is a merge blocker only
+# the bot can clear.
 name: Claude Code Review
 
+# Deliberately no `synchronize`: a full review per push is expensive, and `dismiss_stale_reviews_on_push`
+# discards the previous one anyway. Ask for another round with `@claude` in a comment (see claude.yml).
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review, reopened]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    types: [opened, ready_for_review, reopened]
+
+# Two rounds running at once would both post.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# Least privilege by default; the job widens it for itself.
+permissions: {}
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-
-    runs-on: ubuntu-latest
+    uses: SchweizerischeBundesbahnen/github-workflows-polarion/.github/workflows/reusable-claude-code-review.yml@main
     permissions:
+      actions: read  # read CI results on the pull request
       contents: read
-      pull-requests: read
-      issues: read
-      id-token: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 1
-
-      - name: Run Claude Code Review
-        id: claude-review
-        uses: anthropics/claude-code-action@v1
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
-          plugins: 'code-review@claude-code-plugins'
-          prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment"'
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://code.claude.com/docs/en/cli-reference for available options
-
+      pull-requests: write  # post the review and inline comments
+      issues: write  # `gh pr comment` treats pull requests as issues
+      id-token: write  # OIDC auth for claude-code-action
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+    with:
+      # The traps in this repository are the ones where every check stays green and the product is
+      # still broken, so they have to be named explicitly - the reusable prompt reads CLAUDE.md, but
+      # these are the cases worth spending review attention on. Kept in sync with .greptile/rules.md.
+      extra_focus: >-
+        This is a React component library published to npm, consumed by Polarion extensions.
+        Weight the review as follows, because a green CI run is not evidence that a diff is correct
+        here.
+        (1) src/generic/** is a vendored copy of ch.sbb.polarion.extension.generic and must never be
+        hand-edited, restyled or modernised - changes come from re-copying the file out of generic.
+        It carries intentional local patches that a by-the-book re-copy silently deletes: the
+        SearchableDropdown.js option-list portal appending to getRootNode() with outside-click
+        detection via event.composedPath(), control-tokens.css rewriting generic's inline: icon
+        placeholders to real url(../images/...) references, and the two Selawik @font-face blocks in
+        control-tokens.css. Removing any of them is a regression even though the test suite stays
+        green.
+        (2) The playwright devDependency in package.json and the
+        container: mcr.microsoft.com/playwright:v<version>-noble tags in ci.yml and
+        release-please.yml are the same number written twice, and the committed reference
+        screenshots were generated against it. NODE_VERSION in release-please.yml must match the
+        node inside that image.
+        (3) Reference screenshots under test/expected/ are canonical only when generated on Linux in
+        that pinned image via `npm run test:update:docker`. Overwriting one to get green is never the
+        fix. Every font a component names must exist in the image; stacks end on Liberation Mono,
+        Liberation Sans or FreeMono.
+        (4) react and react-dom are peer dependencies and must stay external to the bundle.
+        (5) The --sbb-* design tokens are declared on the .sbb-ui, .standard-admin-page,
+        .modal__container and .form-wrapper scopes, deliberately not on :root.
+        (6) Never silence a check to get green: no eslint-disable, no @ts-ignore, no type weakened to
+        any, no skipped test, no lowered or worked-around coverage threshold.
