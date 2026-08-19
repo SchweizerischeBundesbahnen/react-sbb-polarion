@@ -29,8 +29,8 @@ the standalone class goes away). So:
     article inherits Polarion's typography, and `.markdown-body` gains 25px vertical margins. Taking
     the npm package instead would restyle every About and User Guide page.
   - `control-tokens.css` - the two Selawik **`@font-face`** blocks (400 + 700, pointing at Polarion's
-    own `/polarion/ria/fonts/selawik/*.ttf`). Added in v0.0.2; generic's copy has **none**, and this is
-    deliberate and permanent: Polarion's native pages already load Selawik through the petrel theme, so
+    own `/polarion/ria/fonts/selawik/*.ttf`). Generic's copy has **none**, and this is deliberate and
+    permanent: Polarion's native pages already load Selawik through the petrel theme, so
     only the React SPAs - which run in their own iframe without petrel - need the declaration. A
     by-the-book re-copy from generic silently deletes it, every admin page falls back to Arial, and the
     **test suite stays green** (nothing serves `/polarion/ria/fonts/…` under test, so the references
@@ -46,8 +46,8 @@ the standalone class goes away). So:
   Ubuntu Mono / DejaVu, and its generic `monospace` keyword matches three faces (WenQuanYi Zen Hei Mono,
   Liberation Mono, FreeMono) with no stable winner — `PropertiesEditor` hit exactly this, failing one CI
   run and passing the next on the same commit. End such a stack on a face the image has (`Liberation
-  Mono`, `Liberation Sans`, `FreeMono`); check with
-  `docker run --rm mcr.microsoft.com/playwright:v1.62.0-noble fc-list : family`.
+  Mono`, `Liberation Sans`, `FreeMono`); list what the image has with
+  `docker run --rm "$(grep -om1 'mcr.microsoft.com/playwright:[^ ]*' .github/workflows/ci.yml)" fc-list : family`.
 - A bare `npm test` on Windows/macOS will **diff on the screenshot even when the component is
   unchanged** (OS font antialiasing - the control font stack is Windows-only Segoe UI, absent on Linux).
   That is expected; do NOT "fix" it by overwriting the reference. Confirm real visual changes with
