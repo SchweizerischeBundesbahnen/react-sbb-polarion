@@ -1,0 +1,76 @@
+---
+# CodeQL as a workflow (advanced setup) rather than the repository's default setup.
+#
+# Default setup analysed the same two languages, but it is configured in the repository settings, so
+# it cannot be reviewed in a pull request, cannot carry per-language triggers or timeouts, and offers
+# no way to add a query pack, a custom query, a path filter or a threat model without leaving the
+# repository. This file is the same analysis under version control.
+#
+# The two setups are mutually exclusive: while default setup is enabled, a run of this workflow fails
+# with "CodeQL default setup is enabled". Default setup therefore has to be turned off in the
+# repository settings for this workflow to produce results.
+#
+# The organisation ruleset "team-polarion_public-repos_requires-scans" requires CodeQL results on the
+# default branch (errors, and security alerts of high severity or higher), so this workflow is what
+# satisfies that rule once default setup is gone. Do not delete it.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly, off-peak Sunday - the cadence default setup used.
+    - cron: 17 5 * * 0
+  workflow_dispatch:
+
+# A new push to a pull request makes the run in flight pointless; main is left alone so the analysis
+# behind the branch-protection rule is never cancelled halfway.
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least privilege by default; the job widens it for itself.
+permissions: {}
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write  # upload the SARIF results
+      actions: read
+    strategy:
+      # One language failing must not hide the other language's results.
+      fail-fast: false
+      matrix:
+        # `javascript-typescript` covers src/ and test/; `actions` analyses the workflow files
+        # themselves (expression injection, over-broad permissions, untrusted checkout).
+        language: [javascript-typescript, actions]
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # Nothing here pushes, and CodeQL does not need to fetch a second ref.
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd  # v4
+        with:
+          languages: ${{ matrix.language }}
+          # Neither language is compiled, so there is nothing to build for the extractor. Note that
+          # this means the analysis reads the sources, not the bundle Vite produces.
+          build-mode: none
+          # Matches the suite default setup ran ("extended"). This is the line to extend with
+          # `+security-and-quality` or a query pack, which default setup could not express.
+          queries: security-extended
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd  # v4
+        with:
+          # Keeps the two languages' results in separate SARIF categories, so one does not overwrite
+          # the other.
+          category: /language:${{ matrix.language }}
