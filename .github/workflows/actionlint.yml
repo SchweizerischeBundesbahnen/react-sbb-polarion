@@ -1,0 +1,23 @@
+---
+# Static analysis of the workflow files themselves. Complements the CodeQL `actions` analysis, which
+# looks for injection and permission flaws: actionlint catches the expression, shell and schema errors
+# that would otherwise surface only as a failed run.
+name: ActionLint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ['**']
+  workflow_dispatch:
+
+# Least privilege by default; the job widens it for itself.
+permissions: {}
+
+jobs:
+  actionlint:
+    uses: SchweizerischeBundesbahnen/github-workflows-polarion/.github/workflows/reusable-actionlint.yml@main
+    permissions:
+      checks: write  # reviewdog reports findings as a check run
+      contents: read
+      pull-requests: read

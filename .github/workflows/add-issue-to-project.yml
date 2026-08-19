@@ -1,0 +1,20 @@
+---
+# Puts every new issue on the team's project board. Without this, an issue opened here is invisible to
+# the board the team actually plans from.
+name: Add issue to project
+
+on:
+  issues:
+    types: [opened]
+
+# Least privilege by default; the shared workflow mints its own token from the app credentials.
+permissions: {}
+
+jobs:
+  add-to-project:
+    uses: SchweizerischeBundesbahnen/github-workflows-polarion/.github/workflows/reusable-add-issue-to-project.yml@main
+    secrets:
+      POLARION_GITHUB_APP_ID: ${{ secrets.POLARION_GITHUB_APP_ID }}
+      POLARION_GITHUB_APP_PRIVATE_KEY: ${{ secrets.POLARION_GITHUB_APP_PRIVATE_KEY }}
+    with:
+      project-number: ${{ vars.POLARION_GITHUB_PROJECT_NUMBER }}
