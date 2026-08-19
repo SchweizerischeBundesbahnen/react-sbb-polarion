@@ -1,0 +1,21 @@
+---
+# Verifies that every commit in the pull request is a Conventional Commit.
+#
+# The commitizen pre-commit hook already checks this locally, but a hook can be bypassed and CI never
+# verified it, so a non-conforming commit could reach main. It matters here beyond tidiness:
+# release-please derives the next version and the changelog from these subjects, so a commit it cannot
+# parse is silently left out of the release notes.
+name: PR checks
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, unlocked]
+
+# Least privilege by default; the job widens it for itself.
+permissions: {}
+
+jobs:
+  check-conventional-commit:
+    uses: SchweizerischeBundesbahnen/github-workflows-polarion/.github/workflows/reusable-pr.yml@main
+    permissions:
+      contents: read

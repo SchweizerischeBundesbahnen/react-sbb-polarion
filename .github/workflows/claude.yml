@@ -1,0 +1,33 @@
+---
+# On-demand Claude, triggered by an `@claude` mention in an issue, a pull request comment or a review.
+#
+# This is the counterpart to claude-code-review.yml, which reviews a pull request once when it opens.
+# Asking here is how a further review round, or a question about a specific finding, is requested -
+# which is why the review workflow does not run on every push.
+name: Claude Code
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+  pull_request_review:
+    types: [submitted]
+
+# Least privilege by default; the job widens it for itself. The shared workflow filters the four
+# events above down to genuine `@claude` mentions from a non-bot sender.
+permissions: {}
+
+jobs:
+  claude:
+    uses: SchweizerischeBundesbahnen/github-workflows-polarion/.github/workflows/reusable-claude.yml@main
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write  # OIDC auth for claude-code-action
+      actions: read  # read CI results on pull requests
+    secrets:
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

@@ -1,0 +1,42 @@
+---
+# Label pull requests based on the paths of changed files.
+# See: https://github.com/actions/labeler
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '*.md'
+          - docs/**
+          - LICENSE
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+          - .pre-commit-config.yaml
+          - zizmor.yml
+
+javascript:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/**
+
+test:
+  - changed-files:
+      - any-glob-to-any-file:
+          - test/**
+          - vitest.config.ts
+          - scripts/docker-test.mjs
+
+# src/generic is a vendored copy of the generic extension and must never be hand-edited (see
+# CLAUDE.md). Labelling it makes that visible before the diff is opened.
+vendored:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/generic/**
+
+# Reference screenshots are canonical only when regenerated on Linux in the pinned Playwright image.
+needs-screenshot-refresh:
+  - changed-files:
+      - any-glob-to-any-file:
+          - test/expected/**
