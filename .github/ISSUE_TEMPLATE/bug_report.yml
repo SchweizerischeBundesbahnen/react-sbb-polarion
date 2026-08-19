@@ -1,0 +1,82 @@
+---
+name: Bug report
+description: Report something that does not work.
+title: 'fix: '
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before reporting, please search the [existing issues](../../issues?q=is%3Aissue+label%3Abug).
+
+        If this is a potential security vulnerability, do **not** open a public issue - follow the
+        [security policy](https://github.com/SchweizerischeBundesbahnen/.github/blob/main/SECURITY.md)
+        instead.
+
+        A note on visual differences: a screenshot test that diffs on macOS or Windows but not in CI is
+        expected behaviour, not a bug. See `test/README.md`.
+  - type: textarea
+    id: current
+    attributes:
+      label: Current behaviour
+      description: What happens, including the exact error message or a screenshot where there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: An unambiguous set of steps, or a link to a minimal reproduction.
+      placeholder: |
+        1. Render <SearchableSelect> with these props...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: input
+    id: package-version
+    attributes:
+      label: Package version
+      description: The version of @sbb-polarion/react-sbb-polarion you are using.
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: react-version
+    attributes:
+      label: React version
+      description: The react and react-dom version the consuming application supplies.
+      placeholder: 19.0.0
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Name and version. State whether the problem occurs in more than one browser.
+      placeholder: Chrome 140
+    validations:
+      required: true
+  - type: input
+    id: context
+    attributes:
+      label: Where the component runs
+      description: >
+        The consuming application, and whether the component is inside a Polarion form extension
+        (that is, inside a shadow root), an admin page, or a standalone application.
+    validations:
+      required: false
+  - type: textarea
+    id: anything-else
+    attributes:
+      label: Anything else
+      description: Links, related issues, or a suggestion as to the cause.
+    validations:
+      required: false

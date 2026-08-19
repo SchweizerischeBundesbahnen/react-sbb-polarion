@@ -1,0 +1,54 @@
+---
+name: Feature request
+description: Propose an enhancement.
+title: 'feat: '
+labels: [enhancement, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a substantial feature, please outline the proposal here before writing the code, so the
+        design can be discussed and duplicated effort avoided.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem are you trying to solve, and for which consuming application?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: >
+        The change you would like to see. For a new component or prop, an example of the API you have
+        in mind is more useful than a description of it.
+    validations:
+      required: true
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Would this change the public API?
+      description: >
+        Anything that changes an exported component's props, the peer-dependency range or the exported
+        entry points is a breaking change for consumers.
+      options:
+        - 'No: additive only'
+        - 'Yes: it would break existing consumers'
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches or workarounds you considered, and why they fall short.
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Links, screenshots, examples, or related issues.
+    validations:
+      required: false

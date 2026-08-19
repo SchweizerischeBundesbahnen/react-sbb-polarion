@@ -1,0 +1,19 @@
+# Baseline for editors that do not read .prettierrc. Prettier remains authoritative for every file it
+# formats, so the values here match it (tabWidth 2, LF, final newline) rather than competing with it.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = true
+
+# Trailing whitespace is significant in Markdown (two spaces force a line break), and the
+# trailing-whitespace pre-commit hook excludes Markdown for the same reason.
+[*.md]
+trim_trailing_whitespace = false
+
+[CODEOWNERS]
+indent_style = space

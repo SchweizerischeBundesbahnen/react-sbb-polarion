@@ -1,0 +1,15 @@
+* text=auto
+
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+
+# Reference screenshots are compared byte for byte against a fresh capture, so they must never be
+# touched by line-ending or text conversion.
+*.png binary
+*.ttf binary
