@@ -96,11 +96,10 @@ This is not a matter of taste. [release-please](https://github.com/googleapis/re
 the next version and the changelog from these subjects, so a subject it cannot parse is silently left
 out of the release notes.
 
-Note the asymmetry in how far that is enforced. The **individual commits** are checked twice: by the
-`commitizen` pre-commit hook locally, and by the `PR checks` workflow in CI, which runs `cz check` over
-every commit in the pull request. The **pull-request title** is checked by neither, and it is the string
-that actually reaches `main`, because merging is by squash. Until that gap is closed the title rests on
-the checklist item in the pull-request template, so please read it before you merge.
+Note how far that is actually enforced. The **individual commits** are checked by the `commitizen`
+pre-commit hook, which runs locally and can therefore be bypassed. The **pull-request title** is checked
+by nothing at all, and it is the string that reaches `main`, because merging is by squash - so it rests
+on the checklist item in the pull-request template. Please read that item before you merge.
 
 ## Coding rules
 
