@@ -73,3 +73,15 @@ repos:
     rev: v4.16.4
     hooks:
       - id: commitizen
+  # Workflow security static analysis. Configuration: zizmor.yml. Complements actionlint below -
+  # actionlint checks that a workflow is well-formed, zizmor checks that it is not exploitable
+  # (expression injection, over-broad permissions, a checkout that leaves a usable token behind, an
+  # action pinned to a movable tag).
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.29.0
+    hooks:
+      - id: zizmor
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint

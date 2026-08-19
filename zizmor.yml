@@ -1,0 +1,13 @@
+---
+# zizmor configuration. Run by the pre-commit hook of the same name.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # Third-party actions must be hash-pinned: a tag can be moved, a commit cannot. Renovate
+        # keeps the pins current and rewrites the trailing version comment with them.
+        '*': hash-pin
+        # The organisation's shared reusable workflows deliberately track @main, so that a fix to a
+        # shared workflow reaches every repository at once. Same policy as the shared workflows
+        # repository and the Java template use.
+        SchweizerischeBundesbahnen/*: any
