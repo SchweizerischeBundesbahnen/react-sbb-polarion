@@ -8,8 +8,8 @@ so it closes on merge - in this description, not in the title.
 
 - [ ] I have read the [`CONTRIBUTING`](CONTRIBUTING.md) document, and [`CLAUDE.md`](CLAUDE.md) for this
       repository's non-obvious rules
-- [ ] The title follows Conventional Commits (`type: subject`, no scope) - it becomes the commit subject
-      on `main`, because merging is by squash
+- [ ] The title follows Conventional Commits - it becomes the commit subject on `main`, because merging
+      is by squash, and release-please parses it for the version and the changelog
 - [ ] I have added tests that prove the fix or cover the feature
 - [ ] Any reference screenshot I changed was regenerated with `npm run test:update:docker`, never with a
       bare `npm run test:update`

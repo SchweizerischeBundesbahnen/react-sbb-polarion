@@ -83,9 +83,9 @@ follow the commit conventions below just as the individual commits do.
 ## Commit conventions
 
 Commit subjects and pull-request titles follow
-[Conventional Commits](https://www.conventionalcommits.org/): `type: subject`, in English, with **no
-scope**. Use the imperative mood, a lowercase first letter, no trailing period, and at most 50
-characters.
+[Conventional Commits](https://www.conventionalcommits.org/) in English: a `type`, an optional scope,
+then the description. Use the imperative mood, a lowercase first letter and no trailing period, and keep
+the subject short enough to read in a changelog.
 
 ```
 feat: add a disabled state to SearchableSelect
