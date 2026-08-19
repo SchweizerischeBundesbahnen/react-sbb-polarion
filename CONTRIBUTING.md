@@ -66,11 +66,13 @@ request.
    [`test/README.md`](./test/README.md).
 3. Run the checks locally. Installing the hooks with `pre-commit install` runs the relevant ones on
    every commit, which is the least effort way to keep them passing.
-4. Commit with a **signed** commit. Signed commits are required on every branch by an organisation
-   ruleset, and signing is how you certify the [Developer Certificate of Origin](./DCO):
+4. Commit with **both** a cryptographic signature and a sign-off. They are two different things and
+   each is needed for its own reason: `--gpg-sign` satisfies the organisation ruleset that requires
+   signed commits on every branch, while `--signoff` adds the `Signed-off-by:` trailer that certifies
+   the [Developer Certificate of Origin](./DCO). Neither flag implies the other.
 
    ```shell
-   git commit --gpg-sign
+   git commit --gpg-sign --signoff
    ```
 
 5. Push your branch and open a pull request against `main`.
@@ -92,7 +94,13 @@ fix: keep the dropdown portal inside the shadow root
 
 This is not a matter of taste. [release-please](https://github.com/googleapis/release-please) derives
 the next version and the changelog from these subjects, so a subject it cannot parse is silently left
-out of the release notes. Both the `commitizen` pre-commit hook and the `PR checks` workflow verify it.
+out of the release notes.
+
+Note the asymmetry in how far that is enforced. The **individual commits** are checked twice: by the
+`commitizen` pre-commit hook locally, and by the `PR checks` workflow in CI, which runs `cz check` over
+every commit in the pull request. The **pull-request title** is checked by neither, and it is the string
+that actually reaches `main`, because merging is by squash. Until that gap is closed the title rests on
+the checklist item in the pull-request template, so please read it before you merge.
 
 ## Coding rules
 
