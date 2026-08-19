@@ -37,33 +37,3 @@ jobs:
       id-token: write  # OIDC auth for claude-code-action
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-    with:
-      # The traps in this repository are the ones where every check stays green and the product is
-      # still broken, so they have to be named explicitly - the reusable prompt reads CLAUDE.md, but
-      # these are the cases worth spending review attention on. Kept in sync with .greptile/rules.md.
-      extra_focus: >-
-        This is a React component library published to npm, consumed by Polarion extensions.
-        Weight the review as follows, because a green CI run is not evidence that a diff is correct
-        here.
-        (1) src/generic/** is a vendored copy of ch.sbb.polarion.extension.generic and must never be
-        hand-edited, restyled or modernised - changes come from re-copying the file out of generic.
-        It carries intentional local patches that a by-the-book re-copy silently deletes: the
-        SearchableDropdown.js option-list portal appending to getRootNode() with outside-click
-        detection via event.composedPath(), control-tokens.css rewriting generic's inline: icon
-        placeholders to real url(../images/...) references, and the two Selawik @font-face blocks in
-        control-tokens.css. Removing any of them is a regression even though the test suite stays
-        green.
-        (2) The playwright devDependency in package.json and the
-        container: mcr.microsoft.com/playwright:v<version>-noble tags in ci.yml and
-        release-please.yml are the same number written twice, and the committed reference
-        screenshots were generated against it. NODE_VERSION in release-please.yml must match the
-        node inside that image.
-        (3) Reference screenshots under test/expected/ are canonical only when generated on Linux in
-        that pinned image via `npm run test:update:docker`. Overwriting one to get green is never the
-        fix. Every font a component names must exist in the image; stacks end on Liberation Mono,
-        Liberation Sans or FreeMono.
-        (4) react and react-dom are peer dependencies and must stay external to the bundle.
-        (5) The --sbb-* design tokens are declared on the .sbb-ui, .standard-admin-page,
-        .modal__container and .form-wrapper scopes, deliberately not on :root.
-        (6) Never silence a check to get green: no eslint-disable, no @ts-ignore, no type weakened to
-        any, no skipped test, no lowered or worked-around coverage threshold.
