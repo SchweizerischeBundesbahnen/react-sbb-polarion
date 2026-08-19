@@ -6,9 +6,11 @@
 # no way to add a query pack, a custom query, a path filter or a threat model without leaving the
 # repository. This file is the same analysis under version control.
 #
-# The two setups are mutually exclusive: while default setup is enabled, a run of this workflow fails
-# with "CodeQL default setup is enabled". Default setup therefore has to be turned off in the
-# repository settings for this workflow to produce results.
+# The two setups are mutually exclusive. While default setup is enabled, this workflow runs the analysis
+# and then fails on the upload with the verbatim message
+#   Code Scanning could not process the submitted SARIF file:
+#   CodeQL analyses from advanced configurations cannot be processed when the default setup is enabled
+# so default setup has to be turned off in the repository settings for this workflow to produce results.
 #
 # The organisation ruleset "team-polarion_public-repos_requires-scans" requires CodeQL results on the
 # default branch (errors, and security alerts of high severity or higher), so this workflow is what
