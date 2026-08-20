@@ -350,6 +350,10 @@ there is no stylesheet to serve alongside it.
 > loading generic's older engine coordinates through exactly those keys, so renaming them would split
 > the registries and break button ordering across the old/new boundary. See the NAMING note at the top
 > of `src/shell/DleToolbarStarter.js`.
+>
+> One page can evaluate this engine twice - an administrator configuring the same injector in two places
+> produces exactly that - so the disabled state remembers its click blocker on the button element rather
+> than in the load that added it. The element is what both loads can reach; the load cannot be.
 
 Each is exposed as an export: `@sbb-polarion/react-sbb-polarion/breadcrumb-bridge.js` and
 `@sbb-polarion/react-sbb-polarion/dle-toolbar-starter.js`.
