@@ -171,11 +171,12 @@ describe('CommonDleToolbarStarter', () => {
     // literal one would be a module tsc cannot resolve.
     await import(/* @vite-ignore */ new URL('../src/shell/DleToolbarStarter.js?second-load', import.meta.url).href);
     const second = engine();
-    expect(second, 'the second load did not replace the global').not.toBe(first);
-    // That load replaced the global for good; every later test in this file expects the first copy.
+    // Registered before the assertion below: that load replaced the global for good, and the case
+    // where the assertion throws is exactly the one where the rest of the file must not inherit it.
     onTestFinished(() => {
       window.CommonDleToolbarStarter = first;
     });
+    expect(second, 'the second load did not replace the global').not.toBe(first);
 
     first.create(cfg()).injectToolbar({ disabled: true });
     const clicked = vi.fn();

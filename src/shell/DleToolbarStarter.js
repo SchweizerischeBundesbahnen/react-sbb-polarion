@@ -34,7 +34,7 @@
  *     `data-common-prev-*` attributes it writes on its own buttons).
  *   - Everything SHARED with the other extensions on the page keeps the `__generic*` /
  *     `generic-*` names it had in ch.sbb.polarion.extension.generic: the `top.__genericDleToolbar*`
- *     registries (order, observers, owners and the disabled-state click blocker),
+ *     registries (order, observers and owners),
  *     `top.__genericRpeAutoExpandObserver` and the `generic-dle-toolbar-styles` element id.
  *     Those are a wire format, not a name. An extension still loading generic's older engine
  *     coordinates through exactly those keys, and renaming them would silently split the registries -
@@ -87,16 +87,10 @@ import toolbarStyles from './dleToolbar.css?inline';
     // button's baked-in onclick. Module-level (stateless) so a single shared reference add/removes
     // consistently on ANY element — including a stale panel's button kept across an SPA navigation,
     // whose listener a later enable must be able to clear regardless of which starter instance runs.
-    // Shared across engine loads on purpose, like the registries above (see NAMING). A disabled button
-    // gets this as a capture-phase listener, and whoever re-enables it must be able to take it off -
-    // including a SECOND load of this engine in the same page, which an administrator produces by
-    // configuring the same injector twice (say Administration > Properties and polarion.properties).
-    // A per-load function would be a different identity there, so removeEventListener would miss it and
-    // the button would keep swallowing clicks while looking, and hovering, perfectly enabled.
-    const blockClick = top.__genericDleToolbarBlockClick || (top.__genericDleToolbarBlockClick = function (event) {
+    function blockClick(event) {
         event.stopPropagation();
         event.preventDefault();
-    });
+    }
 
     // Toggle the disabled look/behavior on an injected container and its inner interactive elements:
     // the dleToolBarDisabled class fades it and makes the container non-hit-testable to the mouse
@@ -109,12 +103,24 @@ import toolbarStyles from './dleToolbar.css?inline';
         if (!container) {
             return;
         }
-        container.removeEventListener('click', blockClick, true);
+        // Take off whichever blocker this element carries, not the one this load would have added.
+        // The same page can evaluate this engine twice - an administrator configuring the same injector
+        // in two places produces exactly that - and then the enable comes from a different load than the
+        // disable did. A per-load function is a different identity, removeEventListener would silently
+        // match nothing, and the button would keep swallowing clicks while looking, and hovering,
+        // perfectly enabled. The element outlives both loads, so it is where the reference belongs; a
+        // shared singleton would instead pin the blocker to the realm of whichever load ran first, and
+        // in the document editor that realm is an iframe that later goes away.
+        if (container.commonBlockClick) {
+            container.removeEventListener('click', container.commonBlockClick, true);
+            delete container.commonBlockClick;
+        }
         const interactive = container.querySelectorAll('[role="button"], button, a');
         if (disabled) {
             container.classList.add('dleToolBarDisabled');
             container.setAttribute('aria-disabled', 'true');
             container.addEventListener('click', blockClick, true);
+            container.commonBlockClick = blockClick;
             interactive.forEach(el => {
                 // Remember the element's own aria-disabled / tabindex (if any) so re-enabling
                 // restores the markup's values instead of clobbering them.
