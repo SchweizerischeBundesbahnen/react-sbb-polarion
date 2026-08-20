@@ -550,6 +550,14 @@ export default class SearchableDropdown {
             e.preventDefault();
             this._handleEnter();
         } else if (e.key === 'Escape') {
+            // react-sbb-polarion patch (not in upstream generic): an open popup consumes the Escape.
+            // Without this the keydown's default action survives and the browser goes on to fire the
+            // close request of an enclosing modal <dialog> (RSP's Modal), so one Escape would both
+            // close the list and throw away the dialog the user is filling in. Only when the popup is
+            // open: a closed control must let Escape through to whatever encloses it.
+            if (this.isOpen) {
+                e.preventDefault();
+            }
             this._close();
         }
     }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
+import { userEvent } from 'vitest/browser';
 import Modal from '../src/components/Modal';
 import SearchableSelect, { type SelectOption } from '../src/components/SearchableSelect';
 import { flush, mousedown } from './helpers';
@@ -16,10 +17,10 @@ const OPTIONS: SelectOption[] = [
   { id: 'c', name: 'Third' },
 ];
 
-function ModalWithSelect() {
+function ModalWithSelect({ onCancel = () => {} }: { onCancel?: () => void }) {
   const [value, setValue] = useState('a');
   return (
-    <Modal open title="Export" onOk={() => {}} onCancel={() => {}}>
+    <Modal open title="Export" onOk={() => {}} onCancel={onCancel}>
       <div style={{ width: 240 }}>
         <SearchableSelect value={value} onChange={setValue} options={OPTIONS} />
       </div>
@@ -55,6 +56,24 @@ describe('SearchableSelect inside a Modal', () => {
     const hit = topmostAtPopup();
     expect(hit, 'nothing painted at the popup coordinates').not.toBeNull();
     expect(portal().contains(hit), `dialog paints over the option list, hit: ${hit?.className}`).toBe(true);
+  });
+
+  it('lets Escape close the list without closing the dialog', async () => {
+    const onCancel = vi.fn();
+    render(<ModalWithSelect onCancel={onCancel} />);
+    await flush();
+
+    mousedown(trigger());
+    await flush();
+    expect(optionsList().getBoundingClientRect().height).toBeGreaterThan(0);
+
+    // A real key press, not a synthetic keydown: Escape on a modal <dialog> is a close request the
+    // browser handles itself, and a hand-dispatched KeyboardEvent never produces it.
+    await userEvent.keyboard('{Escape}');
+    await flush();
+
+    expect(optionsList().getBoundingClientRect().height, 'the option list stayed open').toBe(0);
+    expect(onCancel, 'Escape closed the dialog as well as the list').not.toHaveBeenCalled();
   });
 
   it('is clickable through to a selection', async () => {
