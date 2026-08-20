@@ -38,6 +38,9 @@ export default function Modal({
   children,
 }: Readonly<ModalProps>) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  // Set by the `cancel` handler below, which fires for a close REQUEST - Escape or the light dismiss -
+  // and not for the buttons. The focus cleanup needs to tell those apart; see it for why.
+  const closedByRequest = useRef(false);
 
   // showModal() is what makes it modal; the `open` attribute alone renders a non-modal dialog with no
   // backdrop and no focus handling, so this cannot be expressed declaratively in the JSX.
@@ -74,10 +77,14 @@ export default function Modal({
       dialog?.close();
       // Closing gives focus back to the opener, and :focus-visible then judges by the LAST interaction
       // - so dismissing with Escape paints a ring on a button the user only ever clicked. Take the
-      // focus off again in exactly that case, which is why the ring is checked again here rather than
-      // assumed: closing with the mouse restores the focus without one, and that restoration is what
-      // the component promises. A keyboard user, who had a ring all along, keeps both.
-      if (!openerHadRing && opener?.matches?.(':focus-visible')) {
+      // focus off again in exactly that case, and only there. Three conditions, each ruling out a user
+      // who should keep the focus they have:
+      //   - the opener had no ring when it opened the dialog, so it was reached with the pointer;
+      //   - the close was a close request (Escape, light dismiss) rather than a button, so a user who
+      //     tabbed to Cancel and pressed Enter - navigating by keyboard by then - keeps both;
+      //   - a ring is actually there now, so a mouse close, which restores focus without one, is left
+      //     alone. That restoration is what this component promises.
+      if (!openerHadRing && closedByRequest.current && opener?.matches?.(':focus-visible')) {
         opener.blur?.();
       }
     };
@@ -102,6 +109,7 @@ export default function Modal({
       // believing it is still open.
       onCancel={(event) => {
         event.preventDefault();
+        closedByRequest.current = true;
         onCancel();
       }}
     >

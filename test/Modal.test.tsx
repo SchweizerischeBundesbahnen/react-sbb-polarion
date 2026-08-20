@@ -138,6 +138,20 @@ describe('Modal focus restoration', () => {
     }
   });
 
+  // A dialog opened with the mouse but closed from the keyboard: by then the user is navigating with
+  // it, so the focus they get back is the focus they need.
+  it('restores focus when a mouse-opened dialog is closed with the keyboard', async () => {
+    const button = withOpener();
+    await userEvent.click(button);
+
+    openModal();
+    // Tab to a footer button and press it, which is a close through the parent, not a close request.
+    await userEvent.keyboard('{Tab}{Tab}{Tab}{Enter}');
+    teardown();
+
+    expect(document.activeElement, 'a keyboard close dropped the focus').toBe(button);
+  });
+
   it('keeps focus and ring for a keyboard user', async () => {
     const button = withOpener();
     button.focus();
