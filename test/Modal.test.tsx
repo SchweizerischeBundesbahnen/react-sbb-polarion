@@ -70,6 +70,52 @@ function openModal(
   return { onOk, onCancel };
 }
 
+// Focus handling around the opener, which is what a user sees as a ring appearing on a toolbar button
+// after they dismiss the dialog with Escape. The <dialog> gives focus back on close, and :focus-visible
+// then judges by the last interaction - the key press - however the dialog was opened.
+describe('Modal focus restoration', () => {
+  let opener: HTMLButtonElement | undefined;
+
+  const withOpener = () => {
+    opener = document.createElement('button');
+    opener.textContent = 'Open';
+    document.body.appendChild(opener);
+    return opener;
+  };
+
+  afterEach(() => {
+    opener?.remove();
+    opener = undefined;
+  });
+
+  it('leaves no ring on a button the user only clicked', async () => {
+    const button = withOpener();
+    await userEvent.click(button);
+    expect(button.matches(':focus-visible'), 'a click should not raise a ring').toBe(false);
+
+    openModal();
+    await userEvent.keyboard('{Escape}');
+    teardown();
+
+    expect(button.matches(':focus-visible'), 'Escape put a ring on a clicked button').toBe(false);
+  });
+
+  it('keeps focus and ring for a keyboard user', async () => {
+    const button = withOpener();
+    button.focus();
+    // A ring the control already had: the dialog going away must not take it, or the keyboard user
+    // loses their place in the toolbar.
+    await userEvent.keyboard('{Tab}');
+    button.focus();
+
+    openModal();
+    await userEvent.keyboard('{Escape}');
+    teardown();
+
+    expect(document.activeElement, 'focus did not return to the opener').toBe(button);
+  });
+});
+
 describe('Modal', () => {
   it('renders nothing when open is false', () => {
     openModal({ open: false });

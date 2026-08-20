@@ -48,6 +48,13 @@ export default function Modal({
   useLayoutEffect(() => {
     if (!open) return;
     const dialog = dialogRef.current;
+
+    // Read before showModal(): the control that opened the dialog, and whether it was showing a focus
+    // ring at the time. A mouse click focuses a control without one; tabbing to it and pressing Enter
+    // leaves one. After showModal() the active element is the dialog, so this cannot be read later.
+    const opener = document.activeElement as HTMLElement | null;
+    const openerHadRing = !!opener?.matches?.(':focus-visible');
+
     dialog?.showModal();
     // The dialog focusing steps land on the first focusable descendant, which here is the close button
     // - so Enter, pressed straight after opening, would dismiss the dialog. Focus the dialog itself
@@ -55,7 +62,18 @@ export default function Modal({
     // rather than with `autoFocus`, because React does not render that as the attribute the focusing
     // steps read; it focuses the node itself, which is not the same thing for a <dialog>.
     dialog?.focus();
-    return () => dialog?.close();
+
+    return () => {
+      dialog?.close();
+      // Closing gives focus back to the opener, and :focus-visible then judges by the LAST interaction
+      // - so dismissing with Escape paints a ring on a button the user only ever clicked. Take the
+      // focus off again in exactly that case: the opener had no ring when it opened the dialog, so it
+      // should not gain one by the dialog going away. A keyboard user, who did have one, keeps both
+      // the focus and the ring.
+      if (!openerHadRing) {
+        opener?.blur?.();
+      }
+    };
   }, [open]);
 
   if (!open) return null;
