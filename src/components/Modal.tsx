@@ -64,6 +64,9 @@ export default function Modal({
       opener = opener.shadowRoot.activeElement as HTMLElement;
     }
     const openerHadRing = !!opener?.matches?.(':focus-visible');
+    // This component survives `open` toggling, and so does the ref: without the reset, the first
+    // dismissal would make every later close of the same instance look like a close request.
+    closedByRequest.current = false;
 
     dialog?.showModal();
     // The dialog focusing steps land on the first focusable descendant, which here is the close button
