@@ -4,7 +4,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import Modal from '../src/components/Modal';
 import SearchableSelect, { type SelectOption } from '../src/components/SearchableSelect';
-import { flush, mousedown } from './helpers';
+import { flush, mousedown, parkPointer } from './helpers';
 
 // A <dialog> opened with showModal() paints in the browser's top layer, which is above the normal layer
 // whatever the z-index says. The option list is a portal outside the dialog, so no z-index can put it in
@@ -41,7 +41,13 @@ const topmostAtPopup = (): Element | null => {
   return document.elementFromPoint(x, y);
 };
 
-afterEach(cleanup);
+// The real click below leaves Playwright's pointer at the option's coordinates, and that position
+// survives into the next file - which is how a visual reference once came to be captured in its
+// :hover paint. Park it before handing over.
+afterEach(async () => {
+  await parkPointer();
+  cleanup();
+});
 
 describe('SearchableSelect inside a Modal', () => {
   it('paints the option list above the dialog', async () => {

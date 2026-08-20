@@ -918,7 +918,15 @@ export default class SearchableDropdown {
     // under <body> therefore loses twice against RSP's Modal: it is painted behind the dialog and it
     // cannot be clicked. Being a descendant of the open dialog fixes both - it paints with the dialog
     // and is not inert. `overflow` on the dialog does not clip it: the portal is position: fixed, so
-    // its containing block is the viewport unless an ancestor has a transform/filter/contain.
+    // its containing block is the viewport unless an ancestor has a transform/filter/contain, and a
+    // top-layer element is rendered as a sibling of the root, so no ancestor of the dialog reaches it.
+    //
+    // `dialog:modal`, not `dialog[open]`: the reasoning above is about the top layer and inertness, and
+    // a dialog opened with show() has neither. Re-homing into one would be the move that introduces the
+    // problem the paragraph above rules out - a non-modal dialog is an ordinary in-flow element, so a
+    // transformed ancestor of it would become the fixed portal's containing block and _position()'s
+    // viewport coordinates would be wrong. The pseudo-class is narrower in browser support than the
+    // attribute selector, and cheaply affordable: Modal already ships `closedby`, which is newer still.
     //
     // Otherwise, keep the portal on the control's own root node: in a shadow root (an extension
     // encapsulating its styles in a shared-page form-extension panel) so the popup is styled by that
@@ -927,7 +935,7 @@ export default class SearchableDropdown {
     // in the same shadow root is found, one outside it is not ours to reach into.
     _portalHost() {
         const source = this.originalElement || this.container;
-        const dialog = source && source.closest ? source.closest('dialog[open]') : null;
+        const dialog = source && source.closest ? source.closest('dialog:modal') : null;
         if (dialog) {
             return dialog;
         }
