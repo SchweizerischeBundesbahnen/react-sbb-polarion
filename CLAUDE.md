@@ -24,8 +24,9 @@ the standalone class goes away). So:
     makes the dropdown work inside the form-extension shadow roots; the `<dialog>` part is what makes it
     work inside `Modal`, whose `showModal()` puts the dialog in the top layer and marks everything
     outside it inert - a portal under `<body>` is both painted behind it and unclickable. `Escape` on an
-    open popup also calls `preventDefault()`, so it closes the list only: uncancelled, the keydown goes
-    on to fire the enclosing dialog's close request and discards the whole form.
+    open popup also calls `preventDefault()` and returns focus to the trigger, so it closes the list
+    only: uncancelled, the keydown goes on to fire the enclosing dialog's close request and discards the
+    whole form, and without the focus call focus falls back to the body, which the dialog made inert.
   - `control-tokens.css` - generic's `inline:` icon placeholders are rewritten to real
     `url(../images/…)` (Vite inlines them at build); `ensureSharedStyles.js` is a local no-op (the CSS
     is bundled, not injected at runtime).

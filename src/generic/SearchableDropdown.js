@@ -550,15 +550,30 @@ export default class SearchableDropdown {
             e.preventDefault();
             this._handleEnter();
         } else if (e.key === 'Escape') {
-            // react-sbb-polarion patch (not in upstream generic): an open popup consumes the Escape.
-            // Without this the keydown's default action survives and the browser goes on to fire the
-            // close request of an enclosing modal <dialog> (RSP's Modal), so one Escape would both
-            // close the list and throw away the dialog the user is filling in. Only when the popup is
-            // open: a closed control must let Escape through to whatever encloses it.
-            if (this.isOpen) {
+            // react-sbb-polarion patch (not in upstream generic): an open popup consumes the Escape and
+            // takes the focus back.
+            //
+            // Cancelling matters because otherwise the keydown's default action survives and the browser
+            // goes on to fire the close request of an enclosing modal <dialog> (RSP's Modal), so one
+            // Escape would both close the list and throw away the dialog the user is filling in. Only
+            // when the popup is open: a closed control must let Escape through to whatever encloses it,
+            // which is how a second Escape reaches the dialog.
+            //
+            // The focus call is the ARIA combobox behavior - dismiss the popup, return to the combobox.
+            // _open() moved focus into the popup (the search box), _close() hides the portal, and focus
+            // would otherwise fall back to the body: inside a modal dialog the body is inert, so the
+            // keyboard user loses their place and Tab restarts at the top of the dialog. It belongs here
+            // rather than in _close(), which also runs on the outside click (must not steal focus from
+            // whatever was clicked) and on the mouse pick that deliberately blurs to leave the combo at
+            // rest.
+            const wasOpen = this.isOpen;
+            if (wasOpen) {
                 e.preventDefault();
             }
             this._close();
+            if (wasOpen) {
+                this.trigger.focus();
+            }
         }
     }
 

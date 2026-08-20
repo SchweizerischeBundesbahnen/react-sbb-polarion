@@ -74,6 +74,28 @@ describe('SearchableSelect inside a Modal', () => {
 
     expect(optionsList().getBoundingClientRect().height, 'the option list stayed open').toBe(0);
     expect(onCancel, 'Escape closed the dialog as well as the list').not.toHaveBeenCalled();
+    // Dismissing the popup returns to the combobox. Without it focus is stranded on the hidden search
+    // box and falls back to the body, which is inert while the dialog is open - the keyboard user
+    // loses their place in the form.
+    expect(document.activeElement, 'focus did not return to the combobox').toBe(trigger());
+  });
+
+  it('lets a second Escape close the dialog', async () => {
+    const onCancel = vi.fn();
+    render(<ModalWithSelect onCancel={onCancel} />);
+    await flush();
+
+    mousedown(trigger());
+    await flush();
+    await userEvent.keyboard('{Escape}');
+    await flush();
+    expect(onCancel).not.toHaveBeenCalled();
+
+    // The popup is closed now, so the control passes the key on - this is what the isOpen guard on the
+    // preventDefault above exists to preserve.
+    await userEvent.keyboard('{Escape}');
+    await flush();
+    expect(onCancel, 'Escape no longer reaches the dialog').toHaveBeenCalledTimes(1);
   });
 
   it('is clickable through to a selection', async () => {
@@ -86,7 +108,11 @@ describe('SearchableSelect inside a Modal', () => {
     const second = [...portal().querySelectorAll<HTMLElement>('.items .option')].find((o) =>
       o.textContent?.includes('Second'),
     )!;
-    mousedown(second);
+    // A real click, not the synthetic mousedown helper: dispatchEvent reaches an inert target and does
+    // no hit-testing, so it would select just as happily with the popup buried behind the dialog. This
+    // goes through Playwright's actionability check, which is the half of the bug - unclickable even
+    // where it showed - that paint order alone does not cover.
+    await userEvent.click(second);
     await flush();
 
     expect(trigger().value).toBe('Second');
