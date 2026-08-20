@@ -33,8 +33,9 @@
  *   - This engine's own API and internals use `Common` / `common` (the global above, the
  *     `data-common-prev-*` attributes it writes on its own buttons).
  *   - Everything SHARED with the other extensions on the page keeps the `__generic*` /
- *     `generic-*` names it had in ch.sbb.polarion.extension.generic: the three `top.__genericDleToolbar*`
- *     registries, `top.__genericRpeAutoExpandObserver` and the `generic-dle-toolbar-styles` element id.
+ *     `generic-*` names it had in ch.sbb.polarion.extension.generic: the `top.__genericDleToolbar*`
+ *     registries (order, observers, owners, seq, and the disabled-state click blocker),
+ *     `top.__genericRpeAutoExpandObserver` and the `generic-dle-toolbar-styles` element id.
  *     Those are a wire format, not a name. An extension still loading generic's older engine
  *     coordinates through exactly those keys, and renaming them would silently split the registries -
  *     buttons from old and new extensions would stop ordering against each other and the styles would
@@ -86,10 +87,16 @@ import toolbarStyles from './dleToolbar.css?inline';
     // button's baked-in onclick. Module-level (stateless) so a single shared reference add/removes
     // consistently on ANY element — including a stale panel's button kept across an SPA navigation,
     // whose listener a later enable must be able to clear regardless of which starter instance runs.
-    function blockClick(event) {
+    // Shared across engine loads on purpose, like the registries above (see NAMING). A disabled button
+    // gets this as a capture-phase listener, and whoever re-enables it must be able to take it off -
+    // including a SECOND load of this engine in the same page, which an administrator produces by
+    // configuring the same injector twice (say Administration > Properties and polarion.properties).
+    // A per-load function would be a different identity there, so removeEventListener would miss it and
+    // the button would keep swallowing clicks while looking, and hovering, perfectly enabled.
+    const blockClick = top.__genericDleToolbarBlockClick || (top.__genericDleToolbarBlockClick = function (event) {
         event.stopPropagation();
         event.preventDefault();
-    }
+    });
 
     // Toggle the disabled look/behavior on an injected container and its inner interactive elements:
     // the dleToolBarDisabled class fades it and makes the container non-hit-testable to the mouse
