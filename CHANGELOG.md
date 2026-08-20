@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.0.0...v2.0.1) (2026-08-20)
+
+
+### Bug Fixes
+
+* no focus ring on an opener that was only clicked ([#90](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/90)) ([1300bf2](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/1300bf2d3d38fbcb3fcff68efbef36ad9bfe3f9c))
+* share the disabled-state click blocker across engine loads ([#89](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/89)) ([e35f76e](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/e35f76e5e6a06ad8013220bf5ccc8255f317ecdd))
+
 ## [2.0.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v1.0.0...v2.0.0) (2026-08-20)
 
 
