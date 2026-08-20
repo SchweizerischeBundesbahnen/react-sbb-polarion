@@ -52,7 +52,14 @@ export default function Modal({
     // Read before showModal(): the control that opened the dialog, and whether it was showing a focus
     // ring at the time. A mouse click focuses a control without one; tabbing to it and pressing Enter
     // leaves one. After showModal() the active element is the dialog, so this cannot be read later.
-    const opener = document.activeElement as HTMLElement | null;
+    //
+    // document.activeElement stops at a shadow host, and the form-extension panels mount into one, so
+    // the walk down through shadowRoot.activeElement is what reaches the control the user pressed
+    // rather than the element hosting it.
+    let opener = document.activeElement as HTMLElement | null;
+    while (opener?.shadowRoot?.activeElement) {
+      opener = opener.shadowRoot.activeElement as HTMLElement;
+    }
     const openerHadRing = !!opener?.matches?.(':focus-visible');
 
     dialog?.showModal();
@@ -67,11 +74,11 @@ export default function Modal({
       dialog?.close();
       // Closing gives focus back to the opener, and :focus-visible then judges by the LAST interaction
       // - so dismissing with Escape paints a ring on a button the user only ever clicked. Take the
-      // focus off again in exactly that case: the opener had no ring when it opened the dialog, so it
-      // should not gain one by the dialog going away. A keyboard user, who did have one, keeps both
-      // the focus and the ring.
-      if (!openerHadRing) {
-        opener?.blur?.();
+      // focus off again in exactly that case, which is why the ring is checked again here rather than
+      // assumed: closing with the mouse restores the focus without one, and that restoration is what
+      // the component promises. A keyboard user, who had a ring all along, keeps both.
+      if (!openerHadRing && opener?.matches?.(':focus-visible')) {
+        opener.blur?.();
       }
     };
   }, [open]);

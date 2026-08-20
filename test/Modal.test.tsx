@@ -100,6 +100,19 @@ describe('Modal focus restoration', () => {
     expect(button.matches(':focus-visible'), 'Escape put a ring on a clicked button').toBe(false);
   });
 
+  it('restores focus when the dialog is closed with the mouse', async () => {
+    const button = withOpener();
+    await userEvent.click(button);
+
+    openModal();
+    await userEvent.click(cancelBtn());
+    teardown();
+
+    // No ring is raised by a mouse close, so there is nothing to take away - and the restoration this
+    // component promises has to survive the fix for the Escape case.
+    expect(document.activeElement, 'the mouse close dropped the focus').toBe(button);
+  });
+
   it('keeps focus and ring for a keyboard user', async () => {
     const button = withOpener();
     button.focus();
