@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 // Classic script that registers window.CommonDleToolbarStarter on load; importing it for its side
 // effect exposes that global. It also captures its registries off `top` at load time, so the tests
 // clear those by key and never reassign them.
@@ -156,6 +156,38 @@ describe('CommonDleToolbarStarter', () => {
     starter.injectToolbar();
     starter.injectToolbar();
     expect(topDocument.querySelectorAll('#my-btn')).toHaveLength(1);
+  });
+
+  // An administrator can configure the same injector twice - Administration > Properties and
+  // polarion.properties both carry a scriptInjection - and then this engine is evaluated twice in one
+  // page. The two loads must agree on the capture-phase listener that a disabled button swallows clicks
+  // with, or the first load's listener outlives the second load's re-enable: the button looks enabled,
+  // highlights on hover, and does nothing when clicked, with nothing in the console.
+  it('re-enables a button whose disabled state came from another load of the engine', async () => {
+    setHtml(dleHtml());
+    const first = engine();
+    // A second evaluation of the same file, which is what a duplicated script tag produces. The URL is
+    // built at runtime: a query-suffixed specifier is what gives Vite a fresh module instance, and a
+    // literal one would be a module tsc cannot resolve.
+    await import(/* @vite-ignore */ new URL('../src/shell/DleToolbarStarter.js?second-load', import.meta.url).href);
+    const second = engine();
+    // Registered before the assertion below: that load replaced the global for good, and the case
+    // where the assertion throws is exactly the one where the rest of the file must not inherit it.
+    onTestFinished(() => {
+      window.CommonDleToolbarStarter = first;
+    });
+    expect(second, 'the second load did not replace the global').not.toBe(first);
+
+    first.create(cfg()).injectToolbar({ disabled: true });
+    const clicked = vi.fn();
+    byId('my-btn')!.querySelector('button')!.addEventListener('click', clicked);
+
+    // The permission check of the second instance answers, and it owns the marker now.
+    second.create(cfg()).setDisabled(false);
+
+    byId('my-btn')!.querySelector('button')!.click();
+    expect(byId('my-btn')!.classList.contains('dleToolBarDisabled')).toBe(false);
+    expect(clicked, 'a listener from the other engine load is still swallowing the click').toHaveBeenCalledTimes(1);
   });
 
   it('does nothing when the toolbar row is not rendered yet', () => {
