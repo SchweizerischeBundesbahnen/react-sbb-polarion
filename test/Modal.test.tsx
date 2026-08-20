@@ -113,6 +113,31 @@ describe('Modal focus restoration', () => {
     expect(document.activeElement, 'the mouse close dropped the focus').toBe(button);
   });
 
+  // The form-extension panels mount into a shadow root, and document.activeElement stops at its host -
+  // so without the walk down through shadowRoot.activeElement the ring decision is taken on the host,
+  // and blurring the host leaves the control the user pressed wearing the ring.
+  it('decides on the control inside a shadow root, not on its host', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    const button = document.createElement('button');
+    button.textContent = 'Open';
+    shadow.appendChild(button);
+
+    try {
+      await userEvent.click(button);
+      expect(button.matches(':focus-visible'), 'a click should not raise a ring').toBe(false);
+
+      openModal();
+      await userEvent.keyboard('{Escape}');
+      teardown();
+
+      expect(button.matches(':focus-visible'), 'the ring decision was taken on the shadow host').toBe(false);
+    } finally {
+      host.remove();
+    }
+  });
+
   it('keeps focus and ring for a keyboard user', async () => {
     const button = withOpener();
     button.focus();
