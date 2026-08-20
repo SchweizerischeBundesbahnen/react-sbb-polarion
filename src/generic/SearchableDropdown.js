@@ -408,9 +408,7 @@ export default class SearchableDropdown {
         // in a shared-page form-extension panel), keep the portal in that shadow root so it is styled
         // by the shadow's own stylesheet and stays isolated from other extensions on the page; in the
         // ordinary light DOM it falls back to <body>. `position: fixed` is viewport-relative in both.
-        const portalSource = this.originalElement || this.container;
-        const portalRoot = portalSource && portalSource.getRootNode ? portalSource.getRootNode() : document;
-        this.portalParent = typeof ShadowRoot !== 'undefined' && portalRoot instanceof ShadowRoot ? portalRoot : document.body;
+        this.portalParent = this._portalHost();
         this.portalParent.appendChild(this.portal);
 
         if (this.multiselect) {
@@ -890,7 +888,39 @@ export default class SearchableDropdown {
         this.activeIndex = -1;
     }
 
+    // react-sbb-polarion patch (not in upstream generic): where the popup portal lives.
+    //
+    // A native <dialog> opened with showModal() paints in the browser's TOP LAYER, which is above the
+    // normal layer whatever the z-index says, and makes everything outside itself INERT. A portal left
+    // under <body> therefore loses twice against RSP's Modal: it is painted behind the dialog and it
+    // cannot be clicked. Being a descendant of the open dialog fixes both - it paints with the dialog
+    // and is not inert. `overflow` on the dialog does not clip it: the portal is position: fixed, so
+    // its containing block is the viewport unless an ancestor has a transform/filter/contain.
+    //
+    // Otherwise, keep the portal on the control's own root node: in a shadow root (an extension
+    // encapsulating its styles in a shared-page form-extension panel) so the popup is styled by that
+    // shadow's stylesheet and stays isolated from other extensions on the page, and under <body> in the
+    // ordinary light DOM. closest() does not cross a shadow boundary, which is what we want - a dialog
+    // in the same shadow root is found, one outside it is not ours to reach into.
+    _portalHost() {
+        const source = this.originalElement || this.container;
+        const dialog = source && source.closest ? source.closest('dialog[open]') : null;
+        if (dialog) {
+            return dialog;
+        }
+        const root = source && source.getRootNode ? source.getRootNode() : document;
+        return typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot ? root : document.body;
+    }
+
     _show() {
+        // react-sbb-polarion patch (not in upstream generic): re-home the portal before showing it.
+        // The host depends on state that can change after construction - a <dialog> opens later than
+        // the control inside it - so it is resolved per open, not once.
+        const host = this._portalHost();
+        if (this.portal.parentNode !== host) {
+            host.appendChild(this.portal);
+            this.portalParent = host;
+        }
         this.portal.style.display = 'block';
         this._position();
     }

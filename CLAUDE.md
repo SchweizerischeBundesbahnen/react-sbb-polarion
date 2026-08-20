@@ -18,9 +18,12 @@ the standalone class goes away). So:
   this code in `test/` (written behavior-level so they also guard the eventual React rewrite).
 - The copy carries **intentional local deviations that must survive a re-copy** (do not let a fresh copy
   clobber them):
-  - `SearchableDropdown.js` - the option-list portal appends to `getRootNode()` (shadow-root aware, not
-    always `document.body`) and outside-click detection uses `event.composedPath()`. Required so the
-    dropdown works inside the form-extension shadow roots.
+  - `SearchableDropdown.js` - `_portalHost()` picks where the option-list portal lives: the nearest open
+    `<dialog>` if the control is inside one, else `getRootNode()` (shadow-root aware, not always
+    `document.body`). Outside-click detection uses `event.composedPath()`. The shadow-root part is what
+    makes the dropdown work inside the form-extension shadow roots; the `<dialog>` part is what makes it
+    work inside `Modal`, whose `showModal()` puts the dialog in the top layer and marks everything
+    outside it inert - a portal under `<body>` is both painted behind it and unclickable.
   - `control-tokens.css` - generic's `inline:` icon placeholders are rewritten to real
     `url(../images/…)` (Vite inlines them at build); `ensureSharedStyles.js` is a local no-op (the CSS
     is bundled, not injected at runtime).
