@@ -346,12 +346,14 @@ there is no stylesheet to serve alongside it.
 > This engine began life in `ch.sbb.polarion.extension.generic` as `GenericDleToolbarStarter`. The
 > global was renamed, but everything **shared between extensions on one page** deliberately keeps its
 > original names: the `top.__genericDleToolbar*` registries, `top.__genericRpeAutoExpandObserver` and
-> the `generic-dle-toolbar-styles` element id. The disabled-state click blocker lives on `top` for a
-> second reason as well: the same page can evaluate this engine twice when an administrator configures
-> the same injector in two places, and only a shared listener identity can be taken off again. Those are a wire format, not a name. An extension still
+> the `generic-dle-toolbar-styles` element id. Those are a wire format, not a name. An extension still
 > loading generic's older engine coordinates through exactly those keys, so renaming them would split
 > the registries and break button ordering across the old/new boundary. See the NAMING note at the top
 > of `src/shell/DleToolbarStarter.js`.
+>
+> The disabled-state click blocker is on `top` for a second reason as well: one page can evaluate this
+> engine twice, when an administrator configures the same injector in two places, and only a shared
+> listener identity can be removed again by the load that did not add it.
 
 Each is exposed as an export: `@sbb-polarion/react-sbb-polarion/breadcrumb-bridge.js` and
 `@sbb-polarion/react-sbb-polarion/dle-toolbar-starter.js`.

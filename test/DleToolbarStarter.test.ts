@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 // Classic script that registers window.CommonDleToolbarStarter on load; importing it for its side
 // effect exposes that global. It also captures its registries off `top` at load time, so the tests
 // clear those by key and never reassign them.
@@ -166,10 +166,16 @@ describe('CommonDleToolbarStarter', () => {
   it('re-enables a button whose disabled state came from another load of the engine', async () => {
     setHtml(dleHtml());
     const first = engine();
-    // A second evaluation of the same file, which is what a duplicated script tag produces.
-    await import('../src/shell/DleToolbarStarter.js?second-load');
+    // A second evaluation of the same file, which is what a duplicated script tag produces. The URL is
+    // built at runtime: a query-suffixed specifier is what gives Vite a fresh module instance, and a
+    // literal one would be a module tsc cannot resolve.
+    await import(/* @vite-ignore */ new URL('../src/shell/DleToolbarStarter.js?second-load', import.meta.url).href);
     const second = engine();
     expect(second, 'the second load did not replace the global').not.toBe(first);
+    // That load replaced the global for good; every later test in this file expects the first copy.
+    onTestFinished(() => {
+      window.CommonDleToolbarStarter = first;
+    });
 
     first.create(cfg()).injectToolbar({ disabled: true });
     const clicked = vi.fn();

@@ -34,7 +34,7 @@
  *     `data-common-prev-*` attributes it writes on its own buttons).
  *   - Everything SHARED with the other extensions on the page keeps the `__generic*` /
  *     `generic-*` names it had in ch.sbb.polarion.extension.generic: the `top.__genericDleToolbar*`
- *     registries (order, observers, owners, seq, and the disabled-state click blocker),
+ *     registries (order, observers, owners and the disabled-state click blocker),
  *     `top.__genericRpeAutoExpandObserver` and the `generic-dle-toolbar-styles` element id.
  *     Those are a wire format, not a name. An extension still loading generic's older engine
  *     coordinates through exactly those keys, and renaming them would silently split the registries -
