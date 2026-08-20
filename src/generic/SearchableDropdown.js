@@ -408,9 +408,7 @@ export default class SearchableDropdown {
         // in a shared-page form-extension panel), keep the portal in that shadow root so it is styled
         // by the shadow's own stylesheet and stays isolated from other extensions on the page; in the
         // ordinary light DOM it falls back to <body>. `position: fixed` is viewport-relative in both.
-        const portalSource = this.originalElement || this.container;
-        const portalRoot = portalSource && portalSource.getRootNode ? portalSource.getRootNode() : document;
-        this.portalParent = typeof ShadowRoot !== 'undefined' && portalRoot instanceof ShadowRoot ? portalRoot : document.body;
+        this.portalParent = this._portalHost();
         this.portalParent.appendChild(this.portal);
 
         if (this.multiselect) {
@@ -552,7 +550,30 @@ export default class SearchableDropdown {
             e.preventDefault();
             this._handleEnter();
         } else if (e.key === 'Escape') {
+            // react-sbb-polarion patch (not in upstream generic): an open popup consumes the Escape and
+            // takes the focus back.
+            //
+            // Cancelling matters because otherwise the keydown's default action survives and the browser
+            // goes on to fire the close request of an enclosing modal <dialog> (RSP's Modal), so one
+            // Escape would both close the list and throw away the dialog the user is filling in. Only
+            // when the popup is open: a closed control must let Escape through to whatever encloses it,
+            // which is how a second Escape reaches the dialog.
+            //
+            // The focus call is the ARIA combobox behavior - dismiss the popup, return to the combobox.
+            // _open() moved focus into the popup (the search box), _close() hides the portal, and focus
+            // would otherwise fall back to the body: inside a modal dialog the body is inert, so the
+            // keyboard user loses their place and Tab restarts at the top of the dialog. It belongs here
+            // rather than in _close(), which also runs on the outside click (must not steal focus from
+            // whatever was clicked) and on the mouse pick that deliberately blurs to leave the combo at
+            // rest.
+            const wasOpen = this.isOpen;
+            if (wasOpen) {
+                e.preventDefault();
+            }
             this._close();
+            if (wasOpen) {
+                this.trigger.focus();
+            }
         }
     }
 
@@ -890,7 +911,47 @@ export default class SearchableDropdown {
         this.activeIndex = -1;
     }
 
+    // react-sbb-polarion patch (not in upstream generic): where the popup portal lives.
+    //
+    // A native <dialog> opened with showModal() paints in the browser's TOP LAYER, which is above the
+    // normal layer whatever the z-index says, and makes everything outside itself INERT. A portal left
+    // under <body> therefore loses twice against RSP's Modal: it is painted behind the dialog and it
+    // cannot be clicked. Being a descendant of the open dialog fixes both - it paints with the dialog
+    // and is not inert. `overflow` on the dialog does not clip it: the portal is position: fixed, so
+    // its containing block is the viewport unless an ancestor has a transform/filter/contain, and a
+    // top-layer element is rendered as a sibling of the root, so no ancestor of the dialog reaches it.
+    //
+    // `dialog:modal`, not `dialog[open]`: the reasoning above is about the top layer and inertness, and
+    // a dialog opened with show() has neither. Re-homing into one would be the move that introduces the
+    // problem the paragraph above rules out - a non-modal dialog is an ordinary in-flow element, so a
+    // transformed ancestor of it would become the fixed portal's containing block and _position()'s
+    // viewport coordinates would be wrong. The pseudo-class is narrower in browser support than the
+    // attribute selector, and cheaply affordable: Modal already ships `closedby`, which is newer still.
+    //
+    // Otherwise, keep the portal on the control's own root node: in a shadow root (an extension
+    // encapsulating its styles in a shared-page form-extension panel) so the popup is styled by that
+    // shadow's stylesheet and stays isolated from other extensions on the page, and under <body> in the
+    // ordinary light DOM. closest() does not cross a shadow boundary, which is what we want - a dialog
+    // in the same shadow root is found, one outside it is not ours to reach into.
+    _portalHost() {
+        const source = this.originalElement || this.container;
+        const dialog = source && source.closest ? source.closest('dialog:modal') : null;
+        if (dialog) {
+            return dialog;
+        }
+        const root = source && source.getRootNode ? source.getRootNode() : document;
+        return typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot ? root : document.body;
+    }
+
     _show() {
+        // react-sbb-polarion patch (not in upstream generic): re-home the portal before showing it.
+        // The host depends on state that can change after construction - a <dialog> opens later than
+        // the control inside it - so it is resolved per open, not once.
+        const host = this._portalHost();
+        if (this.portal.parentNode !== host) {
+            host.appendChild(this.portal);
+            this.portalParent = host;
+        }
         this.portal.style.display = 'block';
         this._position();
     }
