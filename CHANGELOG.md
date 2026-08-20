@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v1.0.0...v2.0.0) (2026-08-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* configureGenericModules is removed. BreadcrumbInjector was its only caller, so a consuming app drops the call from main.tsx and adds a build step copying breadcrumb-bridge.js into its served app folder. See "Shell scripts" in the README.
+
+### Features
+
+* breadcrumbs and toolbars ([#64](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/64)) ([c82c483](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/c82c483eee8566505c542190a9cdcf44b0db17b4)), closes [#59](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/59)
+* bundle tables.css and configurations.css ([#80](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/80)) ([45fac9b](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/45fac9ba2c94aaac6c29f0e569442056cce692dd))
+* bundle the base markdown stylesheet ([#79](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/79)) ([74ed503](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/74ed5031801c9d00853d302bc69b64802bae2490))
+
+
+### Bug Fixes
+
+* open the option list above a Modal dialog ([#88](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/88)) ([54a1d58](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/54a1d5827518837570c4f6af0d71fd04e8b99537))
+
 ## [1.0.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v0.2.1...v1.0.0) (2026-08-18)
 
 
