@@ -60,7 +60,7 @@ jobs:
           persist-credentials: false
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd  # v4
+        uses: github/codeql-action/init@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28  # v4
         with:
           languages: ${{ matrix.language }}
           # Neither language is compiled, so there is nothing to build for the extractor. Note that
@@ -71,7 +71,7 @@ jobs:
           queries: security-extended
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd  # v4
+        uses: github/codeql-action/analyze@db488ddef3bf6cb639b32c2e9a7c0a7ea8271d28  # v4
         with:
           # Keeps the two languages' results in separate SARIF categories, so one does not overwrite
           # the other.
