@@ -87,3 +87,19 @@
   align-items: flex-end;
   gap: 8px;
 }
+
+/* A row of controls that are not all the same height. The controls of this library are 23px
+   (--sbb-control-height) and a toolbar button is 28px (--sbb-btn-height), which is Polarion's own
+   relationship - so a button next to a date field would sit 5px proud at the top of the row.
+   The row bottom-aligns, which lines up the fields and their labels, and the taller control is pulled
+   down by half the difference, which centres it on the line the fields make. */
+.sbb-control-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.sbb-control-row > .sbb-btn,
+.sbb-control-row > .toolbar-button {
+  margin-bottom: calc((var(--sbb-control-height) - var(--sbb-btn-height)) / 2);
+}

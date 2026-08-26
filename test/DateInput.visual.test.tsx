@@ -67,12 +67,13 @@ describe.skipIf(!__PIXEL_REFERENCES__)('DateInput visual states', () => {
   //
   // The date fields and the combobox come out at --sbb-control-height (23px) and the button at
   // --sbb-btn-height (28px). That 5px is Polarion's own relationship - its text inputs are 23px, its
-  // .polarion-generalToolbarButton 28px - and is deliberately kept in the reference. A page that wants
-  // the row on one height raises --sbb-control-height in its own scope (the timesheet report does).
+  // .polarion-generalToolbarButton 28px - so the row keeps it and centres the taller control on the
+  // line the fields make (.sbb-control-row). A page that would rather have one height raises
+  // --sbb-control-height in its own scope, the way the timesheet report does.
   it('the range in a control row, next to a select and a button', async () => {
     host(
       'date-in-row',
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+      <div className="sbb-control-row">
         <div className="sbb-date-field">
           <label htmlFor="visual-scope">Scope</label>
           <SearchableSelect

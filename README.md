@@ -245,6 +245,11 @@ calendar offers a day that would invert the range. `min` / `max` bound the range
 labels default to `From` / `To`. The styling is on the components' own classes (`.sbb-date-input`,
 `.sbb-date-field`, `.sbb-date-range`), so a date input an extension writes itself is left alone.
 
+For the row those fields usually sit in, the same stylesheet carries `.sbb-control-row`: it
+bottom-aligns the labelled fields and pulls a taller control - a toolbar button is 28px against the
+controls' 23px, which is Polarion's own relationship - down by half the difference, so it is centred on
+the line the fields make instead of standing proud of it.
+
 `Tabs` is the shared tab bar from the generic framework's `tabs.css` - one tab-bar look for every
 extension. It is controlled (`items`, `activeId`, `onSelect`) and selects only: the caller renders
 whatever the active tab stands for. It uses that stylesheet's JS-driven variant, so the tab count is
