@@ -54,6 +54,21 @@ function optionClass(option: SelectOption): string | undefined {
   return classes.length > 0 ? classes.join(' ') : undefined;
 }
 
+/**
+ * React key covering everything an option paints with, not just its id.
+ *
+ * The dropdown re-reads the <select> from a MutationObserver watching `childList` only, so it sees an
+ * option appear or disappear but NOT an attribute rewritten in place. Keying by id alone, React would
+ * do exactly that when a decoration changes on an option that keeps its id - and the popup would keep
+ * the old paint until the page reloads. That is the real case of a global-scope configuration saved
+ * onto the project scope: same name, same id, `inherited` flips, and the italic "global" marker has to
+ * go. Folding the decorations into the key makes React replace the element instead, which is the
+ * childList change the dropdown already handles.
+ */
+function optionKey(option: SelectOption): string {
+  return [option.id, option.name, optionClass(option) ?? '', option.iconURL ?? '', option.iconBg ?? ''].join('\u0000');
+}
+
 /** The selection as a list in both modes: multi-select passes one through, single-select wraps its
  *  value, and an empty single-select value is no selection rather than a selection of "". */
 function toValues(props: SearchableSelectProps): string[] {
@@ -155,7 +170,7 @@ export default function SearchableSelect(props: Readonly<SearchableSelectProps>)
       {allowEmpty && <option value="" style={{ display: 'none' }} />}
       {options.map((o) => (
         <option
-          key={o.id}
+          key={optionKey(o)}
           value={o.id}
           data-icon={o.iconURL || undefined}
           data-icon-bg={o.iconBg || undefined}

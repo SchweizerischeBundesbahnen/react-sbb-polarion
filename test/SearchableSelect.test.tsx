@@ -497,6 +497,53 @@ describe('SearchableSelect option decorations', () => {
     expectSharedMarkerPlacement(global);
   });
 
+  // Saving a global-scope configuration onto the project scope flips `inherited` on an option that
+  // keeps its id and its label. That is an attribute change on an existing <option>, which the wrapped
+  // dropdown does not watch - it would keep painting the stale "global" marker until the page reloads.
+  function ScopeFlipHost() {
+    const [inherited, setInherited] = useState(true);
+    return (
+      <div className="sbb-ui" style={{ width: 240, padding: 16 }}>
+        <button type="button" data-testid="save-on-scope" onClick={() => setInherited(false)}>
+          save
+        </button>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Default', inherited },
+            { id: 'b', name: 'Compact' },
+          ]}
+        />
+      </div>
+    );
+  }
+
+  it('drops the marker of an option that stops being inherited, with the popup open', async () => {
+    render(<ScopeFlipHost />);
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    mousedown(trigger());
+    expect(options()[0].classList.contains('parent')).toBe(true);
+
+    q<HTMLButtonElement>('[data-testid="save-on-scope"]').click();
+    await vi.waitFor(() => expect(options()[0].classList.contains('parent')).toBe(false));
+    expect(labels()).toEqual(['Default', 'Compact']);
+    expect(getComputedStyle(options()[0], '::after').content).toBe('none');
+  });
+
+  it('drops the marker of an option that stops being inherited, with the popup closed', async () => {
+    render(<ScopeFlipHost />);
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    q<HTMLButtonElement>('[data-testid="save-on-scope"]').click();
+    await flush();
+
+    mousedown(trigger());
+    expect(options()[0].classList.contains('parent')).toBe(false);
+    // The trigger mirrors the class of the selected option, so it has to lose it as well.
+    expect(trigger().classList.contains('parent')).toBe(false);
+    expect(trigger()).toHaveValue('Default');
+  });
+
   it('leaves the weights alone in a list with no inherited option', async () => {
     await mount({ options: OPTIONS });
     mousedown(trigger());
