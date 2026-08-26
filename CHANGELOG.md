@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.2](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.0.1...v2.0.2) (2026-08-26)
+
+
+### Bug Fixes
+
+* keep the shared marker placement in a flex option ([#98](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/98)) ([48be4a9](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/48be4a9dd2cc689abab5298695caeee65b2ac42b))
+* mark an inherited config the way generic marked it ([#96](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/96)) ([2d64760](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/2d6476071498085495f0bb8a463515cc5af13544))
+
 ## [2.0.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.0.0...v2.0.1) (2026-08-20)
 
 
