@@ -465,9 +465,18 @@ describe('SearchableSelect option decorations', () => {
     expect(getComputedStyle(local).fontWeight).toBe('700');
   });
 
-  it('keeps the flex layout of an inherited option that also carries an icon', async () => {
-    // The marker rides on `margin-left: auto` there, so the option must stay a flex box: the icon and
-    // the label span are laid out by it.
+  // In both flex modes the option lays out its icon / checkbox and its label span, and the marker is
+  // placed by the shared rule: `margin-left: auto` pushes it to the right edge, `padding-left` keeps it
+  // off the label. The floated placement of a plain option must not reach either.
+  const expectSharedMarkerPlacement = (option: HTMLElement) => {
+    expect(getComputedStyle(option).display).toBe('flex');
+    const marker = getComputedStyle(option, '::after');
+    expect(marker.content).toBe('"global"');
+    expect(parseFloat(marker.marginLeft)).toBeGreaterThan(0);
+    expect(marker.paddingLeft).toBe('16px');
+  };
+
+  it('keeps the flex layout and marker placement of an inherited option that also carries an icon', async () => {
     await mount({
       options: [
         { id: 'a', name: 'Local' },
@@ -477,15 +486,15 @@ describe('SearchableSelect option decorations', () => {
     mousedown(trigger());
     const global = options()[1];
     expect(global.classList.contains('has-icon')).toBe(true);
-    expect(getComputedStyle(global).display).toBe('flex');
+    expectSharedMarkerPlacement(global);
   });
 
-  it('keeps the flex layout of an inherited option in multi-select mode', async () => {
+  it('keeps the flex layout and marker placement of an inherited option in multi-select mode', async () => {
     await mountMulti({ initial: [], options: SCOPED });
     mousedown(multiTrigger());
     const global = options()[1];
     expect(global.classList.contains('multiselect-option')).toBe(true);
-    expect(getComputedStyle(global).display).toBe('flex');
+    expectSharedMarkerPlacement(global);
   });
 
   it('leaves the weights alone in a list with no inherited option', async () => {
