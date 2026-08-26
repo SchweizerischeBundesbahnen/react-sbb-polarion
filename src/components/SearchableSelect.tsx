@@ -11,6 +11,13 @@ export interface SelectOption {
   iconBg?: string;
   /** Indents the option, for a child entry listed under its parent option. */
   indent?: boolean;
+  /**
+   * Marks the option as inherited from a broader (e.g. global) scope, the way generic marks a config
+   * of the global level: the name in normal weight with a small italic "global" marker on the right,
+   * while the options of the current scope turn bold. The trigger is an <input> and cannot render the
+   * marker, so a selected inherited option shows just its name there.
+   */
+  inherited?: boolean;
 }
 
 interface BaseProps {
@@ -42,6 +49,13 @@ export type SearchableSelectProps = SingleSelectProps | MultiSelectProps;
 
 /** The selection as a list in both modes: multi-select passes one through, single-select wraps its
  *  value, and an empty single-select value is no selection rather than a selection of "". */
+/** Display flags of an option, as the classes the dropdown mirrors onto the rendered popup option
+ *  (preserveOptionClasses). `parent` is the shared generic class for an inherited config. */
+function optionClass(option: SelectOption): string | undefined {
+  const classes = [option.indent && 'indented', option.inherited && 'parent'].filter(Boolean);
+  return classes.length > 0 ? classes.join(' ') : undefined;
+}
+
 function toValues(props: SearchableSelectProps): string[] {
   if (props.multiple) return props.value;
   return props.value ? [props.value] : [];
@@ -145,7 +159,7 @@ export default function SearchableSelect(props: Readonly<SearchableSelectProps>)
           value={o.id}
           data-icon={o.iconURL || undefined}
           data-icon-bg={o.iconBg || undefined}
-          className={o.indent ? 'indented' : undefined}
+          className={optionClass(o)}
         >
           {o.name}
         </option>
