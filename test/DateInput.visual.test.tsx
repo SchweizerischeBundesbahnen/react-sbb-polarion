@@ -64,6 +64,11 @@ describe.skipIf(!__PIXEL_REFERENCES__)('DateInput visual states', () => {
 
   // The regression this component exists for: next to a combobox and a button, the browser's own date
   // box is taller, rounded and in the system font, and the row reads as three unrelated controls.
+  //
+  // The date fields and the combobox come out at --sbb-control-height (23px) and the button at
+  // --sbb-btn-height (28px). That 5px is Polarion's own relationship - its text inputs are 23px, its
+  // .polarion-generalToolbarButton 28px - and is deliberately kept in the reference. A page that wants
+  // the row on one height raises --sbb-control-height in its own scope (the timesheet report does).
   it('the range in a control row, next to a select and a button', async () => {
     host(
       'date-in-row',
