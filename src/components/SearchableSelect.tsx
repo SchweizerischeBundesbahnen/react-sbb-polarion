@@ -47,8 +47,6 @@ export interface MultiSelectProps extends BaseProps {
 
 export type SearchableSelectProps = SingleSelectProps | MultiSelectProps;
 
-/** The selection as a list in both modes: multi-select passes one through, single-select wraps its
- *  value, and an empty single-select value is no selection rather than a selection of "". */
 /** Display flags of an option, as the classes the dropdown mirrors onto the rendered popup option
  *  (preserveOptionClasses). `parent` is the shared generic class for an inherited config. */
 function optionClass(option: SelectOption): string | undefined {
@@ -56,6 +54,8 @@ function optionClass(option: SelectOption): string | undefined {
   return classes.length > 0 ? classes.join(' ') : undefined;
 }
 
+/** The selection as a list in both modes: multi-select passes one through, single-select wraps its
+ *  value, and an empty single-select value is no selection rather than a selection of "". */
 function toValues(props: SearchableSelectProps): string[] {
   if (props.multiple) return props.value;
   return props.value ? [props.value] : [];

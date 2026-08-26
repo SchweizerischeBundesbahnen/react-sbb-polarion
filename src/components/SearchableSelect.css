@@ -30,9 +30,15 @@
    in an ordinary dropdown, and specific enough (extra `.options`) to win over the shared rule
    regardless of stylesheet order. */
 .sd-portal .options .option.parent {
-  display: block;
   color: #333;
   font-weight: 400;
+}
+
+/* The float needs a block box, and this selector outranks the vendored layout rules, so leave the two
+   flex modes of an option (icon, multi-select checkbox) alone - there the marker is placed by the
+   shared `margin-left: auto` instead. */
+.sd-portal .options .option.parent:not(.has-icon):not(.multiselect-option) {
+  display: block;
 }
 
 .sd-portal .options .option.parent::after {

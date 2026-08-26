@@ -465,6 +465,29 @@ describe('SearchableSelect option decorations', () => {
     expect(getComputedStyle(local).fontWeight).toBe('700');
   });
 
+  it('keeps the flex layout of an inherited option that also carries an icon', async () => {
+    // The marker rides on `margin-left: auto` there, so the option must stay a flex box: the icon and
+    // the label span are laid out by it.
+    await mount({
+      options: [
+        { id: 'a', name: 'Local' },
+        { ...SCOPED[1], iconURL: ICON },
+      ],
+    });
+    mousedown(trigger());
+    const global = options()[1];
+    expect(global.classList.contains('has-icon')).toBe(true);
+    expect(getComputedStyle(global).display).toBe('flex');
+  });
+
+  it('keeps the flex layout of an inherited option in multi-select mode', async () => {
+    await mountMulti({ initial: [], options: SCOPED });
+    mousedown(multiTrigger());
+    const global = options()[1];
+    expect(global.classList.contains('multiselect-option')).toBe(true);
+    expect(getComputedStyle(global).display).toBe('flex');
+  });
+
   it('leaves the weights alone in a list with no inherited option', async () => {
     await mount({ options: OPTIONS });
     mousedown(trigger());
