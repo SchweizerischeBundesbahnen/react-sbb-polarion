@@ -1,0 +1,112 @@
+/* The date field, styled off the same --sbb-* control tokens as every other input, so a date sits in
+   a row of Polarion controls at their height and in their font instead of the browser's own taller,
+   rounded, system-font box.
+ *
+ * The rule is on the component's class rather than on `input[type="date"]`: the library styles what it
+ * renders, and a bare date input an extension writes itself keeps whatever it had. The scopes are the
+ * ones that declare the tokens (see control-tokens.css) - outside them `var()` would resolve to
+ * nothing and the field would lose its border, so the selector and the tokens stay together.
+ */
+.sbb-ui .sbb-date-input,
+.standard-admin-page .sbb-date-input,
+.modal__container .sbb-date-input,
+.form-wrapper .sbb-date-input {
+  box-sizing: border-box;
+  height: var(--sbb-control-height);
+  border: 1px solid var(--sbb-control-border);
+  border-radius: var(--sbb-control-radius);
+  padding: 2px 6px;
+  background-color: var(--sbb-control-bg);
+  font-family: var(--sbb-control-font-family);
+  font-size: var(--sbb-control-font-size);
+  font-weight: var(--sbb-control-font-weight);
+  color: var(--sbb-control-text);
+  transition:
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+/* Same soft lift as the text inputs and the combobox trigger. */
+.sbb-ui .sbb-date-input:not(:disabled):hover,
+.standard-admin-page .sbb-date-input:not(:disabled):hover,
+.modal__container .sbb-date-input:not(:disabled):hover,
+.form-wrapper .sbb-date-input:not(:disabled):hover {
+  box-shadow: var(--sbb-control-shadow-hover);
+}
+
+.sbb-ui .sbb-date-input:focus,
+.standard-admin-page .sbb-date-input:focus,
+.modal__container .sbb-date-input:focus,
+.form-wrapper .sbb-date-input:focus {
+  border-color: var(--sbb-control-border-focus);
+  outline: none;
+  box-shadow: var(--sbb-control-shadow-hover);
+}
+
+/* Disabled is dimmed the way the disabled combobox is (searchable-dropdown.css uses the same 0.55 on
+   `.searchable-dropdown.disabled`), so a disabled row reads consistently. The geometry is untouched. */
+.sbb-ui .sbb-date-input:disabled,
+.standard-admin-page .sbb-date-input:disabled,
+.modal__container .sbb-date-input:disabled,
+.form-wrapper .sbb-date-input:disabled {
+  opacity: 0.55;
+}
+
+/* Chromium paints the calendar button at full black; the rest of our control glyphs are gray, and it
+   sits right next to the value, so tone it down and make it read as a button. */
+.sbb-date-input::-webkit-calendar-picker-indicator {
+  padding: 0;
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.sbb-date-input:not(:disabled)::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Label above its field, the layout every consumer was writing by hand around a date input (the
+   timesheet's `.control` column). A field without a label is the input alone, so the wrapper costs
+   nothing there. */
+.sbb-date-field {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sbb-date-field > label {
+  font-family: var(--sbb-control-font-family);
+  font-size: var(--sbb-control-font-size);
+  font-weight: var(--sbb-control-font-weight);
+  color: var(--sbb-control-text);
+}
+
+/* The two ends of a range read as one control, so they keep the row's control spacing between them
+   and align on their inputs even when only one of them carries a label. */
+.sbb-date-range {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* A row of controls that are not all the same height. The controls of this library are 23px
+   (--sbb-control-height) and a toolbar button is 28px (--sbb-btn-height), which is Polarion's own
+   relationship - so a button next to a date field would sit 5px proud at the top of the row.
+   The row bottom-aligns, which lines up the fields and their labels, and the taller control is pulled
+   down by half the difference, which centres it on the line the fields make. */
+.sbb-control-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Only the control look is --sbb-btn-height: `--action`, `--primary`, `--secondary` and `--link` set
+   `height: auto` in buttons.css and size from their own padding, so a correction derived from a height
+   they do not have would push them off the line rather than onto it.
+   `margin-right` goes with it: buttons.css keeps a legacy 5px there for the toolbars it was written
+   for, which had no gap, and flex adds a gap on top of a margin rather than in place of it - so a
+   button anywhere but at the end of this row would be spaced 13px where every other pair is 8px. */
+.sbb-control-row > .sbb-btn:not(.sbb-btn--action):not(.sbb-btn--primary):not(.sbb-btn--secondary):not(.sbb-btn--link),
+.sbb-control-row > .toolbar-button {
+  margin-right: 0;
+  margin-bottom: calc((var(--sbb-control-height) - var(--sbb-btn-height)) / 2);
+}

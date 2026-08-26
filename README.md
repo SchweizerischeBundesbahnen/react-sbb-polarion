@@ -226,12 +226,29 @@ before renaming or moving either.
 
 **Components**: `PageLayout`, `SearchableSelect`, `Tabs`, `Modal`, `Toaster`, `BreadcrumbInjector`,
 `RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
-`CodeEditor`, `AuthorizationSettings`, `StylePackageWeights`.
+`CodeEditor`, `DateInput`, `DateRangePicker`, `AuthorizationSettings`, `StylePackageWeights`.
 
 `SearchableSelect` is the shared combobox for both selection modes. By default it is a single-select
 (`value: string`); pass `multiple` and it renders checkbox options in the popup and one removable chip
 per selection, with `value` / `onChange` switching to a string list. Options may carry `iconURL`,
 `iconBg` and `indent`, so a nested or icon-bearing list needs no bespoke control.
+
+`DateInput` is a native `<input type="date">` - the platform's own calendar popup, keyboard entry and
+locale-formatted display - wearing the control look of every other input here, which the browser's
+default box does not: it is taller, rounded and in the system font, so a date used to break the line of
+a control row. It is controlled (`value`, `onChange`) on the ISO `yyyy-MM-dd` string the input itself
+uses, never a `Date`, and takes an optional `label`, `min`, `max`, `disabled` and `title`. An empty
+`min` / `max` means unbounded, so a form holding "no date yet" as `''` can forward its state as is.
+
+`DateRangePicker` composes two of them into a period and bounds each end by the other, so neither
+calendar offers a day that would invert the range. `min` / `max` bound the range from the outside; the
+labels default to `From` / `To`. The styling is on the components' own classes (`.sbb-date-input`,
+`.sbb-date-field`, `.sbb-date-range`), so a date input an extension writes itself is left alone.
+
+For the row those fields usually sit in, the same stylesheet carries `.sbb-control-row`: it
+bottom-aligns the labelled fields and pulls a taller control - a toolbar button is 28px against the
+controls' 23px, which is Polarion's own relationship - down by half the difference, so it is centred on
+the line the fields make instead of standing proud of it.
 
 `Tabs` is the shared tab bar from the generic framework's `tabs.css` - one tab-bar look for every
 extension. It is controlled (`items`, `activeId`, `onSelect`) and selects only: the caller renders
@@ -243,12 +260,12 @@ than removed, so the bar is still keyboard-reachable and arrow keys switch tabs.
 textarea with a syntax-highlighted layer painted underneath it. It is controlled (`value`, `onChange`)
 and needs a `language`:
 
-| `language`     | for                                                              |
-| -------------- | ---------------------------------------------------------------- |
-| `'properties'` | a `.properties` configuration (the DMS connectors)               |
-| `'css'`        | a stylesheet (the exporters' CSS and style packages)             |
-| `'html'`       | a markup fragment                                                |
-| `'velocity'`   | a Velocity template, markup and all (filename, cover, header)    |
+| `language`     | for                                                           |
+| -------------- | ------------------------------------------------------------- |
+| `'properties'` | a `.properties` configuration (the DMS connectors)            |
+| `'css'`        | a stylesheet (the exporters' CSS and style packages)          |
+| `'html'`       | a markup fragment                                             |
+| `'velocity'`   | a Velocity template, markup and all (filename, cover, header) |
 
 `'velocity'` is Velocity **inside markup** - the grammar is `'html'` extended with directives,
 `$variables` and `#* *#` comments, which is exactly what an exporter template is. So there is no
@@ -331,9 +348,9 @@ Almost everything here is bundled. Two files cannot be, because they do not run 
 at all. Both are classic scripts, so neither is an ES module nor part of `dist/index.js`; `npm run
 build` emits each as its own self-contained file.
 
-| File | Emitted as | Runs in | Loaded by |
-| --- | --- | --- | --- |
-| `src/shell/BreadcrumbBridge.js` | `dist/breadcrumb-bridge.js` | the Polarion shell window (`window.top`) | this library's `BreadcrumbInjector` |
+| File                             | Emitted as                    | Runs in                                          | Loaded by                                                                                |
+| -------------------------------- | ----------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `src/shell/BreadcrumbBridge.js`  | `dist/breadcrumb-bridge.js`   | the Polarion shell window (`window.top`)         | this library's `BreadcrumbInjector`                                                      |
 | `src/shell/DleToolbarStarter.js` | `dist/dle-toolbar-starter.js` | Polarion's document-editor iframe, driving `top` | the extension's own `starter.js` / `dle-toolbar.js`, via `scriptInjection.dleEditorHead` |
 
 `DleToolbarStarter` is the self-healing toolbar-button engine: it injects an extension's button into
