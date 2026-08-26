@@ -430,4 +430,74 @@ describe('SearchableSelect option decorations', () => {
     await mountMulti({ initial: ['a'], options: DECORATED });
     expect(q<HTMLImageElement>('.sd-chip img.sd-chip-icon').src).toContain('svg');
   });
+
+  const SCOPED: SelectOption[] = [
+    { id: 'a', name: 'Local' },
+    { id: 'b', name: 'From global', inherited: true },
+  ];
+
+  it('marks an inherited option with the "global" marker instead of a name suffix', async () => {
+    await mount({ options: SCOPED });
+    mousedown(trigger());
+    const [local, global] = options();
+    // The name itself stays untouched - the marker is CSS, not part of the label.
+    expect(labels()).toEqual(['Local', 'From global']);
+    expect(global.classList.contains('parent')).toBe(true);
+    expect(local.classList.contains('parent')).toBe(false);
+
+    const marker = getComputedStyle(global, '::after');
+    expect(marker.content).toBe('"global"');
+    expect(marker.fontStyle).toBe('italic');
+    // Smaller than the option label, floated to the right edge and 2px below it - generic's own
+    // marker geometry.
+    expect(parseFloat(marker.fontSize)).toBeLessThan(parseFloat(getComputedStyle(global).fontSize));
+    expect(marker.float).toBe('right');
+    expect(marker.marginTop).toBe('2px');
+    expect(getComputedStyle(local, '::after').content).toBe('none');
+  });
+
+  it('writes an inherited option in normal weight and the ones of the scope in bold', async () => {
+    await mount({ options: SCOPED });
+    mousedown(trigger());
+    const [local, global] = options();
+    expect(getComputedStyle(global).fontWeight).toBe('400');
+    expect(getComputedStyle(global).color).toBe('rgb(51, 51, 51)');
+    expect(getComputedStyle(local).fontWeight).toBe('700');
+  });
+
+  it('keeps the flex layout of an inherited option that also carries an icon', async () => {
+    // The marker rides on `margin-left: auto` there, so the option must stay a flex box: the icon and
+    // the label span are laid out by it.
+    await mount({
+      options: [
+        { id: 'a', name: 'Local' },
+        { ...SCOPED[1], iconURL: ICON },
+      ],
+    });
+    mousedown(trigger());
+    const global = options()[1];
+    expect(global.classList.contains('has-icon')).toBe(true);
+    expect(getComputedStyle(global).display).toBe('flex');
+  });
+
+  it('keeps the flex layout of an inherited option in multi-select mode', async () => {
+    await mountMulti({ initial: [], options: SCOPED });
+    mousedown(multiTrigger());
+    const global = options()[1];
+    expect(global.classList.contains('multiselect-option')).toBe(true);
+    expect(getComputedStyle(global).display).toBe('flex');
+  });
+
+  it('leaves the weights alone in a list with no inherited option', async () => {
+    await mount({ options: OPTIONS });
+    mousedown(trigger());
+    // The control font weight (--sbb-control-font-weight), not the bold that only marks "this one is
+    // of the current scope" in a list that mixes scopes.
+    expect(getComputedStyle(options()[0]).fontWeight).toBe('600');
+  });
+
+  it('shows only the name on the trigger when an inherited option is selected', async () => {
+    await mount({ initial: 'b', options: SCOPED });
+    expect(trigger()).toHaveValue('From global');
+  });
 });

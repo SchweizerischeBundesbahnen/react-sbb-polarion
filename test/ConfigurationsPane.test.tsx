@@ -7,6 +7,7 @@ import {
   type ConfigurationsPaneHandle,
   type ConfigurationsService,
 } from '../src/components/ConfigurationsPane';
+import { mousedown } from './helpers';
 
 // Behavior tests for the shared ConfigurationsPane. It is decoupled from any extension: the REST ops
 // come in through the `service` prop and content type T. We inject a mock service and drive the
@@ -213,6 +214,26 @@ describe('ConfigurationsPane', () => {
     await vi.waitFor(() => expect(note()?.textContent).toContain('inherited from the global scope'));
     expect(btn('Rename').disabled).toBe(true);
     expect(btn('Delete').disabled).toBe(true);
+  });
+
+  it('lists a config of a broader scope by name, marked as inherited', async () => {
+    document.cookie = 'ck-test=project-cfg; path=/';
+    const service = makeService({
+      loadConfigurationNames: vi.fn(async () => [
+        { name: 'global-cfg', scope: '' },
+        { name: 'project-cfg', scope: 'project/elibrary/' },
+      ]),
+    });
+    await mount({ scope: 'project/elibrary/', service });
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    mousedown(document.querySelector('.searchable-dropdown .sd-trigger') as HTMLElement);
+    const options = Array.from(document.querySelectorAll<HTMLElement>('.sd-portal .items .option'));
+    // The name carries no "(inherited)" suffix: the marker is the `parent` class, which the shared CSS
+    // renders as a small italic "global" on the right of the option.
+    expect(options.map((o) => (o.textContent ?? '').trim())).toEqual(['global-cfg', 'project-cfg']);
+    expect(options[0].classList.contains('parent')).toBe(true);
+    expect(options[1].classList.contains('parent')).toBe(false);
+    expect(getComputedStyle(options[0], '::after').content).toBe('"global"');
   });
 
   it('shows a load-error banner when loading the names fails', async () => {

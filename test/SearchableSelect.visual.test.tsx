@@ -3,7 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import SearchableSelect, { type SelectOption } from '../src/components/SearchableSelect';
 import SearchableDropdown from '../src/generic/SearchableDropdown.js';
-import { mousedown } from './helpers';
+import { mousedown, parkPointer } from './helpers';
 
 // Opening focuses the search box, whose blinking caret changes pixels every frame and prevents
 // toMatchScreenshot from ever settling on a stable frame. Hide the caret so open-list captures are
@@ -258,6 +258,46 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
     await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
     openStable(instanceOf(document.querySelector('select')!));
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('indented-option-open-list');
+  });
+
+  it('open list with an inherited (global-scope) option', async () => {
+    // `inherited: true` is how a config coming from a broader scope is shown: the name in normal text
+    // plus a small italic "global" marker on the right, as in Polarion's own config selector.
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package' },
+            { id: 'b', name: 'Default', inherited: true },
+            { id: 'c', name: 'Compact', inherited: true },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-option-open-list');
+  });
+
+  it('closed trigger with an inherited option selected (name only, no marker)', async () => {
+    render(
+      <div className="sbb-ui visual-host" data-testid="inherited-closed" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="b"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package' },
+            { id: 'b', name: 'Default', inherited: true },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.sd-trigger')).toHaveValue('Default'));
+    await parkPointer();
+    await expect(page.getByTestId('inherited-closed')).toMatchScreenshot('inherited-selected-closed');
   });
 
   it('multi-select chips in a flex row keep the trailing control visible', async () => {

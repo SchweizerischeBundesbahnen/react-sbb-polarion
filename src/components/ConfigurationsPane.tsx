@@ -242,7 +242,7 @@ export function ConfigurationsPane<T>({
             <SearchableSelect
               value={selected}
               onChange={selectConfig}
-              options={names.map((n) => ({ id: n.name, name: n.scope !== scope ? `${n.name} (inherited)` : n.name }))}
+              options={names.map((n) => ({ id: n.name, name: n.name, inherited: n.scope !== scope }))}
             />
             <button
               type="button"

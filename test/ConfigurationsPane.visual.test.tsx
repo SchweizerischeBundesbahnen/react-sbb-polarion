@@ -3,7 +3,8 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import { userEvent } from 'vitest/browser';
 import { ConfigurationsPane, type ConfigurationsService } from '../src/components/ConfigurationsPane';
-import { parkPointer } from './helpers';
+import type SearchableDropdown from '../src/generic/SearchableDropdown.js';
+import { mousedown, parkPointer } from './helpers';
 
 // Visual-regression states for the shared ConfigurationsPane. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live
@@ -45,6 +46,18 @@ function makeService(over: Partial<ConfigurationsService<Content>> = {}): Config
 }
 
 const pane = () => document.querySelector('.configurations-pane') as HTMLElement | null;
+// Same recipe as SearchableSelect.visual.test.tsx: capture the popup's in-flow `.options` child (the
+// `position: fixed` portal itself never settles for Playwright), and detach the reposition listeners so
+// scroll-into-view cannot move the popup mid-capture. The dropdown instance hangs off the element it
+// wrapped, which is how a React-rendered control is reached.
+const popupContent = () => document.querySelector('.sd-portal .options') as HTMLElement;
+const instanceOf = (select: HTMLSelectElement) =>
+  (select as HTMLSelectElement & { _searchableDropdown: SearchableDropdown })._searchableDropdown;
+const openStable = (dd: SearchableDropdown) => {
+  mousedown(dd.trigger);
+  window.removeEventListener('scroll', dd._repositionHandler, true);
+  window.removeEventListener('resize', dd._repositionHandler);
+};
 const note = () => document.querySelector('.config-note');
 const alertError = () => document.querySelector('.alert-error');
 const nameInput = () => document.querySelector('.config-edit-row input[type="text"]') as HTMLInputElement | null;
@@ -100,6 +113,7 @@ const shot = async (name: string) => {
 
 afterEach(() => {
   cleanup();
+  document.querySelectorAll('.sd-portal').forEach((el) => el.remove());
   clearCookies();
   vi.restoreAllMocks();
 });
@@ -125,6 +139,26 @@ describe.skipIf(!__PIXEL_REFERENCES__)('ConfigurationsPane visual states - view 
     await mount({ scope: 'project/elibrary/', service, cookie: 'Global Config' });
     await vi.waitFor(() => expect(note()?.textContent).toContain('inherited from the global scope'));
     await shot('inherited-note');
+  });
+
+  it('open selector at project scope marks the inherited configs with "global"', async () => {
+    // The regression this fixates: a config coming from the global scope is marked by a small italic
+    // "global" on the right of the option, not by an "(inherited)" suffix on its name.
+    const service = makeService({
+      loadConfigurationNames: vi.fn(async () => [
+        { name: 'Default', scope: '' },
+        { name: 'Requirements', scope: '' },
+        { name: 'Project Cases', scope: 'project/elibrary/' },
+      ]),
+    });
+    await mount({ scope: 'project/elibrary/', service, cookie: 'Project Cases' });
+    await vi.waitFor(() => expect(document.querySelectorAll('.configurations-pane select option')).toHaveLength(3));
+    // Park first, then open: a pointer left over the popup by an earlier test would paint one option in
+    // its hover state, and the popup is gone by the time a later park could help.
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('.configurations-pane select') as HTMLSelectElement));
+    await vi.waitFor(() => expect(document.querySelectorAll('.sd-portal .items .option')).toHaveLength(3));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-options-open-list');
   });
 
   it('empty configuration list (empty select, Rename/Delete disabled)', async () => {
