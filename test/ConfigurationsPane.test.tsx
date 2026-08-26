@@ -236,6 +236,33 @@ describe('ConfigurationsPane', () => {
     expect(getComputedStyle(options[0], '::after').content).toBe('"global"');
   });
 
+  // The real "save it on this level first" flow: a global-scope configuration is saved onto the project
+  // scope, the consuming page calls reloadNames, and the same name comes back owned by this scope. The
+  // marker, the note and the buttons all have to follow without a page reload.
+  it('drops the inherited marker after the configuration is saved on this scope', async () => {
+    document.cookie = 'ck-test=Default; path=/';
+    const scope = 'project/elibrary/';
+    let owned = false;
+    const service = makeService({
+      loadConfigurationNames: vi.fn(async () => [{ name: 'Default', scope: owned ? scope : '' }]),
+    });
+    const ref = createRef<ConfigurationsPaneHandle>();
+    await mount({ scope, service, ref });
+    await vi.waitFor(() => expect(note()?.textContent).toContain('inherited from the global scope'));
+    mousedown(document.querySelector('.searchable-dropdown .sd-trigger') as HTMLElement);
+    expect(document.querySelector('.sd-portal .items .option')?.classList.contains('parent')).toBe(true);
+
+    owned = true;
+    await ref.current!.reloadNames();
+
+    await vi.waitFor(() =>
+      expect(document.querySelector('.sd-portal .items .option')?.classList.contains('parent')).toBe(false),
+    );
+    expect(document.querySelector('.sd-portal .items .option')?.textContent).toBe('Default');
+    expect(note()).toBeNull();
+    expect(btn('Rename').disabled).toBe(false);
+  });
+
   it('shows a load-error banner when loading the names fails', async () => {
     const service = makeService({
       loadConfigurationNames: vi.fn(async () => {
