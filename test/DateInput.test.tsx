@@ -77,10 +77,11 @@ describe('DateInput', () => {
     );
     await ready();
 
-    // An empty string is not a valid min/max: forwarding it verbatim makes the browser drop the
-    // attribute, so the component passes no attribute at all instead.
+    // An empty string is not a valid min/max, so the component renders no attribute at all. The
+    // property reads '' either way - only the attribute tells the two apart, so that is what is
+    // asserted here.
     expect(only().min).toBe('2026-01-01');
-    expect(only().max).toBe('');
+    expect(only().hasAttribute('max')).toBe(false);
   });
 
   it('renders disabled with the reason as its tooltip', async () => {
