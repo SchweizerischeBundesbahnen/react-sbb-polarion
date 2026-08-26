@@ -34,14 +34,15 @@
   font-weight: 400;
 }
 
-/* The float needs a block box, and this selector outranks the vendored layout rules, so leave the two
-   flex modes of an option (icon, multi-select checkbox) alone - there the marker is placed by the
-   shared `margin-left: auto` instead. */
+/* Both rules outrank the vendored layout, so both carry the same exclusion: the two flex modes of an
+   option (icon, multi-select checkbox) keep the shared placement, where `margin-left: auto` pushes the
+   marker to the right edge and `padding-left` separates it from the label. The float needs a block box
+   and would be ignored on a flex item anyway; the `margin` shorthand here would reset that `auto`. */
 .sd-portal .options .option.parent:not(.has-icon):not(.multiselect-option) {
   display: block;
 }
 
-.sd-portal .options .option.parent::after {
+.sd-portal .options .option.parent:not(.has-icon):not(.multiselect-option)::after {
   float: right;
   margin: 2px 0 0;
   padding-left: 0;
