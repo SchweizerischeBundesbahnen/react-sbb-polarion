@@ -42,6 +42,12 @@ export { default as RevisionsTable } from './components/RevisionsTable';
 // The code editor behind every settings page whose content is a document rather than a form: the DMS
 // connectors' .properties configuration, the exporters' CSS, Velocity templates and HTML fragments.
 // Replaces the legacy <code-input> web component; `language` picks the grammar.
+// The date field and the period it composes into: the native <input type="date"> in the Polarion
+// control look, with the two ends of a range bounding each other.
+export { default as DateInput } from './components/DateInput';
+export type { DateInputProps } from './components/DateInput';
+export { default as DateRangePicker } from './components/DateRangePicker';
+export type { DateRangePickerProps } from './components/DateRangePicker';
 export { default as CodeEditor } from './components/CodeEditor';
 export type { CodeLanguage } from './components/CodeEditor';
 export { default as ConfigurationButtons } from './components/ConfigurationButtons';
