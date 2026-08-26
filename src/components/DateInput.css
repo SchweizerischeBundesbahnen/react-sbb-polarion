@@ -99,7 +99,14 @@
   gap: 8px;
 }
 
-.sbb-control-row > .sbb-btn,
+/* Only the control look is --sbb-btn-height: `--action`, `--primary`, `--secondary` and `--link` set
+   `height: auto` in buttons.css and size from their own padding, so a correction derived from a height
+   they do not have would push them off the line rather than onto it.
+   `margin-right` goes with it: buttons.css keeps a legacy 5px there for the toolbars it was written
+   for, which had no gap, and flex adds a gap on top of a margin rather than in place of it - so a
+   button anywhere but at the end of this row would be spaced 13px where every other pair is 8px. */
+.sbb-control-row > .sbb-btn:not(.sbb-btn--action):not(.sbb-btn--primary):not(.sbb-btn--secondary):not(.sbb-btn--link),
 .sbb-control-row > .toolbar-button {
+  margin-right: 0;
   margin-bottom: calc((var(--sbb-control-height) - var(--sbb-btn-height)) / 2);
 }

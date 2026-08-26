@@ -96,4 +96,22 @@ describe.skipIf(!__PIXEL_REFERENCES__)('DateInput visual states', () => {
     await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
     await shot('date-in-row', 'date-in-a-control-row');
   });
+
+  // A button that is not the last thing in the row: buttons.css keeps a legacy `margin-right: 5px`
+  // for the toolbars it was written for, and a flex gap adds to a margin rather than replacing it, so
+  // without the reset this pair would be 13px apart where every other pair in the row is 8px.
+  it('a button between two fields keeps the row spacing', async () => {
+    host(
+      'date-mid-row',
+      <div className="sbb-control-row">
+        <DateInput label="From" value="2026-06-01" onChange={() => {}} />
+        <button type="button" className="sbb-btn sbb-btn--control">
+          <span>Today</span>
+        </button>
+        <DateInput label="To" value="2026-06-30" onChange={() => {}} />
+      </div>,
+      460,
+    );
+    await shot('date-mid-row', 'date-button-between-fields');
+  });
 });
