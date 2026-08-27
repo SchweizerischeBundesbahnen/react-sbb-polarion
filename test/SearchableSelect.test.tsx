@@ -471,6 +471,18 @@ describe('SearchableSelect option decorations', () => {
     expect(style.overflow).toBe('hidden');
   });
 
+  it('ellipsizes an inherited name at the cap and keeps it readable through the tooltip', async () => {
+    const long = Array(4).fill('A global style package whose name does not fit').join(', ');
+    await mount({ options: [SCOPED[0], { id: 'b', name: long, inherited: true }] });
+    mousedown(trigger());
+    const global = options()[1];
+    // Capped popup: the name stops at the room reserved for the marker instead of widening the popup,
+    // and the part the ellipsis hides is still readable on the row.
+    expect(global.scrollWidth).toBeGreaterThan(global.clientWidth);
+    expect(global.title).toBe(long);
+    expect(getComputedStyle(global).textOverflow).toBe('ellipsis');
+  });
+
   it('writes an inherited option in normal weight and the ones of the scope in bold', async () => {
     await mount({ options: SCOPED });
     mousedown(trigger());

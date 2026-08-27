@@ -216,9 +216,11 @@
     position: absolute;
     top: 100%;
     left: 0;
-    /* Popup width is driven by the longest option, but never narrower than the trigger + 35px */
+    /* Popup width is driven by the longest option, but never narrower than the trigger + 35px and
+       never wider than the cap (min-width wins over max-width, so a wide trigger keeps its width). */
     min-width: calc(100% + 35px);
     width: max-content;
+    max-width: var(--sbb-option-max-width);
     background: var(--sbb-control-bg);
     border: 1px solid var(--sbb-combo-popup-border);
     border-radius: var(--sbb-control-radius);

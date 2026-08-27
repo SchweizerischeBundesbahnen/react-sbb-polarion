@@ -120,6 +120,11 @@
        derive from, and the token the React SPAs reference for dropdown-row hovers. */
     --sbb-hover-tint: #ebf7f8;
     --sbb-option-hover: var(--sbb-hover-tint);
+    /* Widest the option popup may grow. The popup is sized by its longest option, so without a cap one
+       very long configuration name paints a row wider than the window. Past the cap the option
+       ellipsizes and keeps its full name in the DOM. Override it on .sd-portal — the popup is a
+       body-level element tagged .sbb-ui, not a descendant of the wrapper the trigger sits in. */
+    --sbb-option-max-width: min(480px, calc(100vw - 16px));
 
     /* Multi-select chips */
     --sbb-chip-bg: var(--sbb-hover-tint);

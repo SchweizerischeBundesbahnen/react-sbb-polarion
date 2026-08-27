@@ -113,6 +113,23 @@ describe('option rendering: icons, classes, mouse', () => {
     dropdown.destroy();
   });
 
+  it('caps the popup width and carries the full label as the row tooltip', () => {
+    const long = Array(4).fill('A configuration name far too long to fit the popup').join(', ');
+    const select = document.createElement('select');
+    select.innerHTML = `<option value="a">${long}</option>`;
+    fixture.appendChild(select);
+    const dropdown = new SearchableDropdown({ element: select, rememberSelection: false });
+    mousedown(dropdown.trigger);
+    const option = dropdown.itemsEl.children[0] as HTMLElement;
+    // Capped, so the row ellipsizes instead of growing the popup past the window - and the name the
+    // ellipsis hides stays readable through the tooltip. The cap is a content-box max-width, so the
+    // painted popup is the token plus its 1px borders.
+    expect(getComputedStyle(dropdown.optionsEl).maxWidth).toBe('480px');
+    expect(dropdown.optionsEl.offsetWidth).toBeLessThanOrEqual(482);
+    expect(option.title).toBe(long);
+    dropdown.destroy();
+  });
+
   it('highlights on mouseover and selects on option mousedown', () => {
     const dropdown = new SearchableDropdown({ element: single(), rememberSelection: false });
     mousedown(dropdown.trigger);

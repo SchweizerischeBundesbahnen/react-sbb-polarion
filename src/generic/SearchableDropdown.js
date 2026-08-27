@@ -663,6 +663,10 @@ export default class SearchableDropdown {
                 option.textContent = item.label;
             }
 
+            // The popup is capped (--sbb-option-max-width), so a long label is painted with an
+            // ellipsis. Carry the full one as the row's tooltip, or it is readable nowhere.
+            option.title = item.label;
+
             if (this.preserveOptionClasses && item.className) {
                 option.classList.add(...item.className.split(/\s+/).filter(Boolean));
             }
