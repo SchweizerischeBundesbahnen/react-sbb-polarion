@@ -448,12 +448,26 @@ describe('SearchableSelect option decorations', () => {
     const marker = getComputedStyle(global, '::after');
     expect(marker.content).toBe('"global"');
     expect(marker.fontStyle).toBe('italic');
-    // Smaller than the option label, floated to the right edge and 2px below it - generic's own
-    // marker geometry.
+    // Smaller than the option label, pinned to the right edge of the row and 2px below the name -
+    // generic's own marker geometry.
     expect(parseFloat(marker.fontSize)).toBeLessThan(parseFloat(getComputedStyle(global).fontSize));
-    expect(marker.float).toBe('right');
-    expect(marker.marginTop).toBe('2px');
+    expect(marker.position).toBe('absolute');
+    expect(marker.top).toBe('8px');
+    expect(marker.right).toBe('12px');
     expect(getComputedStyle(local, '::after').content).toBe('none');
+  });
+
+  it('reserves room for the marker so a long inherited name ellipsizes instead of running into it', async () => {
+    await mount({ options: [SCOPED[0], { id: 'b', name: 'Global style package with long name', inherited: true }] });
+    mousedown(trigger());
+    const [local, global] = options();
+    // The name is a bare text node, so the room is reserved on the option itself: right padding wide
+    // enough for the marker plus a gap, with the ellipsis of the base option kept.
+    const style = getComputedStyle(global);
+    expect(style.display).toBe('block');
+    expect(parseFloat(style.paddingRight)).toBeGreaterThan(parseFloat(getComputedStyle(local).paddingRight));
+    expect(style.textOverflow).toBe('ellipsis');
+    expect(style.overflow).toBe('hidden');
   });
 
   it('writes an inherited option in normal weight and the ones of the scope in bold', async () => {
@@ -467,13 +481,19 @@ describe('SearchableSelect option decorations', () => {
 
   // In both flex modes the option lays out its icon / checkbox and its label span, and the marker is
   // placed by the shared rule: `margin-left: auto` pushes it to the right edge, `padding-left` keeps it
-  // off the label. The floated placement of a plain option must not reach either.
+  // off the label. The out-of-flow placement of a plain option must not reach either.
   const expectSharedMarkerPlacement = (option: HTMLElement) => {
     expect(getComputedStyle(option).display).toBe('flex');
     const marker = getComputedStyle(option, '::after');
     expect(marker.content).toBe('"global"');
     expect(parseFloat(marker.marginLeft)).toBeGreaterThan(0);
     expect(marker.paddingLeft).toBe('16px');
+    // The label is bounded, so a name longer than the popup ellipsizes rather than pushing the marker
+    // out of the row.
+    const label = getComputedStyle(option.querySelector('.option-label')!);
+    expect(label.minWidth).toBe('0px');
+    expect(label.textOverflow).toBe('ellipsis');
+    expect(label.overflow).toBe('hidden');
   };
 
   it('keeps the flex layout and marker placement of an inherited option that also carries an icon', async () => {

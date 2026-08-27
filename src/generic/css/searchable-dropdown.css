@@ -382,13 +382,43 @@
 .sd-portal .option.parent {
     display: flex;
     align-items: baseline;
-    overflow: visible;
+}
+
+/* A flex item never shrinks below its content, and the label is `nowrap`, so a name longer than the
+   popup would push the marker out of the row and past the clipping edge. Bound the label instead: it
+   ellipsizes and the marker stays at the right edge, one `padding-left` away from the name. */
+.sd-portal .option.parent > .option-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .sd-portal .option.parent::after {
     content: "global";
+    flex: none;
     margin-left: auto;
     padding-left: 16px;
     font-size: 10px;
     font-style: italic;
+}
+
+/* A plain option (no icon, no checkbox) carries its name as a bare text node, which no rule can
+   select, so the label cannot be bounded the way the two flex modes above bound `.option-label`.
+   Take the marker out of the flow instead and reserve the room it needs as right padding: the name
+   then ellipsizes at the padding edge and a long one keeps its distance from the marker. The reserve
+   is 56px — 12px of the row's own padding, the width of the italic 10px "global", and the gap.
+   Enlarging it only ellipsizes earlier, since the marker is pinned to the right edge either way. */
+.sd-portal .option.parent:not(.has-icon):not(.multiselect-option) {
+    display: block;
+    position: relative;
+    padding-right: 56px;
+}
+
+.sd-portal .option.parent:not(.has-icon):not(.multiselect-option)::after {
+    position: absolute;
+    /* 6px of row padding, then the 2px drop below the name generic's own config list has. */
+    top: 8px;
+    right: 12px;
+    margin-left: 0;
+    padding-left: 0;
 }

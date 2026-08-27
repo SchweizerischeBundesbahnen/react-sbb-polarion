@@ -282,6 +282,26 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-option-open-list');
   });
 
+  it('open list with an inherited option whose name is longer than the popup', async () => {
+    // The name must never run into the "global" marker: it ellipsizes before the room reserved for it.
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package' },
+            { id: 'b', name: 'Global style package with long name', inherited: true },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-long-name-open-list');
+  });
+
   it('closed trigger with an inherited option selected (name only, no marker)', async () => {
     render(
       <div className="sbb-ui visual-host" data-testid="inherited-closed" style={{ width: 240, padding: 16 }}>
