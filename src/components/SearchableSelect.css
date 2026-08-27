@@ -19,12 +19,12 @@
 }
 
 /* `inherited: true` marks an option that comes from a broader (e.g. global) scope. The shared CSS
-   (generic/css/searchable-dropdown.css) already turns the `parent` class into a small italic "global"
-   marker; these rules restore the rest of the look generic had for such a list before its v15.2
-   dropdown rewrite (configurations.css, `.checkboxes label.parent`): the marker floats at the right
-   edge 2px below the name, an inherited entry is written in normal weight and #333, and an entry of
-   the current scope is bold. The weights are literal (400 / 700) rather than generic's `bolder`,
-   because the option here starts from --sbb-control-font-weight (600), where `bolder` computes to 900.
+   (generic/css/searchable-dropdown.css) already places the small italic "global" marker the `parent`
+   class renders; these rules restore the rest of the look generic had for such a list before its
+   v15.2 dropdown rewrite (configurations.css, `.checkboxes label.parent`): an inherited entry is
+   written in normal weight and #333, and an entry of the current scope is bold. The weights are
+   literal (400 / 700) rather than generic's `bolder`, because the option here starts from
+   --sbb-control-font-weight (600), where `bolder` computes to 900.
 
    Scoped to a list that actually contains an inherited entry (:has), since the bold has no meaning
    in an ordinary dropdown, and specific enough (extra `.options`) to win over the shared rule
@@ -32,20 +32,6 @@
 .sd-portal .options .option.parent {
   color: #333;
   font-weight: 400;
-}
-
-/* Both rules outrank the vendored layout, so both carry the same exclusion: the two flex modes of an
-   option (icon, multi-select checkbox) keep the shared placement, where `margin-left: auto` pushes the
-   marker to the right edge and `padding-left` separates it from the label. The float needs a block box
-   and would be ignored on a flex item anyway; the `margin` shorthand here would reset that `auto`. */
-.sd-portal .options .option.parent:not(.has-icon):not(.multiselect-option) {
-  display: block;
-}
-
-.sd-portal .options .option.parent:not(.has-icon):not(.multiselect-option)::after {
-  float: right;
-  margin: 2px 0 0;
-  padding-left: 0;
 }
 
 .sd-portal .items:has(> .option.parent) > .option:not(.parent) {

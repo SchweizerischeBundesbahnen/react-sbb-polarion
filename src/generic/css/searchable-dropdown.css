@@ -381,14 +381,50 @@
    can't render ::after, so the selected value there shows just the config name. */
 .sd-portal .option.parent {
     display: flex;
-    align-items: baseline;
-    overflow: visible;
+    /* `center`, the alignment both flex modes of an option already ask for. Baseline alignment would
+       undo it: the baseline of the icon is its bottom edge, so the name would drop by the difference
+       and sit off-center against its icon. */
+    align-items: center;
+}
+
+/* The popup is `width: max-content` and nothing narrows it, so the marker and its `padding-left` widen
+   the popup rather than crowd the name. Bound the label for the case that does constrain the width — a
+   consumer capping the popup — where a `nowrap` flex item would keep its full width instead and push
+   the marker past the right edge. */
+.sd-portal .option.parent > .option-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .sd-portal .option.parent::after {
     content: "global";
+    flex: none;
     margin-left: auto;
     padding-left: 16px;
     font-size: 10px;
     font-style: italic;
+}
+
+/* A plain option (no icon, no checkbox) carries its name as a bare text node, which no rule can
+   select, so the label cannot be bounded the way the two flex modes above bound `.option-label`.
+   Take the marker out of the flow instead and reserve the room it needs as right padding. The reserve
+   counts toward the `max-content` width of the popup, which is what separates the two: the popup grows
+   by it, and a name of any length ends a gap short of the marker. It is 56px — 12px of the row's own
+   padding, the width of the italic 10px "global", and the gap. Where a consumer caps the popup width,
+   the name ellipsizes at the padding edge instead, which is why the ellipsis of the base `.option` is
+   kept here rather than turned off the way the flex placement above turns it off. */
+.sd-portal .option.parent:not(.has-icon):not(.multiselect-option) {
+    display: block;
+    position: relative;
+    padding-right: 56px;
+}
+
+.sd-portal .option.parent:not(.has-icon):not(.multiselect-option)::after {
+    position: absolute;
+    /* 6px of row padding, then the 2px drop below the name generic's own config list has. */
+    top: 8px;
+    right: 12px;
+    margin-left: 0;
+    padding-left: 0;
 }
