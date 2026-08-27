@@ -2,18 +2,37 @@ name: CI
 
 # `ci` is a required status check on main, so it has to report on the pull request itself: a branch
 # push produces a check run only in the repository that owns the branch, which would leave a fork's PR
-# permanently unmergeable. Hence the pull_request trigger. `push` is narrowed to main so a same-repo
-# branch does not build twice for the same commit (once for the branch, once for its PR).
+# permanently unmergeable. Hence the pull_request trigger.
+#
+# `push` covers main and `renovate/**` only. Renovate runs under `automergeType: "branch"` (the shared
+# preset), which merges a green branch into main with `git merge --ff-only` and never opens a pull
+# request - so without a branch trigger those branches carry no check run at all, Renovate reads the
+# branch as pending forever, and nothing automerges. The fast-forward also means main's new head IS the
+# renovate commit, so the check run produced here is the one that satisfies the required `ci` context
+# on main; `renovate[bot]` is a bypass actor on the require-a-pull-request ruleset but NOT on
+# `main-requires-status-checks`.
+#
+# The cost is a double build for EVERY Renovate branch, and it is unavoidable here. A branch that
+# automerges builds once on the branch push, then again when the fast-forward moves main to that same
+# commit: Renovate pushes with its own App installation token rather than GITHUB_TOKEN, so the main
+# push is not suppressed, and the two runs sit in different concurrency groups (ci-refs/heads/renovate/x
+# against ci-refs/heads/main) so neither cancels the other. A branch that becomes a pull request
+# instead - a major, or the playwright group - builds twice for the same reason, once for the branch
+# and once for the pull request. Paying that is what makes the required `ci` context report on the
+# commit that lands.
+# No other branch prefix is added: a same-repo feature branch would build twice with nothing to show
+# for it, having no automerge to unblock.
 on:
   push:
-    branches: [main]
+    branches: [main, 'renovate/**']
   pull_request:
 
-# A new push to a PR makes the run in flight pointless; main is left alone so release history is not
-# cancelled halfway.
+# A new push to a PR, or a Renovate rebase of its branch, makes the run in flight pointless; main is
+# left alone so release history is not cancelled halfway. Keyed on the ref rather than the event, so
+# that `rebaseWhen: "behind-base-branch"` does not leave a superseded branch build running.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -61,7 +80,14 @@ jobs:
     #
     # Secrets are withheld from a pull request opened from a fork, so the scan would fail on something
     # the contributor cannot fix. Skip it there - the push to main re-analyses everything after merge.
-    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+    #
+    # Gated on the main ref rather than on `push`, so this job does NOT run on a `renovate/**` branch.
+    # Renovate reads a branch as red from ANY failing check run on its head and does not distinguish a
+    # required context from an optional one, so an expired SONAR_TOKEN or a SonarCloud outage would
+    # otherwise block every automerge in the repository - while `sonar` is deliberately absent from
+    # `main-requires-status-checks`, whose only required context is `ci`. The fast-forward fires a main
+    # push carrying the same commit, so the analysis still happens, one step later.
+    if: ${{ github.ref == 'refs/heads/main' || github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
