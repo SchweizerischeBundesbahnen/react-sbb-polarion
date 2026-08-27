@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.1.0...v2.2.0) (2026-08-27)
+
+
+### Features
+
+* settings visibility ([#108](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/108)) ([6876d5f](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/6876d5f429e86ab6de1cb58bb918828e1405f18f))
+
 ## [2.1.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.0.2...v2.1.0) (2026-08-27)
 
 
