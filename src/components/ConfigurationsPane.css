@@ -26,3 +26,23 @@
 .config-edit-row .sbb-btn {
   margin-right: 0;
 }
+
+/* Separates the "Change visibility" button from the three that act on the selected configuration: it is
+   about all of them at once, not about the one in the dropdown. */
+.config-separator {
+  color: var(--sbb-color-text-muted, #6b6b6b);
+  user-select: none;
+}
+
+.config-visibility-dialog p {
+  margin: 0 0 12px;
+}
+
+/* The checkbox and its sentence on one line, with the box on the text baseline rather than centred on a
+   line that may wrap. */
+.config-visibility-toggle {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  cursor: pointer;
+}

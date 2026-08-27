@@ -2,7 +2,11 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import { userEvent } from 'vitest/browser';
-import { ConfigurationsPane, type ConfigurationsService } from '../src/components/ConfigurationsPane';
+import {
+  ConfigurationsPane,
+  type ConfigurationsService,
+  type ConfigurationsVisibility,
+} from '../src/components/ConfigurationsPane';
 import type SearchableDropdown from '../src/generic/SearchableDropdown.js';
 import { mousedown, parkPointer } from './helpers';
 
@@ -80,6 +84,7 @@ interface Opts {
   service?: ConfigurationsService<Content>;
   label?: string;
   cookie?: string;
+  visibility?: ConfigurationsVisibility;
 }
 
 async function mount(opts: Opts = {}) {
@@ -99,6 +104,7 @@ async function mount(opts: Opts = {}) {
         onContentLoaded={() => {}}
         onSelectedChange={() => {}}
         onEditingNameChange={() => {}}
+        visibility={opts.visibility}
       />
     </div>,
   );
@@ -109,6 +115,13 @@ async function mount(opts: Opts = {}) {
 const shot = async (name: string) => {
   await parkPointer();
   return expect(page.elementLocator(pane() as HTMLElement)).toMatchScreenshot(name);
+};
+
+/** The visibility dialog is a top-layer `<dialog>`, so it is captured as its own box, like Modal's own
+ *  visual states are - an element shot of the pane would not contain it. */
+const dialogShot = async (name: string) => {
+  await parkPointer();
+  return expect(page.elementLocator(document.querySelector('.rsp-modal') as HTMLElement)).toMatchScreenshot(name);
 };
 
 afterEach(() => {
@@ -232,5 +245,78 @@ describe.skipIf(!__PIXEL_REFERENCES__)('ConfigurationsPane visual states - error
       .click();
     await vi.waitFor(() => expect(alertError()?.textContent).toContain('Error occurred while deleting'));
     await shot('delete-error');
+  });
+});
+
+describe.skipIf(!__PIXEL_REFERENCES__)('ConfigurationsPane visual states - visibility of the global scope', () => {
+  const visibility = (over: Partial<ConfigurationsVisibility> = {}): ConfigurationsVisibility => ({
+    globalHidden: false,
+    onChange: async () => {},
+    ...over,
+  });
+
+  it('the button behind its separator, after "Add new"', async () => {
+    await mount({ label: 'style package', cookie: 'Requirements', visibility: visibility() });
+    await vi.waitFor(() => expect(btn('Change visibility').disabled).toBe(false));
+    await shot('visibility-button');
+  });
+
+  it('the dialog of a project, nothing hidden yet (Change disabled)', async () => {
+    await mount({
+      scope: 'project/elibrary/',
+      label: 'style package',
+      cookie: 'Requirements',
+      visibility: visibility(),
+    });
+    await vi.waitFor(() => expect(btn('Change visibility').disabled).toBe(false));
+    btn('Change visibility').click();
+    await vi.waitFor(() => expect(document.querySelector('.config-visibility-dialog')).not.toBeNull());
+    await dialogShot('visibility-dialog-project');
+  });
+
+  it('the dialog with the global scope hidden and an extra note from the consumer', async () => {
+    await mount({
+      scope: 'project/elibrary/',
+      label: 'style package',
+      cookie: 'Requirements',
+      visibility: visibility({
+        globalHidden: true,
+        note: <p>The project also gets a copy of the "Default" style package it used until now.</p>,
+      }),
+    });
+    await vi.waitFor(() => expect(btn('Change visibility').disabled).toBe(false));
+    btn('Change visibility').click();
+    await vi.waitFor(() => expect(document.querySelector('.config-visibility-dialog')).not.toBeNull());
+    await dialogShot('visibility-dialog-hidden');
+  });
+
+  it('the dialog of the global scope, which decides for every project', async () => {
+    await mount({ label: 'style package', cookie: 'Requirements', visibility: visibility() });
+    await vi.waitFor(() => expect(btn('Change visibility').disabled).toBe(false));
+    btn('Change visibility').click();
+    await vi.waitFor(() => expect(document.querySelector('.config-visibility-dialog')).not.toBeNull());
+    await dialogShot('visibility-dialog-global');
+  });
+
+  it('the dialog reporting a write that failed', async () => {
+    await mount({
+      scope: 'project/elibrary/',
+      label: 'style package',
+      cookie: 'Requirements',
+      visibility: visibility({
+        onChange: async () => {
+          throw new Error('nope');
+        },
+      }),
+    });
+    await vi.waitFor(() => expect(btn('Change visibility').disabled).toBe(false));
+    btn('Change visibility').click();
+    await vi.waitFor(() => expect(document.querySelector('.config-visibility-dialog')).not.toBeNull());
+    (document.querySelector('.config-visibility-dialog input[type="checkbox"]') as HTMLInputElement).click();
+    Array.from(document.querySelectorAll<HTMLButtonElement>('.rsp-modal-footer .sbb-btn'))
+      .find((b) => (b.textContent ?? '').trim() === 'Change')!
+      .click();
+    await vi.waitFor(() => expect(document.querySelector('.config-visibility-dialog .alert-error')).not.toBeNull());
+    await dialogShot('visibility-dialog-error');
   });
 });

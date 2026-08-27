@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import type { Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 import useConfirm from '../hooks/useConfirm';
 import { getCookie, setCookie } from '../services/cookies';
 import type { SettingName } from '../types';
 import './ConfigurationsPane.css';
+import Modal from './Modal';
 import SearchableSelect from './SearchableSelect';
 
 const INVALID_CHARS = /[^a-zA-Z0-9\-_ ]+/;
@@ -28,6 +29,26 @@ export interface ConfigurationsService<T> {
   deleteConfiguration: (name: string, scope: string) => Promise<void>;
 }
 
+/**
+ * Whether the scope offers the configurations that come from the global level, edited through the pane's
+ * own dialog. Pass it and the pane grows a "Change visibility" button next to "Add new"; leave it out and
+ * the pane has no such button, which is what every scope that cannot hide anything wants.
+ *
+ * It is deliberately a value plus a writer rather than a settings feature of its own: what the flag is
+ * stored in differs per extension (its own document, a property, a column), and the pane only has to show
+ * it and hand back what the administrator chose.
+ */
+export interface ConfigurationsVisibility {
+  /** Whether this scope currently hides the configurations defined on the global level. */
+  globalHidden: boolean;
+  /** Stores the value the administrator picked. The pane reloads its list once this resolves. */
+  onChange: (globalHidden: boolean) => Promise<void>;
+  /** What the dialog says on top of the generic explanation, e.g. what the extension does besides hiding. */
+  note?: ReactNode;
+  /** Greys the button out, e.g. while the stored value is still being read or reading it failed. */
+  disabled?: boolean;
+}
+
 interface ConfigurationsPaneProps<T> {
   scope: string;
   /** REST operations for the named settings (see ConfigurationsService). */
@@ -42,6 +63,8 @@ interface ConfigurationsPaneProps<T> {
   onSelectedChange: (name: string | null) => void;
   /** Called when the create/rename name editor opens or closes, so the form can be dimmed. */
   onEditingNameChange?: (editing: boolean) => void;
+  /** The visibility of the configurations of the global level; omit it and the pane offers no such button. */
+  visibility?: ConfigurationsVisibility;
   /** Imperative handle (React 19 ref-as-prop) exposing reloadNames. */
   ref?: Ref<ConfigurationsPaneHandle>;
 }
@@ -66,6 +89,7 @@ export function ConfigurationsPane<T>({
   onContentLoaded,
   onSelectedChange,
   onEditingNameChange,
+  visibility,
   ref,
 }: Readonly<ConfigurationsPaneProps<T>>) {
   const { loadConfigurationNames, loadContent, createConfiguration, renameConfiguration, deleteConfiguration } =
@@ -79,6 +103,23 @@ export function ConfigurationsPane<T>({
   const [loadError, setLoadError] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState(false);
+  // The visibility dialog: what it shows while open, and how the write it triggers went.
+  const [visibilityOpen, setVisibilityOpen] = useState(false);
+  const [visibilityDraft, setVisibilityDraft] = useState(false);
+  const [visibilitySaving, setVisibilitySaving] = useState(false);
+  const [visibilityError, setVisibilityError] = useState(false);
+  /**
+   * Bumped when a visibility change rewrote the list, to rebuild the selector below from scratch.
+   *
+   * Reading the names again is not enough: hiding the global level turns an inherited configuration into
+   * one of this scope, which changes how an option is *marked* while its id and its position stay put.
+   * SearchableDropdown re-reads the list from a MutationObserver watching the `<select>` for children
+   * coming and going, so a change inside an option it already knows leaves the trigger and the popup
+   * showing the old marker until the page is reloaded by hand. Rebuilding the control is the fix that
+   * stays out of the vendored code (which must not be hand-edited, see CLAUDE.md) and out of every other
+   * consumer's rendering: create / rename / delete change which options exist, which the observer sees.
+   */
+  const [selectorEpoch, setSelectorEpoch] = useState(0);
 
   // Keep the latest callbacks in refs so fetchNames/selectConfig stay stable across parent renders.
   const contentLoadedRef = useRef(onContentLoaded);
@@ -233,6 +274,32 @@ export function ConfigurationsPane<T>({
     }
   };
 
+  const openVisibility = () => {
+    setVisibilityDraft(visibility?.globalHidden ?? false);
+    setVisibilityError(false);
+    setVisibilityOpen(true);
+  };
+
+  const submitVisibility = async () => {
+    if (!visibility) {
+      return;
+    }
+    setVisibilitySaving(true);
+    setVisibilityError(false);
+    try {
+      await visibility.onChange(visibilityDraft);
+      setVisibilityOpen(false);
+      // Hiding or showing the global level changes which configurations exist here, so the list the pane
+      // offers - and the content the parent has in its form - are read again.
+      await fetchNames();
+      setSelectorEpoch((epoch) => epoch + 1);
+    } catch {
+      setVisibilityError(true);
+    } finally {
+      setVisibilitySaving(false);
+    }
+  };
+
   return (
     <div className="configurations-pane">
       {mode === 'view' ? (
@@ -240,6 +307,7 @@ export function ConfigurationsPane<T>({
           <div className="config-row">
             <label>Selected {label}:</label>
             <SearchableSelect
+              key={selectorEpoch}
               value={selected}
               onChange={selectConfig}
               options={names.map((n) => ({ id: n.name, name: n.name, inherited: n.scope !== scope }))}
@@ -273,6 +341,25 @@ export function ConfigurationsPane<T>({
               <span className="button-image sbb-icon-table-plus" aria-hidden="true" />
               <span>Add new</span>
             </button>
+            {visibility && (
+              <>
+                <span className="config-separator" aria-hidden="true">
+                  |
+                </span>
+                {/* No glyph on purpose: the shared icon set has none for visibility, and reusing the
+                    pencil of "Rename" two buttons along would read as the same kind of action. The
+                    separator is what marks this one as the odd one out. */}
+                <button
+                  type="button"
+                  className="sbb-btn sbb-btn--control"
+                  title={`Change visibility of ${label}s`}
+                  disabled={visibility.disabled}
+                  onClick={openVisibility}
+                >
+                  <span>Change visibility</span>
+                </button>
+              </>
+            )}
           </div>
           {showDefaultNote && (
             <p className="config-note">
@@ -315,6 +402,47 @@ export function ConfigurationsPane<T>({
           </button>
           {nameError && <div className="alert alert-error">{nameError}</div>}
         </div>
+      )}
+      {visibility && (
+        <Modal
+          open={visibilityOpen}
+          title={`Visibility of ${label}s`}
+          okText="Change"
+          cancelText="Cancel"
+          okDisabled={visibilitySaving || visibilityDraft === visibility.globalHidden}
+          onOk={() => void submitVisibility()}
+          onCancel={() => setVisibilityOpen(false)}
+        >
+          {/* `modal__container` is what the shared checkbox and input CSS is scoped to, so the box below
+              looks the same here as on the page, whatever the consumer wrapped the pane in. */}
+          <div className="modal__container config-visibility-dialog">
+            {scope === '' ? (
+              <p>
+                The {label}s defined here, on the global level, are offered in every project next to the ones the
+                project defines itself. Hiding them applies to every project which does not set this itself. The global
+                level keeps listing its own {label}s.
+              </p>
+            ) : (
+              <p>
+                The {label}s defined on the global level are offered in this project next to the ones it defines itself.
+                Hide them and only the {label}s of this project are offered.
+              </p>
+            )}
+            {visibility.note}
+            <label className="config-visibility-toggle">
+              <input
+                type="checkbox"
+                checked={visibilityDraft}
+                disabled={visibilitySaving}
+                onChange={(e) => setVisibilityDraft(e.target.checked)}
+              />
+              Hide {label}s defined on the global level
+            </label>
+            {visibilityError && (
+              <div className="alert alert-error">Error occurred while saving the visibility of the {label}s.</div>
+            )}
+          </div>
+        </Modal>
       )}
       {confirmDialog}
     </div>
