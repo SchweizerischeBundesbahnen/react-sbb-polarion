@@ -3,45 +3,6 @@
 Non-obvious rules for this repo. How-to (build, test, lint) is in `package.json`, `README.md` and
 `test/README.md` - read those directly rather than duplicating here.
 
-## Vendored generic code - transitional; don't edit for style, preserve the local patches
-
-`src/generic/**` is a **transit artifact**, not a permanent dependency. It is kept in sync with
-`ch.sbb.polarion.extension.generic` (`app/src/main/resources/js` and `/css`) only until the other
-extensions finish migrating onto RSP; then generic deletes its copy (and its tests), and RSP rewrites
-each file in idiomatic React (e.g. `SearchableDropdown.js`'s logic folds into `SearchableSelect.tsx` and
-the standalone class goes away). So:
-
-- **Synced, not owned (for now):** to change it, **re-copy from generic** - never hand-edit, restyle, or
-  "clean it up" (it is excluded from Prettier and ESLint). Don't invest effort polishing it; it is
-  slated to be replaced by React, not maintained here.
-- Because generic will delete its own tests before RSP finishes the rewrite, RSP owns behavior tests for
-  this code in `test/` (written behavior-level so they also guard the eventual React rewrite).
-- The copy carries **intentional local deviations that must survive a re-copy** (do not let a fresh copy
-  clobber them):
-  - `SearchableDropdown.js` - `_portalHost()` picks where the option-list portal lives: the nearest open
-    `<dialog>` if the control is inside one, else `getRootNode()` (shadow-root aware, not always
-    `document.body`). Outside-click detection uses `event.composedPath()`. The shadow-root part is what
-    makes the dropdown work inside the form-extension shadow roots; the `<dialog>` part is what makes it
-    work inside `Modal`, whose `showModal()` puts the dialog in the top layer and marks everything
-    outside it inert - a portal under `<body>` is both painted behind it and unclickable. `Escape` on an
-    open popup also calls `preventDefault()` and returns focus to the trigger, so it closes the list
-    only: uncancelled, the keydown goes on to fire the enclosing dialog's close request and discards the
-    whole form, and without the focus call focus falls back to the body, which the dialog made inert.
-  - `control-tokens.css` - generic's `inline:` icon placeholders are rewritten to real
-    `url(../images/…)` (Vite inlines them at build); `ensureSharedStyles.js` is a local no-op (the CSS
-    is bundled, not injected at runtime).
-  - `github-markdown-light.css` - generic's copy is **not** upstream `github-markdown-css`: `color`,
-    `background-color`, `font-family`, `font-size` and `line-height` are commented out so a help
-    article inherits Polarion's typography, and `.markdown-body` gains 25px vertical margins. Taking
-    the npm package instead would restyle every About and User Guide page.
-  - `control-tokens.css` - the two Selawik **`@font-face`** blocks (400 + 700, pointing at Polarion's
-    own `/polarion/ria/fonts/selawik/*.ttf`). Generic's copy has **none**, and this is deliberate and
-    permanent: Polarion's native pages already load Selawik through the petrel theme, so
-    only the React SPAs - which run in their own iframe without petrel - need the declaration. A
-    by-the-book re-copy from generic silently deletes it, every admin page falls back to Arial, and the
-    **test suite stays green** (nothing serves `/polarion/ria/fonts/…` under test, so the references
-    render the fallback either way). Re-add it after any re-copy.
-
 ## Visual-regression reference screenshots
 
 - References in `test/expected/` are canonical **only when generated on Linux** in the pinned Playwright
