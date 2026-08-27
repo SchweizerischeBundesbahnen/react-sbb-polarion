@@ -182,17 +182,12 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - long va
     await expect(page.getByTestId('single-overflow')).toMatchScreenshot('single-overflow-value');
   });
 
-  // NOTE: this reference is intentionally ugly, and that is the point. The popup uses
-  // `width: max-content`, so the long option makes it ~1770px wide, far past the 1280px viewport;
-  // `_position()` shifts it to x=4 but it still overflows the right edge. Because the popup is
-  // `position: fixed`, the browser never paints the part beyond the viewport, so the captured PNG
-  // (~1771 x 120, the full popup box) shows the label painted only to x~1275 (the viewport edge) with
-  // a blank white band from there to ~1771. So we are fixating a capture/paint artifact of an
-  // over-wide fixed popup, NOT a component truncation: the text is laid out in full, no ellipsis. It
-  // is kept deliberately so that if the popup later gains a sane max-width / ellipsis, this reference
-  // flips and forces a review. Numbers are the actual measured values at generation time
-  // (viewport 1280 x 720, popup 1770px, image 1771px wide, content to x~1275).
-  it('open list containing a long option (deliberately clipped - see note above)', async () => {
+  // This reference used to be the deliberately ugly one: the popup was `width: max-content` with no
+  // cap, so the long option made it ~1770px wide at a 1280px viewport, and the capture was a paint
+  // artifact of an over-wide fixed popup rather than any truncation of the component. The note kept
+  // said that a sane max-width would flip it, which is what --sbb-option-max-width now does: the popup
+  // stops at the cap and the long option ellipsizes, with its full label on the row's `title`.
+  it('open list containing a long option (capped popup, ellipsized row)', async () => {
     const select = makeSelect([
       { value: 'a', label: 'First' },
       { value: 'b', label: LONG },
@@ -280,6 +275,110 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
     await parkPointer();
     openStable(instanceOf(document.querySelector('select')!));
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-option-open-list');
+  });
+
+  it('open list with an inherited name longer than the control', async () => {
+    // The name must never run into the "global" marker. The popup is max-content, so the room reserved
+    // for the marker widens it and the gap holds; the name itself is painted in full.
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package' },
+            { id: 'b', name: 'Global style package with long name', inherited: true },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-long-name-open-list');
+  });
+
+  it('open list with an icon row past the popup cap', async () => {
+    // The label of a flex mode is bounded on its own: unbounded it keeps its full width and the option
+    // cuts it mid-glyph, with no ellipsis.
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package', iconURL: ICON },
+            { id: 'b', name: LONG, iconURL: ICON },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('icon-capped-open-list');
+  });
+
+  it('open list with an inherited name past the popup cap', async () => {
+    // The two rules meeting: the popup stops at --sbb-option-max-width, and the room reserved for the
+    // marker is what the name ellipsizes before.
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package' },
+            { id: 'b', name: LONG, inherited: true },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-capped-open-list');
+  });
+
+  it('open list with an inherited option that also carries an icon', async () => {
+    // The flex modes place the marker with `margin-left: auto` and bound their label span; this pins how
+    // the name, the icon and the marker line up vertically there.
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package', iconURL: ICON },
+            { id: 'b', name: 'Default', iconURL: ICON, inherited: true },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-with-icon-open-list');
+  });
+
+  it('open multi-select list with an inherited option', async () => {
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          multiple
+          value={[]}
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package' },
+            { id: 'b', name: 'Default', inherited: true },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger-multi')).not.toBeNull());
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-multi-open-list');
   });
 
   it('closed trigger with an inherited option selected (name only, no marker)', async () => {

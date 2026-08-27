@@ -216,9 +216,11 @@
     position: absolute;
     top: 100%;
     left: 0;
-    /* Popup width is driven by the longest option, but never narrower than the trigger + 35px */
+    /* Popup width is driven by the longest option, but never narrower than the trigger + 35px and
+       never wider than the cap (min-width wins over max-width, so a wide trigger keeps its width). */
     min-width: calc(100% + 35px);
     width: max-content;
+    max-width: var(--sbb-option-max-width);
     background: var(--sbb-control-bg);
     border: 1px solid var(--sbb-combo-popup-border);
     border-radius: var(--sbb-control-radius);
@@ -323,6 +325,17 @@
     object-fit: contain;
 }
 
+/* The label span every flex mode of an option renders (icon, multi-select checkbox). A flex item does
+   not shrink below its content and the label is `nowrap`, so at the popup's max-width cap it would
+   keep its full width and be hard-cut by the option's own `overflow: hidden` — `text-overflow` acts on
+   the inline content of a block container, never on an overflowing flex item. Bounding the span makes
+   its automatic minimum size zero, so it shrinks and ellipsizes instead. */
+.sd-portal .option > .option-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Optional coloured tile behind an icon (<option data-icon-bg> / addOption's 4th arg). The tile
    colour is per-option, so it is set inline in JS (_applyIconBg); this only adds the padding and
    radius that turn the icon's own background into a neat little tile — matching the entity/project
@@ -369,11 +382,6 @@
     background-image: var(--sbb-checkbox-checked);
 }
 
-.sd-portal .option.multiselect-option .option-label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 /* preserveOptionClasses: options inherit the source <option>'s class.
    .parent = a config inherited from a broader (e.g. global) scope. The name is
    shown in normal text and a small italic "global" marker is appended on the
@@ -381,14 +389,40 @@
    can't render ::after, so the selected value there shows just the config name. */
 .sd-portal .option.parent {
     display: flex;
-    align-items: baseline;
-    overflow: visible;
+    /* `center`, the alignment both flex modes of an option already ask for. Baseline alignment would
+       undo it: the baseline of the icon is its bottom edge, so the name would drop by the difference
+       and sit off-center against its icon. */
+    align-items: center;
 }
 
 .sd-portal .option.parent::after {
     content: "global";
+    flex: none;
     margin-left: auto;
     padding-left: 16px;
     font-size: 10px;
     font-style: italic;
+}
+
+/* A plain option (no icon, no checkbox) carries its name as a bare text node, which no rule can
+   select, so the label cannot be bounded the way the two flex modes above bound `.option-label`.
+   Take the marker out of the flow instead and reserve the room it needs as right padding. The reserve
+   counts toward the `max-content` width of the popup, which is what separates the two: the popup grows
+   by it, and a name of any length ends a gap short of the marker. It is 56px — 12px of the row's own
+   padding, the width of the italic 10px "global", and the gap. Where a consumer caps the popup width,
+   the name ellipsizes at the padding edge instead, which is why the ellipsis of the base `.option` is
+   kept here rather than turned off the way the flex placement above turns it off. */
+.sd-portal .option.parent:not(.has-icon):not(.multiselect-option) {
+    display: block;
+    position: relative;
+    padding-right: 56px;
+}
+
+.sd-portal .option.parent:not(.has-icon):not(.multiselect-option)::after {
+    position: absolute;
+    /* 6px of row padding, then the 2px drop below the name generic's own config list has. */
+    top: 8px;
+    right: 12px;
+    margin-left: 0;
+    padding-left: 0;
 }

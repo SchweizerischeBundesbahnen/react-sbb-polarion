@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SearchableDropdown from '../src/generic/SearchableDropdown.js';
-import { mousedown } from './helpers';
+import { mousedown, mouseover } from './helpers';
 
 // Vanilla-class rendering & interaction behaviors (icons, chips, mouse, label resolution, change
 // listener, clearable ×, refresh/sync) ported behavior-level from generic's suite. Where generic called
@@ -110,6 +110,72 @@ describe('option rendering: icons, classes, mouse', () => {
     const dropdown = new SearchableDropdown({ element: select, preserveOptionClasses: true, rememberSelection: false });
     mousedown(dropdown.trigger);
     expect((dropdown.itemsEl.children[0] as HTMLElement).classList.contains('parent')).toBe(true);
+    dropdown.destroy();
+  });
+
+  it('caps the popup width and carries the full label as the row tooltip', () => {
+    const long = Array(4).fill('A configuration name far too long to fit the popup').join(', ');
+    const select = document.createElement('select');
+    select.innerHTML = `<option value="a">${long}</option>`;
+    fixture.appendChild(select);
+    const dropdown = new SearchableDropdown({ element: select, rememberSelection: false });
+    mousedown(dropdown.trigger);
+    const option = dropdown.itemsEl.children[0] as HTMLElement;
+    // Capped, so the row ellipsizes instead of growing the popup past the window - and the name the
+    // ellipsis hides stays readable through the tooltip. The cap is a content-box max-width, so the
+    // painted popup is the token plus its 1px borders.
+    expect(getComputedStyle(dropdown.optionsEl).maxWidth).toBe('480px');
+    expect(dropdown.optionsEl.offsetWidth).toBeLessThanOrEqual(482);
+    mouseover(option);
+    expect(option.title).toBe(long);
+    dropdown.destroy();
+  });
+
+  it('tooltips a row cut by less than its own right padding', () => {
+    const long = 'A configuration name inherited from the global scope';
+    const select = document.createElement('select');
+    select.innerHTML = `<option value="a" class="parent">${long}</option>`;
+    fixture.appendChild(select);
+    const dropdown = new SearchableDropdown({ element: select, preserveOptionClasses: true, rememberSelection: false });
+    mousedown(dropdown.trigger);
+    const option = dropdown.itemsEl.children[0] as HTMLElement;
+    const range = document.createRange();
+    range.selectNodeContents(option);
+    const textWidth = range.getBoundingClientRect().width;
+    const style = getComputedStyle(option);
+    const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+    // Cap the popup so the name is cut by 10px - inside the 56px this row reserves for the marker,
+    // which is the window where the row ellipsizes and the tooltip has to follow.
+    dropdown.portal.style.setProperty('--sbb-option-max-width', `${Math.round(textWidth + padding - 10)}px`);
+    expect(option.clientWidth - padding).toBeLessThan(textWidth);
+    mouseover(option);
+    expect(option.title).toBe(long);
+    dropdown.destroy();
+  });
+
+  it('leaves a row that fits without a tooltip', () => {
+    const dropdown = new SearchableDropdown({ element: single(), rememberSelection: false });
+    mousedown(dropdown.trigger);
+    const option = dropdown.itemsEl.children[0] as HTMLElement;
+    // A title here would be an accessible description repeating the name the row already carries.
+    mouseover(option);
+    expect(option.title).toBe('');
+    dropdown.destroy();
+  });
+
+  it('ellipsizes the label of an icon row at the cap', () => {
+    const long = Array(4).fill('An option label that does not fit next to its icon').join(', ');
+    const select = document.createElement('select');
+    select.innerHTML = `<option value="a" data-icon="/i/a.svg">${long}</option>`;
+    fixture.appendChild(select);
+    const dropdown = new SearchableDropdown({ element: select, rememberSelection: false });
+    mousedown(dropdown.trigger);
+    const label = dropdown.itemsEl.children[0].querySelector('.option-label') as HTMLElement;
+    // The label is a flex item, so it needs bounding of its own: unbounded it keeps its full width and
+    // the option's overflow cuts it mid-glyph, with no ellipsis.
+    expect(label.scrollWidth).toBeGreaterThan(label.clientWidth);
+    expect(label.getBoundingClientRect().right).toBeLessThanOrEqual(dropdown.optionsEl.getBoundingClientRect().right);
+    expect(getComputedStyle(label).textOverflow).toBe('ellipsis');
     dropdown.destroy();
   });
 

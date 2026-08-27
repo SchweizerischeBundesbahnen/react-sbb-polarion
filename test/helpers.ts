@@ -10,6 +10,11 @@ export function mousedown(node: Element): void {
   node.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, composed: true }));
 }
 
+/** Fire a bubbling mouseover at a node (the dropdown highlights the row and measures it there). */
+export function mouseover(node: Element): void {
+  node.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, composed: true }));
+}
+
 /** Fire a bubbling, cancelable keydown with the given key at a node. */
 export function keydown(node: Element, key: string): void {
   node.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, composed: true }));
