@@ -1,0 +1,90 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+
+  // JSON5 (an official Renovate config filename) rather than renovate.json, so the repo-specific
+  // traps below can be explained where they are configured - renovate.json is strict JSON and the
+  // check-json pre-commit hook rejects comments in it.
+  //
+  // Caveat to know when reviewing a Renovate pull request against this file: the shared preset
+  // pulls in config:best-practices, which enables :configMigration, and Renovate has a known bug
+  // where a migration of a .json5 file is written back as plain JSON with every comment dropped.
+  // That arrives as a reviewable pull request and cannot automerge (automerge here is scoped to
+  // matchUpdateTypes), so take the migration and restore the comments rather than merging as-is.
+  // Renaming the file to renovate.jsonc would make the comments safe, at the cost of losing
+  // configMigration altogether - it runs only on .json and .json5 - which is the worse trade.
+  extends: ['github>SchweizerischeBundesbahnen/casc-renovate-preset-polarion'],
+
+  // The shared Polarion preset owns everything that is not specific to this repository: branch
+  // automerge of minor/patch/pin/digest (automergeType "branch" + platformAutomerge, so those land
+  // on main without a pull request), majors held for a reviewer, minimumReleaseAge, weekly
+  // lockFileMaintenance, the dependency dashboard and the vulnerability-alert handling. Do not
+  // restate those here - a local copy silently stops tracking the preset.
+
+  // The commit convention of this repo is `type: subject`, no scope (see the /development skill).
+  // Renovate's default would emit `chore(deps): ...`.
+  semanticCommitScope: null,
+
+  prConcurrentLimit: 5,
+
+  packageRules: [
+    {
+      description: 'npm dependency updates are build-system changes',
+      matchManagers: ['npm'],
+      semanticCommitType: 'build',
+    },
+    {
+      description: 'Workflow action updates are CI changes',
+      matchManagers: ['github-actions'],
+      semanticCommitType: 'ci',
+    },
+    {
+      description: "Playwright must move in lockstep: the npm devDependency, and the pinned image \
+tag in ci.yml/release.yml that the committed reference screenshots were generated against. \
+Splitting them across two PRs makes the visual suite red on whichever lands first. This is also \
+the one group that must never automerge, which is why it overrides the shared preset: a green \
+build does NOT mean the reference screenshots were regenerated, and the regeneration is a human \
+step. prCreation immediate so the branch surfaces as a pull request straight away instead of \
+waiting for the checks to settle.",
+      matchPackageNames: ['playwright', '@vitest/browser-playwright'],
+      groupName: 'playwright',
+      automerge: false,
+      prCreation: 'immediate',
+      addLabels: ['needs-screenshot-refresh'],
+      prBodyNotes: [
+        "**Do not merge on green alone.** Regenerate the visual references against the new image \
+with `npm run test:update:docker` (never bare `npm run test:update`) and commit the PNGs into this \
+PR. Also re-check `NODE_VERSION` in `release.yml`: it must match the node shipped in the new \
+`mcr.microsoft.com/playwright:*-noble` image.",
+      ],
+    },
+    {
+      description: "react/react-dom are peer dependencies and must stay external - widen the \
+supported range instead of pinning consumers to whatever major this repo develops against.",
+      matchDepTypes: ['peerDependencies'],
+      rangeStrategy: 'widen',
+    },
+    {
+      description: "The devDependency copies of react/react-dom only exist to build and test \
+against; keep them in the same PR as the peer range so the two never disagree.",
+      matchPackageNames: ['react', 'react-dom', '@types/react', '@types/react-dom'],
+      groupName: 'react',
+    },
+  ],
+
+  customManagers: [
+    {
+      customType: 'regex',
+      description: "The `container:` image tag in the workflows is a hand-written copy of the \
+playwright version - scripts/docker-test.mjs derives its own from node_modules, but the workflows \
+cannot, so Renovate has to edit them as if they were a dependency. It emits depName `playwright`, \
+so the playwright rule above groups it with the devDependency and keeps it out of automerge.",
+      managerFilePatterns: ['/^\\.github/workflows/[^/]+\\.ya?ml$/'],
+      matchStrings: [
+        'mcr\\.microsoft\\.com/playwright:v(?<currentValue>[0-9]+\\.[0-9]+\\.[0-9]+)-noble',
+      ],
+      depNameTemplate: 'playwright',
+      datasourceTemplate: 'npm',
+      versioningTemplate: 'npm',
+    },
+  ],
+}
