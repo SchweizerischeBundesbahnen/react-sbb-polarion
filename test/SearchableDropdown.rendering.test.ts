@@ -131,6 +131,28 @@ describe('option rendering: icons, classes, mouse', () => {
     dropdown.destroy();
   });
 
+  it('tooltips a row cut by less than its own right padding', () => {
+    const long = 'A configuration name inherited from the global scope';
+    const select = document.createElement('select');
+    select.innerHTML = `<option value="a" class="parent">${long}</option>`;
+    fixture.appendChild(select);
+    const dropdown = new SearchableDropdown({ element: select, preserveOptionClasses: true, rememberSelection: false });
+    mousedown(dropdown.trigger);
+    const option = dropdown.itemsEl.children[0] as HTMLElement;
+    const range = document.createRange();
+    range.selectNodeContents(option);
+    const textWidth = range.getBoundingClientRect().width;
+    const style = getComputedStyle(option);
+    const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+    // Cap the popup so the name is cut by 10px - inside the 56px this row reserves for the marker,
+    // which is the window where the row ellipsizes and the tooltip has to follow.
+    dropdown.portal.style.setProperty('--sbb-option-max-width', `${Math.round(textWidth + padding - 10)}px`);
+    expect(option.clientWidth - padding).toBeLessThan(textWidth);
+    mouseover(option);
+    expect(option.title).toBe(long);
+    dropdown.destroy();
+  });
+
   it('leaves a row that fits without a tooltip', () => {
     const dropdown = new SearchableDropdown({ element: single(), rememberSelection: false });
     mousedown(dropdown.trigger);
