@@ -411,7 +411,10 @@ export function ConfigurationsPane<T>({
           cancelText="Cancel"
           okDisabled={visibilitySaving || visibilityDraft === visibility.globalHidden}
           onOk={() => void submitVisibility()}
-          onCancel={() => setVisibilityOpen(false)}
+          onCancel={() => {
+            if (visibilitySaving) return;
+            setVisibilityOpen(false);
+          }}
         >
           {/* `modal__container` is what the shared checkbox and input CSS is scoped to, so the box below
               looks the same here as on the page, whatever the consumer wrapped the pane in. */}
