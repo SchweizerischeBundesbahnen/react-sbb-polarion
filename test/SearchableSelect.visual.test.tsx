@@ -282,8 +282,9 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-option-open-list');
   });
 
-  it('open list with an inherited option whose name is longer than the popup', async () => {
-    // The name must never run into the "global" marker: it ellipsizes before the room reserved for it.
+  it('open list with an inherited name longer than the control', async () => {
+    // The name must never run into the "global" marker. The popup is max-content, so the room reserved
+    // for the marker widens it and the gap holds; the name itself is painted in full.
     render(
       <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
         <SearchableSelect
@@ -300,6 +301,47 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
     await parkPointer();
     openStable(instanceOf(document.querySelector('select')!));
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-long-name-open-list');
+  });
+
+  it('open list with an inherited option that also carries an icon', async () => {
+    // The flex modes place the marker with `margin-left: auto` and bound their label span; this pins how
+    // the name, the icon and the marker line up vertically there.
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package', iconURL: ICON },
+            { id: 'b', name: 'Default', iconURL: ICON, inherited: true },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-with-icon-open-list');
+  });
+
+  it('open multi-select list with an inherited option', async () => {
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          multiple
+          value={[]}
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package' },
+            { id: 'b', name: 'Default', inherited: true },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger-multi')).not.toBeNull());
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-multi-open-list');
   });
 
   it('closed trigger with an inherited option selected (name only, no marker)', async () => {

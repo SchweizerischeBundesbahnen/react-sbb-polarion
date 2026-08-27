@@ -457,12 +457,13 @@ describe('SearchableSelect option decorations', () => {
     expect(getComputedStyle(local, '::after').content).toBe('none');
   });
 
-  it('reserves room for the marker so a long inherited name ellipsizes instead of running into it', async () => {
+  it('reserves room for the marker so a long inherited name cannot reach it', async () => {
     await mount({ options: [SCOPED[0], { id: 'b', name: 'Global style package with long name', inherited: true }] });
     mousedown(trigger());
     const [local, global] = options();
     // The name is a bare text node, so the room is reserved on the option itself: right padding wide
-    // enough for the marker plus a gap, with the ellipsis of the base option kept.
+    // enough for the marker plus a gap. The popup is max-content, so the padding widens it and the gap
+    // survives any name length; the ellipsis of the base option covers a consumer-capped popup.
     const style = getComputedStyle(global);
     expect(style.display).toBe('block');
     expect(parseFloat(style.paddingRight)).toBeGreaterThan(parseFloat(getComputedStyle(local).paddingRight));
@@ -483,13 +484,17 @@ describe('SearchableSelect option decorations', () => {
   // placed by the shared rule: `margin-left: auto` pushes it to the right edge, `padding-left` keeps it
   // off the label. The out-of-flow placement of a plain option must not reach either.
   const expectSharedMarkerPlacement = (option: HTMLElement) => {
-    expect(getComputedStyle(option).display).toBe('flex');
+    const style = getComputedStyle(option);
+    expect(style.display).toBe('flex');
+    // Centered, like an option of either flex mode that is not inherited - baseline alignment would
+    // drop the name against its icon, whose baseline is its bottom edge.
+    expect(style.alignItems).toBe('center');
     const marker = getComputedStyle(option, '::after');
     expect(marker.content).toBe('"global"');
     expect(parseFloat(marker.marginLeft)).toBeGreaterThan(0);
     expect(marker.paddingLeft).toBe('16px');
-    // The label is bounded, so a name longer than the popup ellipsizes rather than pushing the marker
-    // out of the row.
+    // The label is bounded, so a name longer than a consumer-capped popup ellipsizes rather than
+    // pushing the marker out of the row.
     const label = getComputedStyle(option.querySelector('.option-label')!);
     expect(label.minWidth).toBe('0px');
     expect(label.textOverflow).toBe('ellipsis');
