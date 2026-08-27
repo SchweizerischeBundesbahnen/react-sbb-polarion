@@ -6,7 +6,9 @@ import {
   ConfigurationsPane,
   type ConfigurationsPaneHandle,
   type ConfigurationsService,
+  type ConfigurationsVisibility,
 } from '../src/components/ConfigurationsPane';
+import type SearchableDropdown from '../src/generic/SearchableDropdown.js';
 import { mousedown } from './helpers';
 
 // Behavior tests for the shared ConfigurationsPane. It is decoupled from any extension: the REST ops
@@ -45,6 +47,25 @@ const btn = (text: string): HTMLButtonElement => {
   return b;
 };
 const nameInput = () => document.querySelector('.config-edit-row input[type="text"]') as HTMLInputElement | null;
+/** What the vendored dropdown holds - the list it read from the `<select>`, marker classes included. */
+const dropdownItems = () => {
+  const select = document.querySelector('.configurations-pane select') as
+    (HTMLSelectElement & { _searchableDropdown?: SearchableDropdown }) | null;
+  return select?._searchableDropdown?.items ?? [];
+};
+const dialog = () => document.querySelector('.rsp-modal');
+const dialogTitle = () => document.querySelector('.rsp-modal-title')?.textContent;
+const dialogBody = () => document.querySelector('.config-visibility-dialog');
+const dialogCheckbox = () =>
+  document.querySelector('.config-visibility-dialog input[type="checkbox"]') as HTMLInputElement | null;
+/** The dialog's own footer buttons: the pane's edit row carries a "Cancel" of its own. */
+const dialogButton = (text: string): HTMLButtonElement => {
+  const b = Array.from(document.querySelectorAll<HTMLButtonElement>('.rsp-modal-footer .sbb-btn')).find(
+    (x) => (x.textContent ?? '').trim() === text,
+  );
+  if (!b) throw new Error(`dialog button "${text}" not found`);
+  return b;
+};
 const alertError = () => document.querySelector('.alert-error');
 const note = () => document.querySelector('.config-note');
 
@@ -61,6 +82,7 @@ interface Opts {
   label?: string;
   onEditingNameChange?: () => void;
   ref?: React.Ref<ConfigurationsPaneHandle>;
+  visibility?: ConfigurationsVisibility;
 }
 
 function renderPane(opts: Opts = {}) {
@@ -77,6 +99,7 @@ function renderPane(opts: Opts = {}) {
       onContentLoaded={onContentLoaded}
       onSelectedChange={onSelectedChange}
       onEditingNameChange={onEditingNameChange}
+      visibility={opts.visibility}
       ref={opts.ref}
     />,
   );
@@ -91,6 +114,7 @@ async function mount(opts: Opts = {}) {
 
 afterEach(() => {
   cleanup();
+  document.querySelectorAll('.sd-portal').forEach((el) => el.remove());
   clearCookies();
   vi.restoreAllMocks();
 });
@@ -436,5 +460,163 @@ describe('ConfigurationsPane', () => {
     await vi.waitFor(() =>
       expect(alertError()?.textContent).toContain('Error occurred while saving the configuration'),
     );
+  });
+});
+
+describe('ConfigurationsPane visibility of the global-scope configurations', () => {
+  const visibility = (over: Partial<ConfigurationsVisibility> = {}): ConfigurationsVisibility => ({
+    globalHidden: false,
+    onChange: vi.fn(async () => {}),
+    ...over,
+  });
+
+  it('offers no such button when the consumer passes no visibility', async () => {
+    await mount();
+    await vi.waitFor(() => expect(btn('Add new')).toBeDefined());
+    expect(buttons().map((b) => (b.textContent ?? '').trim())).not.toContain('Change visibility');
+    expect(document.querySelector('.config-separator')).toBeNull();
+  });
+
+  it('puts the button behind a separator after "Add new"', async () => {
+    await mount({ visibility: visibility() });
+    await vi.waitFor(() => expect(btn('Change visibility')).toBeDefined());
+    const row = Array.from(document.querySelectorAll('.config-row > *'));
+    expect(row.indexOf(document.querySelector('.config-separator')!)).toBe(row.indexOf(btn('Add new')) + 1);
+    expect(row.indexOf(btn('Change visibility'))).toBe(row.indexOf(document.querySelector('.config-separator')!) + 1);
+    expect(dialog()).toBeNull();
+  });
+
+  it('greys the button out while the stored value is unknown', async () => {
+    await mount({ visibility: visibility({ disabled: true }) });
+    await vi.waitFor(() => expect(btn('Change visibility').disabled).toBe(true));
+  });
+
+  it('names the setting after the label and shows the stored value', async () => {
+    await mount({ label: 'style package', visibility: visibility({ globalHidden: true }) });
+    await vi.waitFor(() => expect(btn('Change visibility')).toBeDefined());
+
+    btn('Change visibility').click();
+
+    await vi.waitFor(() => expect(dialog()).not.toBeNull());
+    expect(dialogTitle()).toBe('Visibility of style packages');
+    expect(dialogBody()?.textContent).toContain('Hide style packages defined on the global level');
+    expect(dialogCheckbox()?.checked).toBe(true);
+  });
+
+  it('explains to a project what hiding the global level means for it', async () => {
+    await mount({ scope: 'project/elibrary/', visibility: visibility() });
+    await vi.waitFor(() => expect(btn('Change visibility')).toBeDefined());
+
+    btn('Change visibility').click();
+
+    await vi.waitFor(() => expect(dialogBody()).not.toBeNull());
+    expect(dialogBody()!.textContent).toContain('offered in this project');
+  });
+
+  it('explains on the global scope that it decides for the projects', async () => {
+    await mount({ visibility: visibility() });
+    await vi.waitFor(() => expect(btn('Change visibility')).toBeDefined());
+
+    btn('Change visibility').click();
+
+    await vi.waitFor(() => expect(dialogBody()).not.toBeNull());
+    expect(dialogBody()!.textContent).toContain('every project which does not set this itself');
+  });
+
+  it('shows the extra explanation the consumer passes', async () => {
+    await mount({ visibility: visibility({ note: <p>The project gets a Default of its own.</p> }) });
+    await vi.waitFor(() => expect(btn('Change visibility')).toBeDefined());
+
+    btn('Change visibility').click();
+
+    await vi.waitFor(() => expect(dialogBody()?.textContent).toContain('The project gets a Default of its own.'));
+  });
+
+  it('keeps "Change" disabled until the box is actually changed', async () => {
+    await mount({ visibility: visibility() });
+    await vi.waitFor(() => expect(btn('Change visibility')).toBeDefined());
+    btn('Change visibility').click();
+    await vi.waitFor(() => expect(dialogCheckbox()).not.toBeNull());
+
+    expect(dialogButton('Change').disabled).toBe(true);
+    dialogCheckbox()!.click();
+    await vi.waitFor(() => expect(dialogButton('Change').disabled).toBe(false));
+  });
+
+  it('stores the new value, closes and reloads the list', async () => {
+    const onChange = vi.fn(async () => {});
+    const { service } = await mount({ visibility: visibility({ onChange }) });
+    await vi.waitFor(() => expect(service.loadConfigurationNames).toHaveBeenCalledTimes(1));
+    btn('Change visibility').click();
+    await vi.waitFor(() => expect(dialogCheckbox()).not.toBeNull());
+
+    dialogCheckbox()!.click();
+    dialogButton('Change').click();
+
+    await vi.waitFor(() => expect(onChange).toHaveBeenCalledWith(true));
+    // Hiding changes which configurations exist, so the pane reads its list again
+    await vi.waitFor(() => expect(service.loadConfigurationNames).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(dialog()).toBeNull());
+  });
+
+  it("stops marking an option as inherited once the update made it this scope's own", async () => {
+    // The name is the same on both scopes: nothing enters or leaves the list, the entry the administrator
+    // is looking at simply stops being inherited. The vendored dropdown only watches for options coming
+    // and going, so what it holds is what goes stale - and what the rebuild after an update repairs.
+    let hidden = false;
+    const service = makeService({
+      loadConfigurationNames: vi.fn(async () => [{ name: 'Default', scope: hidden ? 'project/elibrary/' : '' }]),
+    });
+    await mount({
+      scope: 'project/elibrary/',
+      service,
+      visibility: visibility({
+        onChange: vi.fn(async () => {
+          hidden = true;
+        }),
+      }),
+    });
+    await vi.waitFor(() => expect(dropdownItems()[0]?.className).toBe('parent'));
+
+    btn('Change visibility').click();
+    await vi.waitFor(() => expect(dialogCheckbox()).not.toBeNull());
+    dialogCheckbox()!.click();
+    dialogButton('Change').click();
+
+    await vi.waitFor(() => expect(dialog()).toBeNull());
+    await vi.waitFor(() => expect(dropdownItems()[0]?.className).toBe(''));
+  });
+
+  it('stores nothing when the dialog is cancelled', async () => {
+    const onChange = vi.fn(async () => {});
+    await mount({ visibility: visibility({ onChange }) });
+    await vi.waitFor(() => expect(btn('Change visibility')).toBeDefined());
+    btn('Change visibility').click();
+    await vi.waitFor(() => expect(dialogCheckbox()).not.toBeNull());
+
+    dialogCheckbox()!.click();
+    dialogButton('Cancel').click();
+
+    await vi.waitFor(() => expect(dialog()).toBeNull());
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('keeps the dialog open and reports a failed write', async () => {
+    const onChange = vi.fn(async () => {
+      throw new Error('no permission');
+    });
+    const { service } = await mount({ label: 'mapping', visibility: visibility({ onChange }) });
+    await vi.waitFor(() => expect(service.loadConfigurationNames).toHaveBeenCalledTimes(1));
+    btn('Change visibility').click();
+    await vi.waitFor(() => expect(dialogCheckbox()).not.toBeNull());
+
+    dialogCheckbox()!.click();
+    dialogButton('Change').click();
+
+    await vi.waitFor(() =>
+      expect(dialogBody()?.textContent).toContain('Error occurred while saving the visibility of the mappings.'),
+    );
+    expect(dialog()).not.toBeNull();
+    expect(service.loadConfigurationNames).toHaveBeenCalledTimes(1);
   });
 });
