@@ -71,7 +71,11 @@ PR. Also re-check `NODE_VERSION` in `release.yml`: it must match the node shippe
     },
     {
       description: "react/react-dom are peer dependencies and must stay external - widen the \
-supported range instead of pinning consumers to whatever major this repo develops against.",
+supported range instead of pinning consumers to whatever major this repo develops against. This \
+restates a default rather than changing one: rangeStrategy defaults to `auto`, and the npm manager \
+resolves `auto` to `widen` for peerDependencies (lib/modules/manager/npm/range.ts). It is kept \
+explicit because the constraint is load-bearing for this package - see the packaging section of \
+CLAUDE.md - and a manager default is not something this repository would notice changing.",
       matchDepTypes: ['peerDependencies'],
       rangeStrategy: 'widen',
     },
