@@ -37,7 +37,11 @@ export { default as RestAuthTest } from './components/RestAuthTest';
 export { default as About } from './components/About';
 export { default as UserGuide } from './components/UserGuide';
 export { ConfigurationsPane } from './components/ConfigurationsPane';
-export type { ConfigurationsPaneHandle, ConfigurationsService } from './components/ConfigurationsPane';
+export type {
+  ConfigurationsPaneHandle,
+  ConfigurationsService,
+  ConfigurationsVisibility,
+} from './components/ConfigurationsPane';
 export { default as RevisionsTable } from './components/RevisionsTable';
 // The code editor behind every settings page whose content is a document rather than a form: the DMS
 // connectors' .properties configuration, the exporters' CSS, Velocity templates and HTML fragments.

@@ -250,6 +250,15 @@ bottom-aligns the labelled fields and pulls a taller control - a toolbar button 
 controls' 23px, which is Polarion's own relationship - down by half the difference, so it is centred on
 the line the fields make instead of standing proud of it.
 
+`ConfigurationsPane` is the named-configuration selector plus create / rename / delete. Pass the optional
+`visibility` prop - `{ globalHidden, onChange, note?, disabled? }` - and it grows a `Change visibility`
+button, behind a separator, after `Add new`: a dialog that explains what the configurations of the global
+level are, carries a checkbox for the current state and Cancel / Change. The wording is composed from
+`label`, so the dialog of a page whose `label` is `style package` speaks of style packages. The pane does
+not read or store the flag itself (each extension keeps it somewhere else): it hands the chosen value to
+`onChange` and reloads its list once that resolves, since hiding or showing the global level changes which
+configurations the scope has.
+
 `Tabs` is the shared tab bar from the generic framework's `tabs.css` - one tab-bar look for every
 extension. It is controlled (`items`, `activeId`, `onSelect`) and selects only: the caller renders
 whatever the active tab stands for. It uses that stylesheet's JS-driven variant, so the tab count is
@@ -304,7 +313,7 @@ the class's build mode or clearable trigger, a non-React-controlled `<select>`),
 
 **Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableSelectProps`, `SingleSelectProps`,
 `MultiSelectProps`, `SearchableDropdownInstance`, `CodeLanguage`, `ConfigurationsPaneHandle`,
-`ConfigurationsService<T>`, `AuthorizationService`, `AuthorizationContent`, `RolesInfo`,
+`ConfigurationsService<T>`, `ConfigurationsVisibility`, `AuthorizationService`, `AuthorizationContent`, `RolesInfo`,
 `StylePackageWeight`, `StylePackageWeightsService`, `WeightEntry`,
 `SettingName`, `Revision`, `Version`, `ConfigurationProperty`, `ConfigurationPropertiesModel`,
 `ConfigurationStatus`, `SendRequest`.
