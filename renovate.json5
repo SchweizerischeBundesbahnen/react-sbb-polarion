@@ -36,6 +36,17 @@
       semanticCommitType: 'build',
     },
     {
+      description: "The shared preset automerges pre-commit updates including majors, on the grounds \
+that they are low-risk tooling. They are not low-risk here and nothing verifies them: no CI job runs \
+pre-commit, so `ci` is green whatever a hook bump does, and a commitizen or gitleaks major that \
+changes its configuration schema would fast-forward onto main and then fail every contributor's next \
+commit. Minor and patch keep automerging.",
+      matchManagers: ['pre-commit'],
+      matchUpdateTypes: ['major'],
+      automerge: false,
+      prCreation: 'immediate',
+    },
+    {
       description: 'Workflow action updates are CI changes',
       matchManagers: ['github-actions'],
       semanticCommitType: 'ci',
@@ -51,7 +62,7 @@ commit gate does, so read the diff on the dependency dashboard rather than assum
     },
     {
       description: "Playwright must move in lockstep: the npm devDependency, and the pinned image \
-tag in ci.yml/release.yml that the committed reference screenshots were generated against. \
+tag in ci.yml/release-please.yml that the committed reference screenshots were generated against. \
 Splitting them across two PRs makes the visual suite red on whichever lands first. This is also \
 the one group that must never automerge, which is why it overrides the shared preset: a green \
 build does NOT mean the reference screenshots were regenerated, and the regeneration is a human \
@@ -65,7 +76,7 @@ waiting for the checks to settle.",
       prBodyNotes: [
         "**Do not merge on green alone.** Regenerate the visual references against the new image \
 with `npm run test:update:docker` (never bare `npm run test:update`) and commit the PNGs into this \
-PR. Also re-check `NODE_VERSION` in `release.yml`: it must match the node shipped in the new \
+PR. Also re-check `NODE_VERSION` in `release-please.yml`: it must match the node shipped in the new \
 `mcr.microsoft.com/playwright:*-noble` image.",
       ],
     },
