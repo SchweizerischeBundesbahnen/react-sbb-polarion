@@ -325,6 +325,17 @@
     object-fit: contain;
 }
 
+/* The label span every flex mode of an option renders (icon, multi-select checkbox). A flex item does
+   not shrink below its content and the label is `nowrap`, so at the popup's max-width cap it would
+   keep its full width and be hard-cut by the option's own `overflow: hidden` — `text-overflow` acts on
+   the inline content of a block container, never on an overflowing flex item. Bounding the span makes
+   its automatic minimum size zero, so it shrinks and ellipsizes instead. */
+.sd-portal .option > .option-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Optional coloured tile behind an icon (<option data-icon-bg> / addOption's 4th arg). The tile
    colour is per-option, so it is set inline in JS (_applyIconBg); this only adds the padding and
    radius that turn the icon's own background into a neat little tile — matching the entity/project
@@ -371,11 +382,6 @@
     background-image: var(--sbb-checkbox-checked);
 }
 
-.sd-portal .option.multiselect-option .option-label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 /* preserveOptionClasses: options inherit the source <option>'s class.
    .parent = a config inherited from a broader (e.g. global) scope. The name is
    shown in normal text and a small italic "global" marker is appended on the
@@ -387,16 +393,6 @@
        undo it: the baseline of the icon is its bottom edge, so the name would drop by the difference
        and sit off-center against its icon. */
     align-items: center;
-}
-
-/* The popup is `width: max-content` and nothing narrows it, so the marker and its `padding-left` widen
-   the popup rather than crowd the name. Bound the label for the case that does constrain the width — a
-   consumer capping the popup — where a `nowrap` flex item would keep its full width instead and push
-   the marker past the right edge. */
-.sd-portal .option.parent > .option-label {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .sd-portal .option.parent::after {

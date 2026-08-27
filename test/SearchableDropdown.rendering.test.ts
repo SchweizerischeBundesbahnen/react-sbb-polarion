@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SearchableDropdown from '../src/generic/SearchableDropdown.js';
-import { mousedown } from './helpers';
+import { mousedown, mouseover } from './helpers';
 
 // Vanilla-class rendering & interaction behaviors (icons, chips, mouse, label resolution, change
 // listener, clearable ×, refresh/sync) ported behavior-level from generic's suite. Where generic called
@@ -126,7 +126,34 @@ describe('option rendering: icons, classes, mouse', () => {
     // painted popup is the token plus its 1px borders.
     expect(getComputedStyle(dropdown.optionsEl).maxWidth).toBe('480px');
     expect(dropdown.optionsEl.offsetWidth).toBeLessThanOrEqual(482);
+    mouseover(option);
     expect(option.title).toBe(long);
+    dropdown.destroy();
+  });
+
+  it('leaves a row that fits without a tooltip', () => {
+    const dropdown = new SearchableDropdown({ element: single(), rememberSelection: false });
+    mousedown(dropdown.trigger);
+    const option = dropdown.itemsEl.children[0] as HTMLElement;
+    // A title here would be an accessible description repeating the name the row already carries.
+    mouseover(option);
+    expect(option.title).toBe('');
+    dropdown.destroy();
+  });
+
+  it('ellipsizes the label of an icon row at the cap', () => {
+    const long = Array(4).fill('An option label that does not fit next to its icon').join(', ');
+    const select = document.createElement('select');
+    select.innerHTML = `<option value="a" data-icon="/i/a.svg">${long}</option>`;
+    fixture.appendChild(select);
+    const dropdown = new SearchableDropdown({ element: select, rememberSelection: false });
+    mousedown(dropdown.trigger);
+    const label = dropdown.itemsEl.children[0].querySelector('.option-label') as HTMLElement;
+    // The label is a flex item, so it needs bounding of its own: unbounded it keeps its full width and
+    // the option's overflow cuts it mid-glyph, with no ellipsis.
+    expect(label.scrollWidth).toBeGreaterThan(label.clientWidth);
+    expect(label.getBoundingClientRect().right).toBeLessThanOrEqual(dropdown.optionsEl.getBoundingClientRect().right);
+    expect(getComputedStyle(label).textOverflow).toBe('ellipsis');
     dropdown.destroy();
   });
 

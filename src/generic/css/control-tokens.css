@@ -122,8 +122,10 @@
     --sbb-option-hover: var(--sbb-hover-tint);
     /* Widest the option popup may grow. The popup is sized by its longest option, so without a cap one
        very long configuration name paints a row wider than the window. Past the cap the option
-       ellipsizes and keeps its full name in the DOM. Override it on .sd-portal — the popup is a
-       body-level element tagged .sbb-ui, not a descendant of the wrapper the trigger sits in. */
+       ellipsizes and keeps its full name in the DOM. Override it on `.sd-portal.sbb-ui` — the popup is
+       a body-level element carrying both classes, not a descendant of the wrapper the trigger sits in,
+       so a bare `.sd-portal` only ties with the `.sbb-ui` of this declaration and loses to it whenever
+       this file loads last, which is exactly how the React SPAs link it. */
     --sbb-option-max-width: min(480px, calc(100vw - 16px));
 
     /* Multi-select chips */

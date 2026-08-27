@@ -298,6 +298,27 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-long-name-open-list');
   });
 
+  it('open list with an icon row past the popup cap', async () => {
+    // The label of a flex mode is bounded on its own: unbounded it keeps its full width and the option
+    // cuts it mid-glyph, with no ellipsis.
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Project package', iconURL: ICON },
+            { id: 'b', name: LONG, iconURL: ICON },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    await parkPointer();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('icon-capped-open-list');
+  });
+
   it('open list with an inherited name past the popup cap', async () => {
     // The two rules meeting: the popup stops at --sbb-option-max-width, and the room reserved for the
     // marker is what the name ellipsizes before.

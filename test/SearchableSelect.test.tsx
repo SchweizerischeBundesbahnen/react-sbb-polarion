@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import SearchableSelect, { type SelectOption } from '../src/components/SearchableSelect';
-import { flush, keydown, mousedown, typeInto } from './helpers';
+import { flush, keydown, mousedown, mouseover, typeInto } from './helpers';
 
 // Behavior tests driven through the REAL React wrapper (the feature RSP exposes), asserting observable
 // DOM - so they survive the eventual move of SearchableDropdown.js's logic into SearchableSelect.tsx.
@@ -479,6 +479,7 @@ describe('SearchableSelect option decorations', () => {
     // Capped popup: the name stops at the room reserved for the marker instead of widening the popup,
     // and the part the ellipsis hides is still readable on the row.
     expect(global.scrollWidth).toBeGreaterThan(global.clientWidth);
+    mouseover(global);
     expect(global.title).toBe(long);
     expect(getComputedStyle(global).textOverflow).toBe('ellipsis');
   });

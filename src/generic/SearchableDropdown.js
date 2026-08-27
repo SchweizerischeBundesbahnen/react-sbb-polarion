@@ -663,10 +663,6 @@ export default class SearchableDropdown {
                 option.textContent = item.label;
             }
 
-            // The popup is capped (--sbb-option-max-width), so a long label is painted with an
-            // ellipsis. Carry the full one as the row's tooltip, or it is readable nowhere.
-            option.title = item.label;
-
             if (this.preserveOptionClasses && item.className) {
                 option.classList.add(...item.className.split(/\s+/).filter(Boolean));
             }
@@ -689,6 +685,14 @@ export default class SearchableDropdown {
 
             // Highlight follows the mouse — only one option is highlighted at a time
             option.addEventListener('mouseover', () => {
+                // The popup is capped (--sbb-option-max-width), so a long label is painted with an
+                // ellipsis. Carry the full one as the row's tooltip, or the hidden part is readable
+                // nowhere — but only for a row that IS cut: `role="option"` takes its accessible name
+                // from the contents, so a title on a row that fits becomes a description repeating the
+                // name a screen reader just read. Measured here rather than at render time, where the
+                // popup is still `display: none` and every width is 0.
+                const measured = option.querySelector('.option-label') || option;
+                option.title = measured.scrollWidth > measured.clientWidth ? item.label : '';
                 this.activeIndex = index;
                 this._paintActive();
             });
