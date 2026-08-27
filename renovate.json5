@@ -19,6 +19,11 @@
   // on main without a pull request), majors held for a reviewer, minimumReleaseAge, weekly
   // lockFileMaintenance, the dependency dashboard and the vulnerability-alert handling. Do not
   // restate those here - a local copy silently stops tracking the preset.
+  //
+  // Branch automerge only works because ci.yml also triggers on `push: renovate/**`. A branch with no
+  // check run reads as pending, not as green (Renovate: "if you have no tests but still want Renovate
+  // to automerge, you need ignoreTests"), so removing that trigger stops every automerge in this repo
+  // without failing anything - see the comment at the top of .github/workflows/ci.yml.
 
   // The commit convention of this repo is `type: subject`, no scope (see the /development skill).
   // Renovate's default would emit `chore(deps): ...`.
@@ -35,6 +40,15 @@
     {
       description: 'Workflow action updates are CI changes',
       matchManagers: ['github-actions'],
+      semanticCommitType: 'ci',
+    },
+    {
+      description: "The preset extends :enablePreCommit, so .pre-commit-config.yaml is Renovate-\
+managed here even though this repository never had that manager before. Hook updates are commit-gate \
+tooling, so they are typed like the workflow updates above rather than taking Renovate's default \
+`chore`. The preset automerges this manager including majors - a hook major can change what the \
+commit gate does, so read the diff on the dependency dashboard rather than assuming it is cosmetic.",
+      matchManagers: ['pre-commit'],
       semanticCommitType: 'ci',
     },
     {
