@@ -44,8 +44,6 @@ export default defineConfig({
       // Score RSP's own hand-written code only.
       include: ['src/**'],
       exclude: [
-        // Vendored, transitional foreign code (its own behavior suite covers it; not RSP-authored).
-        'src/generic/**',
         // Type-only files - no runtime code to execute (v8 would report them as 0/0).
         'src/**/*.d.ts',
         'src/types.ts',
