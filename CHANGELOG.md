@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.0.2...v2.1.0) (2026-08-27)
+
+
+### Features
+
+* add DateInput and DateRangePicker ([#103](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/103)) ([77c1d09](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/77c1d092a63a685d477648951d2a84d80170a322))
+
+
+### Bug Fixes
+
+* repaint an option when its scope changes ([#101](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/101)) ([968253f](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/968253ff3cec62cec48bad05e2f9590dcee0f9a7))
+
 ## [2.0.2](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.0.1...v2.0.2) (2026-08-26)
 
 
