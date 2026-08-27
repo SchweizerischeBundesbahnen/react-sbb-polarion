@@ -29,8 +29,6 @@
   // Renovate's default would emit `chore(deps): ...`.
   semanticCommitScope: null,
 
-  prConcurrentLimit: 5,
-
   packageRules: [
     {
       description: 'npm dependency updates are build-system changes',
