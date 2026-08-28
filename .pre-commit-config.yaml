@@ -70,7 +70,7 @@ repos:
       - id: check-git-config-user-email
         args: [--templates, ^\S+\.\S+@sbb\.ch$]
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.16.4
+    rev: v4.18.0
     hooks:
       - id: commitizen
   # Workflow security static analysis. Configuration: zizmor.yml. Complements actionlint below -
