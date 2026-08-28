@@ -3,7 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import StylePackageWeights from '../src/components/StylePackageWeights';
 import type { StylePackageWeight, StylePackageWeightsService } from '../src/services/stylePackageWeights';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the weights list: the row look ported from generic's
 // style-package-weights.css (drag handle, weight field with its spinner, reorder carets), the greyed
@@ -78,7 +78,7 @@ afterEach(() => {
 const settlePaint = () => new Promise<void>((resolve) => setTimeout(() => requestAnimationFrame(() => resolve()), 250));
 
 const listShot = (name: string) =>
-  parkPointer()
+  settleBeforeCapture()
     .then(settlePaint)
     .then(() =>
       expect(page.elementLocator(document.querySelector('.weights-list') as HTMLElement)).toMatchScreenshot(name),

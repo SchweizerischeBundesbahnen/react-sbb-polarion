@@ -4,7 +4,7 @@ import { page } from 'vitest/browser';
 import DateInput from '../src/components/DateInput';
 import DateRangePicker from '../src/components/DateRangePicker';
 import SearchableSelect from '../src/components/SearchableSelect';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the date field. Kept separate from the behavior tests (Docker-only,
 // since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live in
@@ -32,7 +32,7 @@ const host = (testid: string, children: React.ReactNode, width = 420) =>
 
 const shot = async (testid: string, name: string) => {
   await vi.waitFor(() => expect(document.querySelectorAll('input[type="date"]').length).toBeGreaterThan(0));
-  await parkPointer();
+  await settleBeforeCapture();
   return expect(page.getByTestId(testid)).toMatchScreenshot(name);
 };
 

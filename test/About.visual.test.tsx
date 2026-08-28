@@ -3,7 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import About from '../src/components/About';
 import type { ConfigurationPropertiesModel, ConfigurationStatus, Version } from '../src/types';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the shared About page. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live
@@ -96,7 +96,7 @@ const fullPage = () =>
   });
 
 const shot = async (name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
 };
 
@@ -121,7 +121,7 @@ function sectionUnder(heading: string): HTMLElement {
 }
 
 const sectionShot = async (element: HTMLElement, name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return expect(page.elementLocator(element)).toMatchScreenshot(name);
 };
 

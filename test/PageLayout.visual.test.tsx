@@ -3,7 +3,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 import PageLayout from '../src/components/PageLayout';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the shared page frame. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live
@@ -52,7 +52,7 @@ function renderPage({ title, search }: { title?: string; search: string }) {
 }
 
 const shot = async (name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
 };
 

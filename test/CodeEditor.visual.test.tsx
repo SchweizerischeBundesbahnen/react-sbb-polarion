@@ -3,7 +3,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 import CodeEditor, { type CodeLanguage } from '../src/components/CodeEditor';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the code editor: the token colors of every supported grammar and, more
 // importantly, that the highlighted layer sits exactly under the textarea's text (a metric that drifts
@@ -87,7 +87,7 @@ function renderEditor(language: CodeLanguage, value: string) {
 }
 
 const editorShot = (name: string) =>
-  parkPointer().then(() =>
+  settleBeforeCapture().then(() =>
     expect(page.elementLocator(document.querySelector('.code-editor') as HTMLElement)).toMatchScreenshot(name),
   );
 

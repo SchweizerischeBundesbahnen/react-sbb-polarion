@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import RestAuthTest from '../src/components/RestAuthTest';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the debug-only REST auth test. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live
@@ -43,7 +43,7 @@ const runButton = () =>
   )!;
 
 const shot = async (name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
 };
 

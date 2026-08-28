@@ -3,7 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import AuthorizationSettings from '../src/components/AuthorizationSettings';
 import type { AuthorizationService } from '../src/services/authorizationSettings';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the shared role-authorization page. Kept separate from the behavior
 // tests (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing).
@@ -51,7 +51,7 @@ function mount(service: AuthorizationService, quickHelp?: React.ReactNode) {
 }
 
 const shot = async (name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
 };
 

@@ -55,3 +55,27 @@ export async function parkPointer(): Promise<void> {
     spot.remove();
   }
 }
+
+/**
+ * Everything a component has to have finished before it is worth photographing: its fonts settled, the
+ * pointer off any control, the hover styling that pointer leaves behind faded out, and a frame painted.
+ * Call it as the LAST thing before a capture. The antialiasing, the fourth cause, is pinned once for the
+ * whole file in test/setup.ts.
+ *
+ * The pointer is the measured one (see `parkPointer`). The rest are precautions rather than proven
+ * culprits, kept because they are cheap and each removes a way for a capture to land on an unfinished
+ * component: `document.fonts.ready`, the wait for the hover transition, and the two frames.
+ *
+ * @param park whether to move the pointer away, for the captures that aim it somewhere themselves.
+ */
+export async function settleBeforeCapture(park = true): Promise<void> {
+  await document.fonts.ready;
+  if (park) {
+    await parkPointer();
+  }
+  // The hover styling of whatever the pointer leaves behind fades over `transition: box-shadow .15s`, and
+  // a capture in the middle of that fade is a reference that only sometimes reproduces.
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  // Two frames: the first lets the style changes above be laid out, the second lets them be painted.
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve(undefined))));
+}
