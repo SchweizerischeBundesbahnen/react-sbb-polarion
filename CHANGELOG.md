@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.2.0...v2.2.1) (2026-08-28)
+
+
+### Bug Fixes
+
+* cap the option popup width ([#114](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/114)) ([5169dbb](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/5169dbbfb813d7fdfe7f262502bc3d40a05b2896))
+* keep a long inherited name off the global marker ([#112](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/112)) ([507ab32](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/507ab3205c367199dac681782d829b2d1a70e91d))
+
 ## [2.2.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.1.0...v2.2.0) (2026-08-27)
 
 
