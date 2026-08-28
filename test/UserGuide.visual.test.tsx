@@ -3,7 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import UserGuide from '../src/components/UserGuide';
 import type { SendRequest } from '../src/types';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the shared User Guide page. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live
@@ -36,7 +36,7 @@ function mount(sendRequest: SendRequest) {
 }
 
 const shot = async (name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return expect(page.elementLocator(container as HTMLElement)).toMatchScreenshot(name);
 };
 

@@ -4,7 +4,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { page } from 'vitest/browser';
 import Modal from '../src/components/Modal';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the shared Modal. Kept separate from the behavior tests (Docker-only,
 // since any toMatchScreenshot file diffs on non-Linux font antialiasing). Rendered with React's
@@ -53,7 +53,7 @@ function renderModal(props: { title?: string; okText?: string; cancelText?: stri
 }
 
 const dialogShot = (name: string) =>
-  parkPointer().then(() =>
+  settleBeforeCapture().then(() =>
     expect(page.elementLocator(document.querySelector('.rsp-modal') as HTMLElement)).toMatchScreenshot(name),
   );
 

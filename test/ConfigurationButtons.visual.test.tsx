@@ -3,7 +3,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import ConfigurationButtons from '../src/components/ConfigurationButtons';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the shared ConfigurationButtons toolbar. Kept separate from the behavior
 // tests (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing).
@@ -52,7 +52,7 @@ const capture = (name: string) =>
 
 /** Resting-state capture: parks the pointer first so an ambient mouse cannot bake a :hover button in. */
 const barShot = async (name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return capture(name);
 };
 

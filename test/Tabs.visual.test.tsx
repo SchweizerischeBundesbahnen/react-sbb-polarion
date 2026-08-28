@@ -3,7 +3,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 import Tabs from '../src/components/Tabs';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the shared tab bar. Kept separate from the behavior tests (Docker-only,
 // since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live in
@@ -62,7 +62,7 @@ const capture = (name: string) => expect(page.elementLocator(container as HTMLEl
 
 /** Resting-state capture: parks the pointer first so an ambient mouse cannot bake a :hover tab in. */
 const barShot = async (name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return capture(name);
 };
 

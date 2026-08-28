@@ -3,7 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import SearchableSelect, { type SelectOption } from '../src/components/SearchableSelect';
 import SearchableDropdown from '../src/generic/SearchableDropdown.js';
-import { mousedown, parkPointer } from './helpers';
+import { mousedown, settleBeforeCapture } from './helpers';
 
 // Opening focuses the search box, whose blinking caret changes pixels every frame and prevents
 // toMatchScreenshot from ever settling on a stable frame. Hide the caret so open-list captures are
@@ -272,7 +272,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
       </div>,
     );
     await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
-    await parkPointer();
+    await settleBeforeCapture();
     openStable(instanceOf(document.querySelector('select')!));
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-option-open-list');
   });
@@ -293,7 +293,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
       </div>,
     );
     await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
-    await parkPointer();
+    await settleBeforeCapture();
     openStable(instanceOf(document.querySelector('select')!));
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-long-name-open-list');
   });
@@ -314,7 +314,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
       </div>,
     );
     await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
-    await parkPointer();
+    await settleBeforeCapture();
     openStable(instanceOf(document.querySelector('select')!));
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('icon-capped-open-list');
   });
@@ -335,7 +335,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
       </div>,
     );
     await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
-    await parkPointer();
+    await settleBeforeCapture();
     openStable(instanceOf(document.querySelector('select')!));
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-capped-open-list');
   });
@@ -356,7 +356,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
       </div>,
     );
     await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
-    await parkPointer();
+    await settleBeforeCapture();
     openStable(instanceOf(document.querySelector('select')!));
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-with-icon-open-list');
   });
@@ -376,7 +376,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
       </div>,
     );
     await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger-multi')).not.toBeNull());
-    await parkPointer();
+    await settleBeforeCapture();
     openStable(instanceOf(document.querySelector('select')!));
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-multi-open-list');
   });
@@ -395,7 +395,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
       </div>,
     );
     await vi.waitFor(() => expect(document.querySelector('.sd-trigger')).toHaveValue('Default'));
-    await parkPointer();
+    await settleBeforeCapture();
     await expect(page.getByTestId('inherited-closed')).toMatchScreenshot('inherited-selected-closed');
   });
 

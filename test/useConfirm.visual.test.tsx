@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import useConfirm from '../src/hooks/useConfirm';
 import type { ConfirmOptions } from '../src/hooks/useConfirm';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Docker-only look of the confirm dialog - the replacement for the browser's own `window.confirm`,
 // which cannot be styled at all. References live in test/expected/useConfirm.
@@ -46,7 +46,7 @@ function ask(message: string, options?: ConfirmOptions) {
 }
 
 const dialogShot = (name: string) =>
-  parkPointer().then(() =>
+  settleBeforeCapture().then(() =>
     expect(page.elementLocator(document.querySelector('.rsp-modal') as HTMLElement)).toMatchScreenshot(name),
   );
 

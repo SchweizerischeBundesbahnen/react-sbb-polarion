@@ -8,7 +8,7 @@ import {
   type ConfigurationsVisibility,
 } from '../src/components/ConfigurationsPane';
 import type SearchableDropdown from '../src/generic/SearchableDropdown.js';
-import { mousedown, parkPointer } from './helpers';
+import { mousedown, settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the shared ConfigurationsPane. Kept separate from the behavior tests
 // (Docker-only, since any toMatchScreenshot file diffs on non-Linux font antialiasing). References live
@@ -113,14 +113,14 @@ async function mount(opts: Opts = {}) {
 }
 
 const shot = async (name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return expect(page.elementLocator(pane() as HTMLElement)).toMatchScreenshot(name);
 };
 
 /** The visibility dialog is a top-layer `<dialog>`, so it is captured as its own box, like Modal's own
  *  visual states are - an element shot of the pane would not contain it. */
 const dialogShot = async (name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return expect(page.elementLocator(document.querySelector('.rsp-modal') as HTMLElement)).toMatchScreenshot(name);
 };
 
@@ -168,7 +168,7 @@ describe.skipIf(!__PIXEL_REFERENCES__)('ConfigurationsPane visual states - view 
     await vi.waitFor(() => expect(document.querySelectorAll('.configurations-pane select option')).toHaveLength(3));
     // Park first, then open: a pointer left over the popup by an earlier test would paint one option in
     // its hover state, and the popup is gone by the time a later park could help.
-    await parkPointer();
+    await settleBeforeCapture();
     openStable(instanceOf(document.querySelector('.configurations-pane select') as HTMLSelectElement));
     await vi.waitFor(() => expect(document.querySelectorAll('.sd-portal .items .option')).toHaveLength(3));
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('inherited-options-open-list');

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import Toaster from '../src/components/Toaster';
-import { parkPointer } from './helpers';
+import { settleBeforeCapture } from './helpers';
 
 // Visual-regression for the shared Toaster's rich-color styling (Docker-only, like the other RSP
 // visual tests). Fires one toast of each severity and screenshots the sonner host, fixating that
@@ -57,7 +57,7 @@ async function settled(count: number) {
 // not stable enough for Playwright's screenshot actionability, but the body's is. The toasts sit
 // top-center on an otherwise empty page.
 const toastShot = async (name: string) => {
-  await parkPointer();
+  await settleBeforeCapture();
   return expect(page.elementLocator(document.body)).toMatchScreenshot(name);
 };
 
