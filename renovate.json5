@@ -39,8 +39,10 @@
   // :semanticPrefixFixDepsChoreOthers typed those `chore` - and this package declares a single
   // runtime dependency with everything else a devDependency, so in practice it is eslint, vite and
   // vitest bumps that publish a patch release of a library whose dist/ did not change. That is
-  // intended; the tooling carve-outs above are what keeps action, hook and lock-file bumps from
-  // doing the same.
+  // intended; the tooling carve-outs above are what keeps action and hook bumps from doing the same.
+  // Lock-file updates stay `chore` too, but only the lock-file-only case is carved out: the weekly
+  // lockFileMaintenance run carries no package name, and the preset's catch-all cannot match an
+  // update without one, so it never needed a rule.
   semanticCommitScope: null,
 
   packageRules: [
