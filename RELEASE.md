@@ -64,6 +64,12 @@ Semantic versioning, derived from the commit types:
 `react` and `react-dom` are peer dependencies. Widening the supported peer range is a `feat`; narrowing
 it is a breaking change, because it removes support a consumer may be relying on.
 
+Dependency updates count. Renovate types every dependency bump `fix` through the shared preset, so a
+Renovate merge produces a patch release on its own - and because this package declares one runtime
+dependency and everything else as a devDependency, most of those releases are tooling bumps that leave
+`dist/` unchanged. Workflow actions, pre-commit hooks and lock-file maintenance are typed `chore` and
+do not release.
+
 ## There is no long-term support branch
 
 Unlike the Java extensions in this organisation, this package releases from `main` only. Fixes go into
