@@ -35,7 +35,11 @@
   // Consequence to know before reviewing a dependency pull request here: this repository runs
   // release-please, `fix` is a releasing type, and the preset branch-automerges minor/patch - so an
   // npm dependency bump now cuts a patch release on its own and lands in the changelog under Bug
-  // Fixes. That is intended; the tooling carve-outs above are what keeps action and hook bumps from
+  // Fixes. Note that the preset's `*` rule types devDependencies `fix` as well - upstream
+  // :semanticPrefixFixDepsChoreOthers typed those `chore` - and this package declares a single
+  // runtime dependency with everything else a devDependency, so in practice it is eslint, vite and
+  // vitest bumps that publish a patch release of a library whose dist/ did not change. That is
+  // intended; the tooling carve-outs above are what keeps action, hook and lock-file bumps from
   // doing the same.
   semanticCommitScope: null,
 
