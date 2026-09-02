@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.2.1...v2.3.0) (2026-09-02)
+
+
+### Features
+
+* implement authorization settings using multiple selects instead of checkboxes ([#121](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/121)) ([0847819](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/0847819f1b8caac1dd137f9f96f95de1b8b443ed))
+
 ## [2.2.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.2.0...v2.2.1) (2026-08-28)
 
 
