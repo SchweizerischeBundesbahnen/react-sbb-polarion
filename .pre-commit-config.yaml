@@ -78,7 +78,7 @@ repos:
   # (expression injection, over-broad permissions, a checkout that leaves a usable token behind, an
   # action pinned to a movable tag).
   - repo: https://github.com/woodruffw/zizmor-pre-commit
-    rev: v1.29.0
+    rev: v1.30.0
     hooks:
       - id: zizmor
   - repo: https://github.com/rhysd/actionlint
