@@ -156,6 +156,7 @@ export default function AuthorizationSettings({ title, service, quickHelp }: Rea
             <SearchableSelect
               multiple
               id="global-roles"
+              ariaLabel="Global Roles"
               options={toOptions(roles.globalRoles)}
               value={selected.globalRoles}
               placeholder={NOTHING_SELECTED}
@@ -172,6 +173,7 @@ export default function AuthorizationSettings({ title, service, quickHelp }: Rea
             <SearchableSelect
               multiple
               id="project-roles"
+              ariaLabel="Project Roles"
               options={toOptions(roles.projectRoles)}
               value={selected.projectRoles}
               placeholder={NOTHING_SELECTED}

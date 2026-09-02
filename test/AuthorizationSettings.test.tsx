@@ -119,6 +119,16 @@ describe('AuthorizationSettings', () => {
     expect(granted('project')).toEqual([]);
   });
 
+  it('names each combobox after its role group, so the two are told apart', async () => {
+    setScope('project/elibrary/');
+    await mount();
+
+    const names = Array.from(document.querySelectorAll('.roles-group .sd-trigger-multi'), (el) =>
+      el.getAttribute('aria-label'),
+    );
+    expect(names).toEqual(['Global Roles', 'Project Roles']);
+  });
+
   it('offers no project section when the scope has no project roles', async () => {
     await mount(makeService({ loadRoles: () => Promise.resolve({ globalRoles: ['admin'], projectRoles: [] }) }));
 

@@ -30,6 +30,12 @@ interface BaseProps {
   searchable?: boolean;
   /** Optional id set on the underlying <select> (some legacy per-extension CSS targets the control by id). */
   id?: string;
+  /**
+   * Accessible name of the control, for a group titled by a heading instead of a <label for>. The
+   * dropdown reads it off the wrapped <select> and puts it on the trigger it builds, so the combobox
+   * is announced by name; without it two adjacent comboboxes are indistinguishable.
+   */
+  ariaLabel?: string;
 }
 
 export interface SingleSelectProps extends BaseProps {
@@ -88,7 +94,7 @@ function toValues(props: SearchableSelectProps): string[] {
  * of a string), which is why the two modes are separate prop types over one component.
  */
 export default function SearchableSelect(props: Readonly<SearchableSelectProps>) {
-  const { options, placeholder = '', disabled = false, loading = false, searchable = true, id } = props;
+  const { options, placeholder = '', disabled = false, loading = false, searchable = true, id, ariaLabel } = props;
   const multiple = props.multiple === true;
   // allowEmpty is meaningless for a multi-select: no selection is already a valid state there.
   const allowEmpty = props.multiple ? false : props.allowEmpty === true;
@@ -156,6 +162,7 @@ export default function SearchableSelect(props: Readonly<SearchableSelectProps>)
   return (
     <select
       id={id}
+      aria-label={ariaLabel}
       ref={selectRef}
       multiple={multiple}
       value={multiple ? values : (values[0] ?? '')}
