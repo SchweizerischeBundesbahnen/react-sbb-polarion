@@ -8,6 +8,7 @@ import './AuthorizationSettings.css';
 import ConfigurationButtons from './ConfigurationButtons';
 import PageLayout from './PageLayout';
 import RevisionsTable from './RevisionsTable';
+import SearchableSelect, { type SelectOption } from './SearchableSelect';
 
 interface AuthorizationSettingsProps {
   /** Page heading, and what the administration entry is called in the menu. */
@@ -18,13 +19,30 @@ interface AuthorizationSettingsProps {
   quickHelp?: ReactNode;
 }
 
+/** Nothing granted, and nothing to grant - the state both role sets start in. */
+const NO_ROLES: AuthorizationContent = { globalRoles: [], projectRoles: [] };
+
+/** Shown on an empty control, in place of the chips a granted role paints. */
+const NOTHING_SELECTED = 'No roles selected';
+
+/** A role is its own option id: the name is what the setting stores. */
+function toOptions(roles: string[]): SelectOption[] {
+  return roles.map((role) => ({ id: role, name: role }));
+}
+
 /**
  * Administration page that grants a permission to a set of roles.
  *
  * Several extensions have this page and each had written it out: the global and project roles of the
- * current scope as checkboxes, the standard Save / Cancel / Default / Revisions toolbar, the revision
- * table, and a warning when the stored setting predates the installed bundle. All of that lives here;
- * the extension supplies which setting to read and write (through `service`) and its own help text.
+ * current scope, the standard Save / Cancel / Default / Revisions toolbar, the revision table, and a
+ * warning when the stored setting predates the installed bundle. All of that lives here; the extension
+ * supplies which setting to read and write (through `service`) and its own help text.
+ *
+ * Each role set is one multi-select {@link SearchableSelect}: the granted roles are chips on the
+ * trigger, the rest are checkbox options behind a search box. This replaced two lists of checkboxes,
+ * which put every role of the scope on screen at once - a Polarion instance with dozens of global roles
+ * pushed the toolbar below the fold and left the administrator scanning the list for the three that
+ * were ticked.
  *
  * The setting is the generic single `Default` setting of whatever feature name the service was built
  * with, so one extension can have several of these pages over different settings.
@@ -32,8 +50,8 @@ interface AuthorizationSettingsProps {
 export default function AuthorizationSettings({ title, service, quickHelp }: Readonly<AuthorizationSettingsProps>) {
   const { confirm, confirmDialog } = useConfirm();
 
-  const [roles, setRoles] = useState<RolesInfo>({ globalRoles: [], projectRoles: [] });
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [roles, setRoles] = useState<RolesInfo>(NO_ROLES);
+  const [selected, setSelected] = useState<AuthorizationContent>(NO_ROLES);
   const [loaded, setLoaded] = useState(false);
   const [loadingError, setLoadingError] = useState(false);
   const [showRevisions, setShowRevisions] = useState(false);
@@ -42,7 +60,7 @@ export default function AuthorizationSettings({ title, service, quickHelp }: Rea
   const scope = getScope();
 
   const applyContent = useCallback((content: AuthorizationContent) => {
-    setSelected(new Set([...(content.globalRoles ?? []), ...(content.projectRoles ?? [])]));
+    setSelected({ globalRoles: content.globalRoles ?? [], projectRoles: content.projectRoles ?? [] });
   }, []);
 
   useEffect(() => {
@@ -65,19 +83,11 @@ export default function AuthorizationSettings({ title, service, quickHelp }: Rea
     };
   }, [service, scope, applyContent]);
 
-  const toggleRole = (role: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(role)) next.delete(role);
-      else next.add(role);
-      return next;
-    });
-  };
-
-  /** Only roles that still exist are stored, so a removed role does not linger in the setting. */
+  /** Only roles that still exist are stored, and in the order the scope lists them, so a removed role
+   *  does not linger in the setting and the stored order does not depend on the order of picking. */
   const buildPayload = (): AuthorizationContent => ({
-    globalRoles: roles.globalRoles.filter((r) => selected.has(r)),
-    projectRoles: roles.projectRoles.filter((r) => selected.has(r)),
+    globalRoles: roles.globalRoles.filter((role) => selected.globalRoles.includes(role)),
+    projectRoles: roles.projectRoles.filter((role) => selected.projectRoles.includes(role)),
   });
 
   const handleSave = async () => {
@@ -129,19 +139,6 @@ export default function AuthorizationSettings({ title, service, quickHelp }: Rea
     );
   }
 
-  const renderRoles = (list: string[]) => (
-    <ul className="roles-list">
-      {list.map((role) => (
-        <li key={role}>
-          <label>
-            <input type="checkbox" checked={selected.has(role)} onChange={() => toggleRole(role)} />
-            <span>{role}</span>
-          </label>
-        </li>
-      ))}
-    </ul>
-  );
-
   return (
     <PageLayout title={title}>
       <div className="notifications">
@@ -155,13 +152,33 @@ export default function AuthorizationSettings({ title, service, quickHelp }: Rea
       <div className="authorization-page">
         <div className="roles-group">
           <h2 className="align-left">Global Roles</h2>
-          {roles.globalRoles.length > 0 ? renderRoles(roles.globalRoles) : <p>No global roles available.</p>}
+          {roles.globalRoles.length > 0 ? (
+            <SearchableSelect
+              multiple
+              id="global-roles"
+              ariaLabel="Global Roles"
+              options={toOptions(roles.globalRoles)}
+              value={selected.globalRoles}
+              placeholder={NOTHING_SELECTED}
+              onChange={(values) => setSelected((prev) => ({ ...prev, globalRoles: values }))}
+            />
+          ) : (
+            <p>No global roles available.</p>
+          )}
         </div>
 
         {roles.projectRoles.length > 0 && (
           <div className="roles-group">
             <h2 className="align-left">Project Roles</h2>
-            {renderRoles(roles.projectRoles)}
+            <SearchableSelect
+              multiple
+              id="project-roles"
+              ariaLabel="Project Roles"
+              options={toOptions(roles.projectRoles)}
+              value={selected.projectRoles}
+              placeholder={NOTHING_SELECTED}
+              onChange={(values) => setSelected((prev) => ({ ...prev, projectRoles: values }))}
+            />
           </div>
         )}
 

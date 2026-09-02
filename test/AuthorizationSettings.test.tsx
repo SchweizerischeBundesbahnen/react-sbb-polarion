@@ -3,9 +3,12 @@ import { cleanup, render } from 'vitest-browser-react';
 import AuthorizationSettings from '../src/components/AuthorizationSettings';
 import Toaster from '../src/components/Toaster';
 import type { AuthorizationContent, AuthorizationService } from '../src/services/authorizationSettings';
+import { mousedown } from './helpers';
 
-// The role-checkbox administration page. The extensions that had this page each wrote it out; this is
-// the shared one, driven through an injected service so no REST shape is assumed here.
+// The role-authorization administration page. The extensions that had this page each wrote it out; this
+// is the shared one, driven through an injected service so no REST shape is assumed here. Each role set
+// is a multi-select SearchableSelect: granted roles are chips on the trigger, the rest are checkbox
+// options in the popup.
 
 const ROLES = { globalRoles: ['admin', 'user'], projectRoles: ['project_admin'] };
 const STORED: AuthorizationContent = { globalRoles: ['admin'], projectRoles: [] };
@@ -25,12 +28,51 @@ function makeService(overrides: Partial<AuthorizationService> = {}): Authorizati
   };
 }
 
-const roleCheckbox = (role: string): HTMLInputElement => {
-  const label = Array.from(document.querySelectorAll('.roles-list label')).find((l) => l.textContent?.trim() === role);
-  const cb = label?.querySelector<HTMLInputElement>('input[type="checkbox"]');
-  if (!cb) throw new Error(`role checkbox "${role}" not found`);
-  return cb;
+/** The upgraded control of one role set. The dropdown inserts itself right after the <select> it wraps,
+ *  which the page ids, so this addresses the two controls without depending on their page order. */
+const control = (kind: 'global' | 'project'): HTMLElement => {
+  const wrapped = document.querySelector(`#${kind}-roles`);
+  const container = wrapped?.nextElementSibling;
+  if (!(container instanceof HTMLElement) || !container.classList.contains('searchable-dropdown')) {
+    throw new Error(`no ${kind} roles control`);
+  }
+  return container;
 };
+
+const trigger = (kind: 'global' | 'project'): HTMLElement =>
+  control(kind).querySelector<HTMLElement>('.sd-trigger-multi')!;
+
+/** The popup of one control. Every dropdown keeps its own portal in the body, so the options have to be
+ *  read through the trigger's aria-controls rather than from the first .sd-portal in the document. */
+const options = (kind: 'global' | 'project'): HTMLElement[] => {
+  const listbox = document.getElementById(trigger(kind).getAttribute('aria-controls')!)!;
+  return Array.from(listbox.querySelectorAll<HTMLElement>('.option'));
+};
+
+/** The roles a control offers. The popup renders its options only while open, so this opens it, reads
+ *  them and closes it again. */
+const listedRoles = (kind: 'global' | 'project'): string[] => {
+  mousedown(trigger(kind));
+  const labels = options(kind).map((option) => (option.textContent ?? '').trim());
+  mousedown(trigger(kind));
+  return labels;
+};
+
+/** The granted roles of one set, as the chips painted on its trigger. */
+const granted = (kind: 'global' | 'project'): string[] =>
+  Array.from(control(kind).querySelectorAll('.sd-chip-label')).map((chip) => (chip.textContent ?? '').trim());
+
+/** Opens the popup, ticks (or unticks) one role, closes it again, and waits for the chips to follow -
+ *  which is also what proves React took the change, so a Save right after reads the new selection. */
+async function toggleRole(kind: 'global' | 'project', role: string) {
+  const wasGranted = granted(kind).includes(role);
+  mousedown(trigger(kind));
+  const option = options(kind).find((o) => (o.textContent ?? '').trim() === role);
+  if (!option) throw new Error(`role option "${role}" not found`);
+  mousedown(option);
+  mousedown(trigger(kind));
+  await vi.waitFor(() => expect(granted(kind).includes(role)).toBe(!wasGranted));
+}
 
 const button = (label: string): HTMLButtonElement => {
   const b = Array.from(document.querySelectorAll<HTMLButtonElement>('.sbb-btn')).find(
@@ -56,23 +98,35 @@ async function mount(service = makeService(), quickHelp?: React.ReactNode) {
       <AuthorizationSettings title="Repair Authorization" service={service} quickHelp={quickHelp} />
     </>,
   );
-  await vi.waitFor(() => expect(document.querySelector('.roles-list')).not.toBeNull());
+  await vi.waitFor(() => expect(document.querySelector('.roles-group .sd-trigger-multi')).not.toBeNull());
 }
 
 afterEach(() => {
   cleanup();
+  document.querySelectorAll('.sd-portal').forEach((el) => el.remove());
   window.history.replaceState({}, '', origUrl);
 });
 
 describe('AuthorizationSettings', () => {
-  it('lists both role kinds and ticks what the setting granted', async () => {
+  it('offers both role kinds and shows what the setting granted', async () => {
     setScope('project/elibrary/');
     await mount();
 
     expect(document.querySelector('h1')!.textContent).toBe('Repair Authorization');
-    expect(roleCheckbox('admin').checked).toBe(true);
-    expect(roleCheckbox('user').checked).toBe(false);
-    expect(roleCheckbox('project_admin').checked).toBe(false);
+    expect(listedRoles('global')).toEqual(['admin', 'user']);
+    expect(listedRoles('project')).toEqual(['project_admin']);
+    expect(granted('global')).toEqual(['admin']);
+    expect(granted('project')).toEqual([]);
+  });
+
+  it('names each combobox after its role group, so the two are told apart', async () => {
+    setScope('project/elibrary/');
+    await mount();
+
+    const names = Array.from(document.querySelectorAll('.roles-group .sd-trigger-multi'), (el) =>
+      el.getAttribute('aria-label'),
+    );
+    expect(names).toEqual(['Global Roles', 'Project Roles']);
   });
 
   it('offers no project section when the scope has no project roles', async () => {
@@ -90,9 +144,10 @@ describe('AuthorizationSettings', () => {
     );
 
     expect(document.body.textContent).toContain('No global roles available.');
+    expect(document.querySelector('#global-roles')).toBeNull();
   });
 
-  it('saves the ticked roles, split into global and project', async () => {
+  it('saves the granted roles, split into global and project', async () => {
     let saved: AuthorizationContent | undefined;
     setScope('project/elibrary/');
     await mount(
@@ -104,12 +159,12 @@ describe('AuthorizationSettings', () => {
       }),
     );
 
-    roleCheckbox('user').click();
-    roleCheckbox('project_admin').click();
+    await toggleRole('global', 'user');
+    await toggleRole('project', 'project_admin');
     button('Save').click();
 
     await vi.waitFor(() => expect(saved).toBeDefined());
-    expect(saved!.globalRoles.sort()).toEqual(['admin', 'user']);
+    expect(saved!.globalRoles).toEqual(['admin', 'user']);
     expect(saved!.projectRoles).toEqual(['project_admin']);
     await vi.waitFor(() => expect(document.body.textContent).toContain('successfully saved'));
   });
@@ -127,6 +182,9 @@ describe('AuthorizationSettings', () => {
       }),
     );
 
+    // It has no option either, so it cannot even be seen - only the roles the scope offers get a chip.
+    expect(granted('global')).toEqual(['admin']);
+
     button('Save').click();
 
     await vi.waitFor(() => expect(saved).toBeDefined());
@@ -143,33 +201,32 @@ describe('AuthorizationSettings', () => {
 
   it('restores the stored selection when the cancel is confirmed', async () => {
     await mount();
-    roleCheckbox('user').click();
-    expect(roleCheckbox('user').checked).toBe(true);
+    await toggleRole('global', 'user');
 
     button('Cancel').click();
     await answerDialog('OK');
 
-    await vi.waitFor(() => expect(roleCheckbox('user').checked).toBe(false));
+    await vi.waitFor(() => expect(granted('global')).toEqual(['admin']));
   });
 
   it('keeps the edit when the cancel is dismissed', async () => {
     await mount();
-    roleCheckbox('user').click();
+    await toggleRole('global', 'user');
 
     button('Cancel').click();
     await answerDialog('Cancel');
 
-    expect(roleCheckbox('user').checked).toBe(true);
+    expect(granted('global')).toEqual(['admin', 'user']);
   });
 
   it('reverts to the default values when confirmed', async () => {
     await mount();
-    expect(roleCheckbox('admin').checked).toBe(true);
+    expect(granted('global')).toEqual(['admin']);
 
     button('Default').click();
     await answerDialog('OK');
 
-    await vi.waitFor(() => expect(roleCheckbox('admin').checked).toBe(false));
+    await vi.waitFor(() => expect(granted('global')).toEqual([]));
     expect(document.body.textContent).toContain('Reverted to the default values');
   });
 
@@ -179,7 +236,7 @@ describe('AuthorizationSettings', () => {
     button('Default').click();
     await answerDialog('Cancel');
 
-    expect(roleCheckbox('admin').checked).toBe(true);
+    expect(granted('global')).toEqual(['admin']);
   });
 
   it('shows the revisions and applies the one picked', async () => {
@@ -195,8 +252,7 @@ describe('AuthorizationSettings', () => {
     await vi.waitFor(() => expect(document.querySelector('.revision-number')).not.toBeNull());
     document.querySelector<HTMLButtonElement>('.revert-to-revision-button')!.click();
 
-    await vi.waitFor(() => expect(roleCheckbox('user').checked).toBe(true));
-    expect(roleCheckbox('admin').checked).toBe(false);
+    await vi.waitFor(() => expect(granted('global')).toEqual(['user']));
   });
 
   it('reports a page it could not load', async () => {
@@ -210,13 +266,13 @@ describe('AuthorizationSettings', () => {
     await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
   });
 
-  it('unticks a granted role', async () => {
+  it('revokes a granted role', async () => {
     await mount();
-    expect(roleCheckbox('admin').checked).toBe(true);
+    expect(granted('global')).toEqual(['admin']);
 
-    roleCheckbox('admin').click();
+    await toggleRole('global', 'admin');
 
-    expect(roleCheckbox('admin').checked).toBe(false);
+    expect(granted('global')).toEqual([]);
   });
 
   // A setting written before one of the two role kinds existed comes back without that array at all;
@@ -224,9 +280,8 @@ describe('AuthorizationSettings', () => {
   it('treats a stored setting with no role arrays as nothing granted', async () => {
     await mount(makeService({ loadContent: () => Promise.resolve({} as AuthorizationContent) }));
 
-    expect(roleCheckbox('admin').checked).toBe(false);
-    expect(roleCheckbox('user').checked).toBe(false);
-    expect(roleCheckbox('project_admin').checked).toBe(false);
+    expect(granted('global')).toEqual([]);
+    expect(granted('project')).toEqual([]);
   });
 
   it('falls back to a generic message when a failed save carries none', async () => {
@@ -253,7 +308,7 @@ describe('AuthorizationSettings', () => {
     settle(ROLES);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(document.querySelector('.roles-list')).toBeNull();
+    expect(document.querySelector('.roles-group')).toBeNull();
   });
 
   it('ignores a load failure that rejects after unmount', async () => {
@@ -283,7 +338,7 @@ describe('AuthorizationSettings', () => {
         loadContent: () => (++calls === 1 ? Promise.resolve({ ...STORED }) : Promise.reject(new Error('gone'))),
       }),
     );
-    roleCheckbox('user').click();
+    await toggleRole('global', 'user');
 
     button('Cancel').click();
     await answerDialog('OK');
@@ -316,7 +371,7 @@ describe('AuthorizationSettings', () => {
     document.querySelector<HTMLButtonElement>('.revert-to-revision-button')!.click();
 
     await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
-    expect(roleCheckbox('admin').checked).toBe(true);
+    expect(granted('global')).toEqual(['admin']);
   });
 
   it('renders the extension help text', async () => {
