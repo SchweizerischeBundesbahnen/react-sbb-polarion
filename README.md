@@ -301,9 +301,8 @@ rest as checkbox options behind a search box), the Save / Cancel / Default / Rev
 revision table. It stores only roles the scope still offers, so a role deleted since the last save drops
 out instead of lingering in the setting. Pair it with `createAuthorizationService(sendRequest, settingName)`, 
 which builds the calls over generic's own endpoints (`/roles` and the single-setting endpoints); the extension
-supplies the title and its own Quick Help text. Note that
-`/roles` is opt-in on the Java side: the extension has to name generic's `RolesInternalController` and
-`RolesApiController` in its REST application.
+supplies the title and its own Quick Help text. Note that `/roles` is opt-in on the Java side: the extension 
+has to name generic's `RolesInternalController` and `RolesApiController` in its REST application.
 
 **Config / helpers**: `createEditableSelect` / `createSearchableSelect` (the vendored
 generic combobox factories, for controls `SearchableSelect` does not cover - a free-text editable input,
