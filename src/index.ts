@@ -55,9 +55,9 @@ export type { DateInputProps } from './components/DateInput';
 export { default as DateRangePicker } from './components/DateRangePicker';
 export type { DateRangePickerProps } from './components/DateRangePicker';
 export { default as ConfigurationButtons } from './components/ConfigurationButtons';
-// The role-checkbox administration page (xml-repair, api-extender, diff-tool): global and project
-// roles as checkboxes over one named setting, with the standard toolbar and revisions. Pair it with
-// createAuthorizationService, which builds the calls over generic's own endpoints.
+// The role-authorization administration page (xml-repair, api-extender, diff-tool): global and project
+// roles as two multi-select comboboxes over one named setting, with the standard toolbar and revisions.
+// Pair it with createAuthorizationService, which builds the calls over generic's own endpoints.
 export { default as AuthorizationSettings } from './components/AuthorizationSettings';
 export { createAuthorizationService } from './services/authorizationSettings';
 // The exporters' style-package ordering page: a weighted, reorderable list where higher weight means

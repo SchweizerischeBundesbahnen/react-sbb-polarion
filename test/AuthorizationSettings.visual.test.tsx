@@ -10,9 +10,10 @@ import { settleBeforeCapture } from './helpers';
 // References live in test/expected/AuthorizationSettings/ and MUST be generated in Docker
 // (npm run test:update:docker).
 //
-// This page is the clearest place the generic checkbox sprites show up in RSP: ticked, unticked, and
-// their alignment against the role labels in two columns. The toolbar underneath is the shared
-// ConfigurationButtons row, and the Quick Help block is the one per-extension slot.
+// Each role set is a multi-select SearchableSelect, so what these states pin down is the chip row on a
+// trigger, an empty trigger showing its placeholder, and how the two controls sit under their headings.
+// The toolbar underneath is the shared ConfigurationButtons row, and the Quick Help block is the one
+// per-extension slot.
 
 const ROLES = {
   globalRoles: ['admin', 'project_admin', 'user'],
@@ -38,9 +39,8 @@ let container: HTMLDivElement | undefined;
 function mount(service: AuthorizationService, quickHelp?: React.ReactNode) {
   window.history.replaceState({}, '', '?embedded=true&scope=project%2Felibrary%2F');
   container = document.createElement('div');
-  // Both classes are needed: .sbb-ui declares the --sbb-* tokens, while checkboxes.css scopes the
-  // Polarion checkbox sprites to .standard-admin-page / .modal__container / .form-wrapper. Under
-  // .sbb-ui alone the page screenshots with the browser native blue boxes, which is not the product.
+  // Both classes are needed: .sbb-ui declares the --sbb-* tokens, while the generic control CSS scopes
+  // part of the Polarion control look to .standard-admin-page / .modal__container / .form-wrapper.
   container.className = 'sbb-ui standard-admin-page';
   container.style.width = '860px';
   container.style.background = '#fff';
@@ -49,6 +49,11 @@ function mount(service: AuthorizationService, quickHelp?: React.ReactNode) {
     container,
   });
 }
+
+/** Both controls are upgraded asynchronously, so a capture has to wait for the expected number of
+ *  triggers - not just the first one - or it catches the page mid-upgrade. */
+const waitForControls = (count: number) =>
+  vi.waitFor(() => expect(document.querySelectorAll('.roles-group .sd-trigger-multi')).toHaveLength(count));
 
 const shot = async (name: string) => {
   await settleBeforeCapture();
@@ -65,19 +70,20 @@ afterEach(() => {
 describe.skipIf(!__PIXEL_REFERENCES__)('AuthorizationSettings visual states', () => {
   it('both role groups, some granted, with the toolbar underneath', async () => {
     mount(makeService());
-    await vi.waitFor(() => expect(document.querySelector('.roles-list')).not.toBeNull());
+    await waitForControls(2);
     await shot('authorization-granted');
   });
 
   it('the extension Quick Help block below the toolbar', async () => {
     mount(makeService(), <p>Only members of a listed role may run a repair.</p>);
     await vi.waitFor(() => expect(document.querySelector('.quick-help')).not.toBeNull());
+    await waitForControls(2);
     await shot('authorization-quick-help');
   });
 
   it('a global scope, where there are no project roles to show', async () => {
     mount(makeService({ loadRoles: async () => ({ globalRoles: ROLES.globalRoles, projectRoles: [] }) }));
-    await vi.waitFor(() => expect(document.querySelector('.roles-list')).not.toBeNull());
+    await waitForControls(1);
     await shot('authorization-global-only');
   });
 
@@ -89,6 +95,8 @@ describe.skipIf(!__PIXEL_REFERENCES__)('AuthorizationSettings visual states', ()
       }),
     );
     await vi.waitFor(() => expect(document.body.textContent).toContain('No global roles available.'));
+    // Nothing granted, so the one control left paints its placeholder rather than a chip row.
+    await waitForControls(1);
     await shot('authorization-no-global-roles');
   });
 

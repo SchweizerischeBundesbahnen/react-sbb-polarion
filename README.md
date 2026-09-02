@@ -296,8 +296,10 @@ endpoint is the extension's own. Its toolbar is Save / Cancel only, since that e
 default values nor revisions.
 
 `AuthorizationSettings` is the whole "which roles may do this" administration page - the global and
-project roles of the current scope as checkboxes, the Save / Cancel / Default / Revisions toolbar and
-the revision table. Pair it with `createAuthorizationService(sendRequest, settingName)`, which builds
+project roles of the current scope as two multi-select `SearchableSelect`s (granted roles as chips, the
+rest as checkbox options behind a search box), the Save / Cancel / Default / Revisions toolbar and the
+revision table. It stores only roles the scope still offers, so a role deleted since the last save drops
+out instead of lingering in the setting. Pair it with `createAuthorizationService(sendRequest, settingName)`, which builds
 the calls over generic's own endpoints (`/roles` and the single-setting endpoints); the extension
 supplies the title and its own Quick Help text. Note that
 `/roles` is opt-in on the Java side: the extension has to name generic's `RolesInternalController` and
