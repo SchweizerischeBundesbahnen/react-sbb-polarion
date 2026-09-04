@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.3.0...v2.3.1) (2026-09-04)
+
+
+### Bug Fixes
+
+* update dependency globals to v17.12.0 ([fb4f16d](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/fb4f16d7d259edba0de59aa6d238ac9ffdf72d0f))
+* update dependency typescript-eslint to v8.69.0 ([116b88b](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/116b88ba505b98a4558f5d87735e35dc55ed0fb9))
+
 ## [2.3.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.2.1...v2.3.0) (2026-09-02)
 
 
