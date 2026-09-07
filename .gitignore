@@ -7,6 +7,8 @@ dist/
 
 # Vitest browser-mode attachments (transient)
 .vitest/
+# Where vitest 4 wrote them. Keep it ignored, or a leftover directory gets committed.
+.vitest-attachments/
 
 # Committed expected screenshots live in test/expected/ (one PNG per screenshot, no platform suffix).
 # They are always generated on Linux in the pinned Playwright Docker image - the `test:update` script
