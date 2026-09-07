@@ -6,7 +6,7 @@ dist/
 .vscode/
 
 # Vitest browser-mode attachments (transient)
-.vitest-attachments/
+.vitest/
 
 # Committed expected screenshots live in test/expected/ (one PNG per screenshot, no platform suffix).
 # They are always generated on Linux in the pinned Playwright Docker image - the `test:update` script
