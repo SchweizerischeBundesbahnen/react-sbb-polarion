@@ -58,6 +58,16 @@ const VELOCITY = [
   '#end',
 ].join('\n');
 
+// Long enough to overflow the box downwards and wide enough to overflow it sideways, so both scrollbars
+// are out. Shaped after a real stylesheet whose one long line is a data URI - the case the users hit.
+const OVERFLOWING_CSS = [
+  '/* stylesheet that scrolls both ways */',
+  ...Array.from({ length: 14 }, (_, i) => `.chapter_${i} > h2 {\n  color: #0079c7;\n  padding: ${i}px;\n}`),
+  '.cover {',
+  `  background: url("data:image/svg+xml;base64,${'QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVo'.repeat(4)}");`,
+  '}',
+].join('\n');
+
 let container: HTMLDivElement | undefined;
 let root: Root | undefined;
 
@@ -134,5 +144,33 @@ describe.skipIf(!__PIXEL_REFERENCES__)('CodeEditor visual states', () => {
     input.focus();
     input.setSelectionRange(0, CSS.indexOf('background'));
     await editorShot('code-editor-selection');
+  });
+
+  // A document that scrolls both ways, scrolled to its very bottom: the last line must be painted whole
+  // and clear of the horizontal scrollbar. This is the state the two layers used to disagree on - the
+  // textarea's visible scrollbars take space out of its client box, so it can scroll further than the
+  // overflow-hidden layer, and a scroll offset copied onto the layer was clamped. The code was drawn a
+  // scrollbar's thickness low: the last line ended up behind the horizontal scrollbar and the caret a
+  // line above the code it belonged to.
+  //
+  // The gutters are drawn with borders, because this browser has overlay scrollbars: they take no space,
+  // so real ones would neither reproduce the geometry nor show up in a static capture. A space-taking
+  // scrollbar is exactly what these borders are - 15px of the client box gone at the bottom and right
+  // edge, in the track's own grey - and with the drift back they would cover the last line again.
+  //
+  // Unfocused on purpose: a blinking caret never settles into a stable capture.
+  it('shows the whole last line when a document that scrolls both ways is scrolled to the bottom', async () => {
+    const gutters = document.createElement('style');
+    gutters.textContent = '.code-editor__input { border-bottom: 15px solid #f1f1f1; border-right: 15px solid #f1f1f1 }';
+    document.head.appendChild(gutters);
+    try {
+      renderEditor('css', OVERFLOWING_CSS);
+      const input = document.querySelector<HTMLTextAreaElement>('.code-editor__input')!;
+      input.scrollTop = input.scrollHeight;
+      input.dispatchEvent(new Event('scroll', { bubbles: true }));
+      await editorShot('code-editor-scrolled-to-bottom');
+    } finally {
+      gutters.remove();
+    }
   });
 });
