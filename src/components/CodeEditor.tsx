@@ -119,13 +119,16 @@ export default function CodeEditor({
    *
    * Desktop browsers only: overlay scrollbars (headless Chromium's default, hence the test browser's)
    * take no space, so the layers never diverge there.
+   *
+   * Both refs are read without a null check on purpose. This runs from the textarea's own scroll event,
+   * and from a layout effect that React runs after a commit which has already assigned both refs -
+   * neither element is conditionally rendered, so there is no path on which one of them is missing. A
+   * guard here would be dead code that no test can reach.
    */
   const syncScroll = useCallback(() => {
-    const textarea = inputRef.current;
-    const content = contentRef.current;
-    if (textarea && content) {
-      content.style.transform = `translate(${-textarea.scrollLeft}px, ${-textarea.scrollTop}px)`;
-    }
+    const textarea = inputRef.current!;
+    const content = contentRef.current!;
+    content.style.transform = `translate(${-textarea.scrollLeft}px, ${-textarea.scrollTop}px)`;
   }, []);
 
   // A shrinking document lets the browser clamp the textarea's own offsets, and a transform does not
