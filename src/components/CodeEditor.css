@@ -6,7 +6,8 @@
  * `white-space: pre` (no wrapping, like the legacy code-input) keeps that agreement even when the
  * textarea shows a vertical scrollbar and is therefore narrower than the highlight layer: with no
  * wrapping, a narrower box changes nothing about where the line breaks are. The horizontal and
- * vertical scroll offsets are synced in the component.
+ * vertical scroll offsets are synced in the component, which translates the highlight layer's content
+ * instead of scrolling the layer (see `syncScroll` there for why the two are not interchangeable).
  */
 .code-editor {
   position: relative;
@@ -62,8 +63,9 @@
 }
 
 .code-editor__highlight {
-  /* Scrolled programmatically to follow the textarea; never scrolls on its own, and never eats a
-     click meant for the textarea above it. */
+  /* Clips the content the component translates to follow the textarea; never scrolls itself (a
+     scrollbar here would take space the textarea's does not, and vice versa), and never eats a click
+     meant for the textarea above it. */
   overflow: hidden;
   pointer-events: none;
   color: #000;
@@ -75,6 +77,9 @@
    its text out of alignment with the textarea above. Neutralised here: a class+element selector wins
    over the app's bare element rule. */
 .code-editor__highlight code {
+  /* Block, because the component follows the textarea by transforming this element and a transform does
+     not apply to an inline one. */
+  display: block;
   font: inherit;
   padding: 0;
   border: 0;

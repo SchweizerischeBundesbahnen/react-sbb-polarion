@@ -36,6 +36,12 @@ const highlight = (): HTMLPreElement => {
   if (!el) throw new Error('highlight layer not rendered');
   return el;
 };
+/** The highlight layer's `<code>` - the element the component translates to follow the textarea. */
+const highlightContent = (): HTMLElement => {
+  const el = highlight().querySelector('code');
+  if (!el) throw new Error('highlight layer has no content');
+  return el;
+};
 /** Texts of the outermost tokens of one prism type - nested ones are skipped, so `<div ...>` counts once. */
 const tokenTexts = (type: string): string[] =>
   Array.from(document.querySelectorAll<HTMLElement>(`.code-editor__highlight .token.${type}`))
@@ -228,7 +234,7 @@ describe('CodeEditor', () => {
     expect(tokenTexts('attr-value')).toEqual(['value']);
   });
 
-  it('scrolls the highlight layer to follow the textarea', () => {
+  it('translates the highlight layer to follow the textarea', () => {
     // Long enough to overflow in both directions - the layer only follows a scroll that can happen.
     renderEditor({ value: Array.from({ length: 200 }, (_, i) => `key_${i}=${'x'.repeat(300)}`).join('\n') });
 
@@ -237,8 +243,43 @@ describe('CodeEditor', () => {
     input.scrollLeft = 40;
     input.dispatchEvent(new Event('scroll', { bubbles: true }));
 
-    expect(highlight().scrollTop).toBe(120);
-    expect(highlight().scrollLeft).toBe(40);
+    expect(highlightContent().style.transform).toBe('translate(-40px, -120px)');
+  });
+
+  it('keeps the layers aligned at the end of the scroll range when the scrollbars take space', () => {
+    // The regression this guards: the layer used to follow by `scrollTop`/`scrollLeft`, which the
+    // browser clamps to the layer's own shorter range - the textarea's range is longer, because its
+    // visible scrollbars take space out of its client box while the overflow-hidden layer keeps the
+    // whole box. Scrolled to the end, the code was then painted about a line away from the caret.
+    // The scrollbars are faked with transparent borders, because this browser has only overlay
+    // scrollbars, which take no space at all and so cannot show the bug. A space-taking scrollbar is
+    // exactly what the borders below are: 15px of the client box gone at the bottom and right edge,
+    // the top left corner where the text starts untouched.
+    const scrollbarStyles = document.createElement('style');
+    scrollbarStyles.textContent =
+      '.code-editor__input { border-bottom: 15px solid transparent; border-right: 15px solid transparent }';
+    document.head.appendChild(scrollbarStyles);
+    try {
+      renderEditor({ value: Array.from({ length: 200 }, (_, i) => `key_${i}=${'x'.repeat(300)}`).join('\n') });
+
+      const input = textarea();
+      // Both scrollbars take their space, and the user is at the very bottom and the far right.
+      expect(input.clientHeight).toBeLessThan(highlight().clientHeight);
+      expect(input.clientWidth).toBeLessThan(highlight().clientWidth);
+      input.scrollTop = input.scrollHeight;
+      input.scrollLeft = input.scrollWidth;
+      input.dispatchEvent(new Event('scroll', { bubbles: true }));
+
+      // Where the layer paints its first line, against where the textarea holds its own text: the
+      // padded top left corner of the shared box, moved by the scroll offsets.
+      const box = input.getBoundingClientRect();
+      const styles = getComputedStyle(input);
+      const painted = highlightContent().getBoundingClientRect();
+      expect(Math.round(painted.top)).toBe(Math.round(box.top + parseFloat(styles.paddingTop) - input.scrollTop));
+      expect(Math.round(painted.left)).toBe(Math.round(box.left + parseFloat(styles.paddingLeft) - input.scrollLeft));
+    } finally {
+      scrollbarStyles.remove();
+    }
   });
 
   it("keeps the highlight layer's metrics when the app styles bare <code> for inline code", () => {
