@@ -94,8 +94,13 @@
 }
 
 .code-editor__input::selection {
-  /* Selecting transparent text would otherwise show as an empty band. */
-  background: #b3d4fc;
+  /* Polarion selects with #d7d4f0 (CodeMirror's focused selection, the editor its own admin pages use),
+     and this one matches it - but it cannot state that color directly. The textarea paints its selection
+     ABOVE the highlight layer that carries the glyphs, so an opaque fill hides the very code it marks.
+     The fill below is translucent and composites to exactly #d7d4f0 over the editor's white background,
+     while the highlighted code still reads through it. Color and alpha move together: for an alpha `a`,
+     each channel is `(target - (1 - a) * 255) / a`. */
+  background: rgb(122 112 205 / 30%);
 }
 
 .code-editor__input::placeholder {

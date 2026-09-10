@@ -122,4 +122,17 @@ describe.skipIf(!__PIXEL_REFERENCES__)('CodeEditor visual states', () => {
     document.querySelector<HTMLTextAreaElement>('.code-editor__input')!.focus();
     await editorShot('code-editor-focused');
   });
+
+  // The selection is painted by the textarea, which sits ABOVE the layer that carries the glyphs, so an
+  // opaque fill would hide the very code it marks - a blank block, the state this reference locks out.
+  // The band itself must read as Polarion's own (#d7d4f0), which is why the reference is a picture and
+  // not an assertion on the declared color: what matters is what the two layers composite to. Multi-line
+  // and across several token colors, because that is where the loss was visible.
+  it('selected text stays readable through the selection band', async () => {
+    renderEditor('css', CSS);
+    const input = document.querySelector<HTMLTextAreaElement>('.code-editor__input')!;
+    input.focus();
+    input.setSelectionRange(0, CSS.indexOf('background'));
+    await editorShot('code-editor-selection');
+  });
 });
