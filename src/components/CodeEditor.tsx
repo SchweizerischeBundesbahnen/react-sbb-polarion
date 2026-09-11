@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react';
-import type { ChangeEvent, ReactNode, UIEvent } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
 import type { Element, RootContent } from 'hast';
 import { refractor } from 'refractor/core';
 import css from 'refractor/css';
@@ -102,17 +102,41 @@ export default function CodeEditor({
   readOnly,
   className,
 }: Readonly<CodeEditorProps>) {
-  const highlightRef = useRef<HTMLPreElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLElement>(null);
 
-  // The highlight layer does not scroll on its own (it has no scrollbars); it follows the textarea.
-  const handleScroll = (event: UIEvent<HTMLTextAreaElement>) => {
-    const textarea = event.currentTarget;
-    const highlight = highlightRef.current;
-    if (highlight) {
-      highlight.scrollTop = textarea.scrollTop;
-      highlight.scrollLeft = textarea.scrollLeft;
-    }
-  };
+  /**
+   * Makes the highlight layer follow the textarea, by translating the layer's content rather than by
+   * scrolling the layer itself.
+   *
+   * Scrolling it (`highlight.scrollTop = textarea.scrollTop`) drifts at the end of the scroll range,
+   * because the two layers are the same box but do not overflow the same way: a visible scrollbar takes
+   * space in the `overflow: auto` textarea, while the `overflow: hidden` layer never has one. The
+   * textarea's client box is therefore the smaller of the two and its scroll range the longer one, so
+   * the value copied onto the layer is clamped there and the code lands a scrollbar's thickness away
+   * from the caret - about one line at this font size, which is what the user sees. A transform has no
+   * range to be clamped to, so the two layers agree whatever the scrollbars do.
+   *
+   * Desktop browsers only: overlay scrollbars (headless Chromium's default, hence the test browser's)
+   * take no space, so the layers never diverge there.
+   *
+   * Both refs are read without a null check on purpose. This runs from the textarea's own scroll event,
+   * and from a layout effect that React runs after a commit which has already assigned both refs -
+   * neither element is conditionally rendered, so there is no path on which one of them is missing. A
+   * guard here would be dead code that no test can reach.
+   */
+  const syncScroll = useCallback(() => {
+    const textarea = inputRef.current!;
+    const content = contentRef.current!;
+    content.style.transform = `translate(${-textarea.scrollLeft}px, ${-textarea.scrollTop}px)`;
+  }, []);
+
+  // A shrinking document lets the browser clamp the textarea's own offsets, and a transform does not
+  // correct itself the way a scrolled layer would. Re-sync from the textarea whenever the rendered text
+  // changes, not on scroll events alone.
+  useLayoutEffect(() => {
+    syncScroll();
+  }, [syncScroll, value, language]);
 
   const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => onChange(event.target.value);
 
@@ -123,27 +147,28 @@ export default function CodeEditor({
 
   return (
     <div className={className ? `code-editor ${className}` : 'code-editor'}>
-      <pre className="code-editor__highlight" ref={highlightRef} aria-hidden="true">
+      <pre className="code-editor__highlight" aria-hidden="true">
         {/* The layer's text is exactly `value` plus the one trailing newline below. That newline
             matters: a textarea shows an empty line after a trailing newline, while a <pre> whose text
             ends there does not - without the sentinel the two layers differ by a line height as soon as
             the document ends with a blank line. One sentinel for the whole document, not one per line:
             a Prism token can span newlines (a CSS block comment, a Velocity #* *# comment), so the tree
             cannot be cut into lines. */}
-        <code>
+        <code ref={contentRef}>
           {tokens.map(renderNode)}
           {'\n'}
         </code>
       </pre>
       <textarea
         className="code-editor__input"
+        ref={inputRef}
         id={id}
         aria-label={ariaLabel}
         placeholder={placeholder}
         readOnly={readOnly}
         value={value}
         onChange={handleChange}
-        onScroll={handleScroll}
+        onScroll={syncScroll}
         spellCheck={false}
         autoComplete="off"
         autoCorrect="off"
