@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.3.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.3.0...v2.3.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* keep the code editor's highlight under the caret at the end of the scroll range ([#131](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/131)) ([c4e06e9](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/c4e06e9e5291e97ea7df1bacd1d354f30e9f2320)), closes [#130](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/130)
+* update dependency @types/react-dom to v19.2.7 ([15a4d71](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/15a4d71f084126b893f91772881dd8d94f85c468))
+* update dependency eslint to v10.10.0 ([c365011](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/c3650114403f240f6b69c849d058ee78184f1144))
+* update dependency globals to v17.12.0 ([fb4f16d](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/fb4f16d7d259edba0de59aa6d238ac9ffdf72d0f))
+* update dependency typescript-eslint to v8.69.0 ([116b88b](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/116b88ba505b98a4558f5d87735e35dc55ed0fb9))
+* update dependency typescript-eslint to v8.70.0 ([d55b6dd](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/d55b6dd8406a01ee46f74436dc386eb0d7df29d7))
+* update dependency vite to v8.3.0 ([a2aed8a](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/a2aed8a4d0f97c582437e482cfdec5b6e1d80053))
+* update react to v19.3.0 ([b32350c](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/b32350c9efeb1cce03c31ea322d8b96a6960d7da))
+
 ## [2.3.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.2.1...v2.3.0) (2026-09-02)
 
 
