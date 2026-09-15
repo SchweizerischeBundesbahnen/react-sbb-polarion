@@ -6,12 +6,19 @@
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* The dialog takes focus itself on open (tabindex -1), which the UA would draw a ring around. The ring
-   is meaningful on controls a keyboard user moved to; this container is not reachable by Tab and was
-   focused programmatically, so the ring here only says "the dialog opened", which the dialog already
-   says by existing. The controls inside keep their own focus indicators. */
-.rsp-modal:focus {
+/* The content area takes focus on open and is reachable by Tab. The focus given on open shows no ring: the
+   ring would only say "the dialog opened", which the dialog already says by existing - and a script's focus
+   matches :focus-visible whenever no pointer was used before, so the marker attribute the component sets
+   for that focus, and removes on blur, is what tells it apart. A keyboard user who tabs back gets the ring,
+   drawn inside the box because the dialog clips what overflows it. The color is the one of
+   --sbb-btn-focus-ring, stated here since the modal renders without the design tokens too. */
+.rsp-modal-content:focus {
   outline: none;
+}
+
+.rsp-modal-content:focus-visible:not([data-focused-on-open]) {
+  outline: 2px solid rgb(0 121 147 / 35%);
+  outline-offset: -2px;
 }
 
 .rsp-modal {
@@ -33,11 +40,21 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
 }
 
+/* The header and the footer stay in view, and only the content between them scrolls: a dialog whose whole box
+   scrolled took its title and its buttons away with the content. A column only while open, since a display
+   of its own would override the UA's `display: none` of a closed <dialog>. The dialog keeps `overflow: auto`
+   for what is too wide, such as footer buttons with long labels. */
+.rsp-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Dark header (matches the generic 2606 modal / micromodal default): dark bar, white title + close. */
 .rsp-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex: none;
   min-height: 48px;
   padding: 0 16px;
   background-color: #23233c;
@@ -61,10 +78,15 @@
 }
 
 .rsp-modal-content {
+  flex: 1 1 auto;
+  /* A flex item does not shrink below its content without it, and would push the footer out again. */
+  min-height: 0;
+  overflow: auto;
   padding: 16px;
 }
 
 .rsp-modal-footer {
+  flex: none;
   display: flex;
   justify-content: flex-end;
   gap: 8px;

@@ -10,7 +10,8 @@ import { settleBeforeCapture } from './helpers';
 // since any toMatchScreenshot file diffs on non-Linux font antialiasing). Rendered with React's
 // createRoot + flushSync so the dialog is committed synchronously before the screenshot. We screenshot
 // the `.rsp-modal` dialog box (not the full-viewport dark overlay). The dialog is capped at
-// min(640px, 100vw-32) wide and 85vh tall with overflow:auto, so it always fits the 1280x720 viewport;
+// min(640px, 100vw-32) wide and 85vh tall, and its content scrolls between a header and a footer that stay
+// in view, so it always fits the 1280x720 viewport;
 // the size/overflow edge cases (long title, tall/wide content, long button labels) are captured on
 // purpose to fixate how the current styling handles them.
 
@@ -88,6 +89,24 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Modal visual states', () => {
       ),
     });
     await dialogShot('modal-tall-content');
+  });
+
+  // The test browser has overlay scrollbars, which a screenshot does not show, so the scroll is shown by its
+  // effect: scrolled to the end, the last paragraph sits between a header and a footer that did not move.
+  it('tall content scrolled to the end (header and buttons stay in view)', async () => {
+    renderModal({
+      title: 'Details',
+      children: (
+        <div>
+          {Array.from({ length: 40 }, (_, i) => (
+            <p key={i}>Paragraph {i + 1}: some body text that makes the dialog exceed its max height.</p>
+          ))}
+        </div>
+      ),
+    });
+    const content = document.querySelector<HTMLElement>('.rsp-modal-content')!;
+    content.scrollTop = content.scrollHeight;
+    await dialogShot('modal-tall-content-scrolled');
   });
 
   it('wide content (capped width + overflow)', async () => {

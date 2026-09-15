@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useId, useLayoutEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import './Modal.css';
 
@@ -38,6 +38,8 @@ export default function Modal({
   children,
 }: Readonly<ModalProps>) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const contentRef = useRef<HTMLElement>(null);
+  const titleId = useId();
   // Set by the `cancel` handler below, which fires for a close REQUEST - Escape or the light dismiss -
   // and not for the buttons. The focus cleanup needs to tell those apart; see it for why.
   const closedByRequest = useRef(false);
@@ -70,11 +72,15 @@ export default function Modal({
 
     dialog?.showModal();
     // The dialog focusing steps land on the first focusable descendant, which here is the close button
-    // - so Enter, pressed straight after opening, would dismiss the dialog. Focus the dialog itself
-    // instead: nothing is armed, and a screen reader announces the dialog by its title. Done here
-    // rather than with `autoFocus`, because React does not render that as the attribute the focusing
-    // steps read; it focuses the node itself, which is not the same thing for a <dialog>.
-    dialog?.focus();
+    // - so Enter, pressed straight after opening, would dismiss the dialog. Focus the content area
+    // instead: nothing is armed, a screen reader announces the dialog by its title as the focus enters
+    // it, and the content is the dialog's scroller, so the arrow keys and Page Down scroll a tall one in
+    // every browser - a scroller that is only a descendant of the focused element is not scrolled by
+    // them. Done here rather than with `autoFocus`, because React does not render that as the attribute
+    // the focusing steps read; it focuses the node itself, which is not the same thing for a <dialog>.
+    // Marked, so the stylesheet draws no ring for this focus: see Modal.css. The mark goes with the focus.
+    if (contentRef.current) contentRef.current.dataset.focusedOnOpen = '';
+    contentRef.current?.focus();
 
     return () => {
       dialog?.close();
@@ -100,8 +106,6 @@ export default function Modal({
       ref={dialogRef}
       className="rsp-modal"
       aria-label={title}
-      // Makes the dialog itself eligible for the focus the layout effect gives it.
-      tabIndex={-1}
       // Light dismiss, done by the browser: a click outside the box is a close request, exactly as
       // Escape is. That is what removes the need for an onClick that compared event.target with the
       // dialog - the backdrop is a pseudo-element and was never really clickable in the first place.
@@ -117,12 +121,28 @@ export default function Modal({
       }}
     >
       <header className="rsp-modal-header">
-        <h2 className="rsp-modal-title">{title}</h2>
+        <h2 className="rsp-modal-title" id={titleId}>
+          {title}
+        </h2>
         <button type="button" className="rsp-modal-close" aria-label="Close" onClick={onCancel}>
           &times;
         </button>
       </header>
-      <div className="rsp-modal-content">{children}</div>
+      {/* The dialog's only scroller, so it stays in the Tab order: the arrow keys and Page Down scroll the
+          nearest scrollable ancestor of the focused element, and the header and footer controls are not in
+          it. A user who tabbed to a button tabs back here to scroll. A <section> named after the dialog, so it
+          is a region with a name: a focusable element without one is announced as nothing. */}
+      <section
+        className="rsp-modal-content"
+        ref={contentRef}
+        tabIndex={0}
+        aria-labelledby={titleId}
+        onBlur={(event) => {
+          delete event.currentTarget.dataset.focusedOnOpen;
+        }}
+      >
+        {children}
+      </section>
       <footer className="rsp-modal-footer">
         <button type="button" className="sbb-btn sbb-btn--secondary" onClick={onCancel}>
           {cancelText}
