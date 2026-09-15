@@ -268,8 +268,8 @@ stays in the bar, dimmed, and neither a click nor the arrow keys select it; disa
 not move the selection, which stays the caller's.
 
 `CodeEditor` is the editor for a settings page whose content is a document rather than a form - a
-textarea with a syntax-highlighted layer painted underneath it. It is controlled (`value`, `onChange`)
-and needs a `language`:
+textarea with a syntax-highlighted layer painted underneath it. With `readOnly` it is filled like a
+control, so it does not look editable. It is controlled (`value`, `onChange`) and needs a `language`:
 
 | `language`     | for                                                           |
 | -------------- | ------------------------------------------------------------- |
