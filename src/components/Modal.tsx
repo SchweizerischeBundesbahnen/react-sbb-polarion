@@ -38,7 +38,7 @@ export default function Modal({
   children,
 }: Readonly<ModalProps>) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLElement>(null);
   const titleId = useId();
   // Set by the `cancel` handler below, which fires for a close REQUEST - Escape or the light dismiss -
   // and not for the buttons. The focus cleanup needs to tell those apart; see it for why.
@@ -79,7 +79,7 @@ export default function Modal({
     // them. Done here rather than with `autoFocus`, because React does not render that as the attribute
     // the focusing steps read; it focuses the node itself, which is not the same thing for a <dialog>.
     // Marked, so the stylesheet draws no ring for this focus: see Modal.css. The mark goes with the focus.
-    contentRef.current?.setAttribute('data-focused-on-open', '');
+    if (contentRef.current) contentRef.current.dataset.focusedOnOpen = '';
     contentRef.current?.focus();
 
     return () => {
@@ -130,18 +130,19 @@ export default function Modal({
       </header>
       {/* The dialog's only scroller, so it stays in the Tab order: the arrow keys and Page Down scroll the
           nearest scrollable ancestor of the focused element, and the header and footer controls are not in
-          it. A user who tabbed to a button tabs back here to scroll. Named after the dialog, since a
-          focusable element without a name is announced as nothing. */}
-      <div
+          it. A user who tabbed to a button tabs back here to scroll. A <section> named after the dialog, so it
+          is a region with a name: a focusable element without one is announced as nothing. */}
+      <section
         className="rsp-modal-content"
         ref={contentRef}
         tabIndex={0}
-        role="region"
         aria-labelledby={titleId}
-        onBlur={(event) => event.currentTarget.removeAttribute('data-focused-on-open')}
+        onBlur={(event) => {
+          delete event.currentTarget.dataset.focusedOnOpen;
+        }}
       >
         {children}
-      </div>
+      </section>
       <footer className="rsp-modal-footer">
         <button type="button" className="sbb-btn sbb-btn--secondary" onClick={onCancel}>
           {cancelText}

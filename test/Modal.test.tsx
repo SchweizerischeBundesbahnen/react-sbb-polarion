@@ -214,7 +214,7 @@ describe('Modal', () => {
     const content = q<HTMLElement>('.rsp-modal-content');
     expect(document.activeElement).toBe(content);
     expect(content.tabIndex).toBe(0);
-    expect(content).toHaveAttribute('role', 'region');
+    expect(content).toHaveRole('region');
     expect(content).toHaveAccessibleName('Dialog title');
     // The focus given on open draws no ring.
     expect(getComputedStyle(content).outlineStyle).toBe('none');
