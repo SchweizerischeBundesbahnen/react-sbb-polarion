@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.4.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.3.1...v2.4.0) (2026-09-15)
+
+
+### Features
+
+* disable tabs and gray read-only code editor ([#133](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/133)) ([e4844eb](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/e4844eb4a4c2dc743fd0db5834b1b09755ea90b2))
+
+
+### Bug Fixes
+
+* keep the modal header and buttons in view ([#136](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/136)) ([d58ff2b](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/d58ff2b7e96031f45ee1310eb9e0f552c985d77b))
+* update dependency playwright to v1.63.0 ([#128](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/128)) ([56f9209](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/56f9209efe3350264eaa226ba171059d15c8b63e))
+
 ## [2.3.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.3.0...v2.3.1) (2026-09-14)
 
 
