@@ -1,10 +1,16 @@
 import { type ReactNode, useId } from 'react';
+import './Tabs.css';
 
 export interface TabItem {
   /** Stable identity of the tab: what `onSelect` reports and what `activeId` is matched against. */
   id: string;
   /** What the tab shows. A plain string in the normal case. */
   label: ReactNode;
+  /**
+   * Whether the tab cannot be selected, e.g. because what it shows does not apply. It stays in the bar, dimmed,
+   * and neither a click nor the arrow keys reach it. Disabling the active tab does not move the selection.
+   */
+  disabled?: boolean;
 }
 
 interface TabsProps {
@@ -38,12 +44,16 @@ export default function Tabs({ items, activeId, onSelect, name, ariaLabel }: Rea
   return (
     <ul className="tabs" aria-label={ariaLabel}>
       {items.map((item) => (
-        <li key={item.id} className={item.id === activeId ? 'tab active' : 'tab'}>
+        <li
+          key={item.id}
+          className={['tab', item.id === activeId && 'active', item.disabled && 'disabled'].filter(Boolean).join(' ')}
+        >
           <label>
             <input
               type="radio"
               name={name ?? generatedName}
               checked={item.id === activeId}
+              disabled={item.disabled}
               onChange={() => onSelect(item.id)}
             />
             <span>{item.label}</span>

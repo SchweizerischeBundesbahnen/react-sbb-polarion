@@ -1,0 +1,9 @@
+/* Disabled tab of the JS-driven variant. The vendored tabs.css styles a disabled tab of its radio-driven variant
+   only, so the same look is given to the li marked disabled. The label ignores the pointer, and the hover rule is
+   repeated so no hover effect shows whatever order the stylesheets are bundled in. */
+.tab.disabled > label,
+.tab.disabled:hover > label {
+  color: var(--sbb-btn-dlg-disabled-fg);
+  cursor: default;
+  pointer-events: none;
+}

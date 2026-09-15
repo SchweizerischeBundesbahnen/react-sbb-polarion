@@ -2,7 +2,7 @@ import { flushSync } from 'react-dom';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
-import Tabs from '../src/components/Tabs';
+import Tabs, { type TabItem } from '../src/components/Tabs';
 import { settleBeforeCapture } from './helpers';
 
 // Visual-regression states for the shared tab bar. Kept separate from the behavior tests (Docker-only,
@@ -27,7 +27,7 @@ function teardown() {
 
 afterEach(teardown);
 
-const THREE = [
+const THREE: TabItem[] = [
   { id: 'first', label: 'First hook' },
   { id: 'second', label: 'Second hook' },
   { id: 'third', label: 'Third hook' },
@@ -106,6 +106,18 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Tabs visual states', () => {
       ],
     });
     await barShot('tabs-many');
+  });
+
+  it('disabled tab next to the active one', async () => {
+    renderBar({ activeId: 'first', items: [THREE[0], { ...THREE[1], disabled: true }, THREE[2]] });
+    await barShot('tabs-disabled');
+  });
+
+  // A disabled tab takes no hover effect: its label ignores the pointer.
+  it('hover over a disabled tab', async () => {
+    renderBar({ activeId: 'first', items: [THREE[0], { ...THREE[1], disabled: true }, THREE[2]] });
+    await userEvent.hover(tabLabel(1), { force: true });
+    await capture('tabs-disabled-hover');
   });
 
   it('hover lifts an inactive tab', async () => {
