@@ -182,6 +182,25 @@ describe('Modal', () => {
     expect(okBtn()).toBeInTheDocument();
   });
 
+  it('keeps the header and the footer in view and scrolls only the content when it is taller than the dialog', () => {
+    openModal({
+      children: (
+        <div>
+          {Array.from({ length: 80 }, (_, i) => (
+            <p key={i}>Paragraph {i + 1}</p>
+          ))}
+        </div>
+      ),
+    });
+    const content = q<HTMLElement>('.rsp-modal-content');
+    expect(content.scrollHeight).toBeGreaterThan(content.clientHeight);
+    expect(dialog().scrollHeight).toBeLessThanOrEqual(dialog().clientHeight + 1);
+
+    const box = dialog().getBoundingClientRect();
+    expect(q('.rsp-modal-header').getBoundingClientRect().top).toBeGreaterThanOrEqual(box.top);
+    expect(q('.rsp-modal-footer').getBoundingClientRect().bottom).toBeLessThanOrEqual(box.bottom + 1);
+  });
+
   it('uses default button labels (Cancel / Accept) and honors custom ones', () => {
     openModal();
     expect(cancelBtn().textContent).toBe('Cancel');

@@ -33,11 +33,21 @@
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
 }
 
+/* The header and the footer stay in view, and only the content between them scrolls: a dialog whose whole box
+   scrolled took its title and its buttons away with the content. A column only while open, since a display
+   of its own would override the UA's `display: none` of a closed <dialog>. The dialog keeps `overflow: auto`
+   for what is too wide, such as footer buttons with long labels. */
+.rsp-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Dark header (matches the generic 2606 modal / micromodal default): dark bar, white title + close. */
 .rsp-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex: none;
   min-height: 48px;
   padding: 0 16px;
   background-color: #23233c;
@@ -61,10 +71,15 @@
 }
 
 .rsp-modal-content {
+  flex: 1 1 auto;
+  /* A flex item does not shrink below its content without it, and would push the footer out again. */
+  min-height: 0;
+  overflow: auto;
   padding: 16px;
 }
 
 .rsp-modal-footer {
+  flex: none;
   display: flex;
   justify-content: flex-end;
   gap: 8px;

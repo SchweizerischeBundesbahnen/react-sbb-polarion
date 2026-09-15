@@ -10,7 +10,8 @@ import { settleBeforeCapture } from './helpers';
 // since any toMatchScreenshot file diffs on non-Linux font antialiasing). Rendered with React's
 // createRoot + flushSync so the dialog is committed synchronously before the screenshot. We screenshot
 // the `.rsp-modal` dialog box (not the full-viewport dark overlay). The dialog is capped at
-// min(640px, 100vw-32) wide and 85vh tall with overflow:auto, so it always fits the 1280x720 viewport;
+// min(640px, 100vw-32) wide and 85vh tall, and its content scrolls between a header and a footer that stay
+// in view, so it always fits the 1280x720 viewport;
 // the size/overflow edge cases (long title, tall/wide content, long button labels) are captured on
 // purpose to fixate how the current styling handles them.
 
