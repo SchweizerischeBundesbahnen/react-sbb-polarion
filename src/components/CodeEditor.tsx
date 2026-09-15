@@ -146,7 +146,7 @@ export default function CodeEditor({
   const tokens = useMemo(() => refractor.highlight(value, language).children, [value, language]);
 
   return (
-    <div className={className ? `code-editor ${className}` : 'code-editor'}>
+    <div className={['code-editor', readOnly && 'code-editor--readonly', className].filter(Boolean).join(' ')}>
       <pre className="code-editor__highlight" aria-hidden="true">
         {/* The layer's text is exactly `value` plus the one trailing newline below. That newline
             matters: a textarea shows an empty line after a trailing newline, while a <pre> whose text

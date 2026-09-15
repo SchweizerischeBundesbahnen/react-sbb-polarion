@@ -82,7 +82,7 @@ function teardown() {
 
 afterEach(teardown);
 
-function renderEditor(language: CodeLanguage, value: string) {
+function renderEditor(language: CodeLanguage, value: string, readOnly = false) {
   teardown();
   container = document.createElement('div');
   // Mirror the app: body.sbb-ui carries the control tokens the wrapper's border and focus ring use.
@@ -92,7 +92,7 @@ function renderEditor(language: CodeLanguage, value: string) {
   document.body.appendChild(container);
   root = createRoot(container);
   flushSync(() => {
-    root!.render(<CodeEditor language={language} value={value} onChange={() => {}} />);
+    root!.render(<CodeEditor language={language} value={value} onChange={() => {}} readOnly={readOnly} />);
   });
 }
 
@@ -120,6 +120,12 @@ describe.skipIf(!__PIXEL_REFERENCES__)('CodeEditor visual states', () => {
   it('highlights a Velocity template inside markup', async () => {
     renderEditor('velocity', VELOCITY);
     await editorShot('code-editor-velocity');
+  });
+
+  // Filled like a control, so it does not look editable.
+  it('read-only', async () => {
+    renderEditor('css', CSS, true);
+    await editorShot('code-editor-readonly');
   });
 
   it('empty (placeholder-less, just the framed box)', async () => {

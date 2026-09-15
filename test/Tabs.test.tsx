@@ -122,6 +122,35 @@ describe('Tabs', () => {
     other.remove();
   });
 
+  it('keeps a disabled tab in the bar but does not report it when clicked', () => {
+    const { onSelect } = renderTabs({
+      activeId: 'first',
+      items: [ITEMS[0], { ...ITEMS[1], disabled: true }, ITEMS[2]],
+    });
+    expect(labels()).toEqual(['First', 'Second', 'Third']);
+    expect(tabs().map((t) => t.classList.contains('disabled'))).toEqual([false, true, false]);
+    expect(radios().map((r) => r.disabled)).toEqual([false, true, false]);
+
+    tabs()[1].querySelector('label')!.click();
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(activeLabels()).toEqual(['First']);
+  });
+
+  it('keeps the active tab active when it is disabled', () => {
+    // Only the caller moves the selection: disabling a tab says it cannot be picked, not that it is not shown.
+    renderTabs({ activeId: 'second', items: [ITEMS[0], { ...ITEMS[1], disabled: true }, ITEMS[2]] });
+    expect(activeLabels()).toEqual(['Second']);
+    expect(tabs()[1].className).toBe('tab active disabled');
+    // The disabled look wins over the active one, whatever order the stylesheets load in.
+    const label = tabs()[1].querySelector('label')!;
+    const disabledColor = getComputedStyle(tabs()[0].closest('.sbb-ui')!).getPropertyValue('--sbb-btn-dlg-disabled-fg');
+    expect(disabledColor.trim()).toBe('#9999a9');
+    const probe = document.createElement('span');
+    probe.style.color = disabledColor;
+    container!.appendChild(probe);
+    expect(getComputedStyle(label).color).toBe(getComputedStyle(probe).color);
+  });
+
   it('renders an empty bar for an empty list rather than failing', () => {
     renderTabs({ items: [] });
     expect(document.querySelector('.tabs')).not.toBeNull();

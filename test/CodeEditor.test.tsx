@@ -317,6 +317,14 @@ describe('CodeEditor', () => {
     expect(input.spellcheck).toBe(false);
   });
 
+  it('marks a read-only editor on the wrapper, which the stylesheet fills like a control', () => {
+    renderEditor({ readOnly: true, className: 'fills-page' });
+    expect(document.querySelector('.code-editor')!.className).toBe('code-editor code-editor--readonly fills-page');
+
+    renderEditor({ readOnly: false });
+    expect(document.querySelector('.code-editor')).not.toHaveClass('code-editor--readonly');
+  });
+
   it('appends the consumer class to the wrapper and keeps the base class', () => {
     renderEditor({ className: 'fills-page' });
 

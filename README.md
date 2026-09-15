@@ -263,11 +263,13 @@ configurations the scope has.
 extension. It is controlled (`items`, `activeId`, `onSelect`) and selects only: the caller renders
 whatever the active tab stands for. It uses that stylesheet's JS-driven variant, so the tab count is
 free; generic's pure-CSS variant caps at four. The tabs stay real radio inputs, visually hidden rather
-than removed, so the bar is still keyboard-reachable and arrow keys switch tabs.
+than removed, so the bar is still keyboard-reachable and arrow keys switch tabs. A tab with `disabled`
+stays in the bar, dimmed, and neither a click nor the arrow keys select it; disabling the active tab does
+not move the selection, which stays the caller's.
 
 `CodeEditor` is the editor for a settings page whose content is a document rather than a form - a
-textarea with a syntax-highlighted layer painted underneath it. It is controlled (`value`, `onChange`)
-and needs a `language`:
+textarea with a syntax-highlighted layer painted underneath it. With `readOnly` it is filled like a
+control, so it does not look editable. It is controlled (`value`, `onChange`) and needs a `language`:
 
 | `language`     | for                                                           |
 | -------------- | ------------------------------------------------------------- |
