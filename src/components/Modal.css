@@ -6,11 +6,11 @@
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* The dialog takes focus itself on open (tabindex -1), which the UA would draw a ring around. The ring
-   is meaningful on controls a keyboard user moved to; this container is not reachable by Tab and was
-   focused programmatically, so the ring here only says "the dialog opened", which the dialog already
-   says by existing. The controls inside keep their own focus indicators. */
-.rsp-modal:focus {
+/* The content area takes focus on open (tabindex -1), which the UA would draw a ring around. The ring
+   is meaningful on controls a keyboard user moved to; this area is not reachable by Tab and was focused
+   programmatically, so the ring here only says "the dialog opened", which the dialog already says by
+   existing. The controls inside keep their own focus indicators. */
+.rsp-modal-content:focus {
   outline: none;
 }
 

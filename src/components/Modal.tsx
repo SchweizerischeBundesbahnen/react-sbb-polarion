@@ -38,6 +38,7 @@ export default function Modal({
   children,
 }: Readonly<ModalProps>) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   // Set by the `cancel` handler below, which fires for a close REQUEST - Escape or the light dismiss -
   // and not for the buttons. The focus cleanup needs to tell those apart; see it for why.
   const closedByRequest = useRef(false);
@@ -70,11 +71,13 @@ export default function Modal({
 
     dialog?.showModal();
     // The dialog focusing steps land on the first focusable descendant, which here is the close button
-    // - so Enter, pressed straight after opening, would dismiss the dialog. Focus the dialog itself
-    // instead: nothing is armed, and a screen reader announces the dialog by its title. Done here
-    // rather than with `autoFocus`, because React does not render that as the attribute the focusing
-    // steps read; it focuses the node itself, which is not the same thing for a <dialog>.
-    dialog?.focus();
+    // - so Enter, pressed straight after opening, would dismiss the dialog. Focus the content area
+    // instead: nothing is armed, a screen reader announces the dialog by its title as the focus enters
+    // it, and the content is the dialog's scroller, so the arrow keys and Page Down scroll a tall one in
+    // every browser - a scroller that is only a descendant of the focused element is not scrolled by
+    // them. Done here rather than with `autoFocus`, because React does not render that as the attribute
+    // the focusing steps read; it focuses the node itself, which is not the same thing for a <dialog>.
+    contentRef.current?.focus();
 
     return () => {
       dialog?.close();
@@ -100,8 +103,6 @@ export default function Modal({
       ref={dialogRef}
       className="rsp-modal"
       aria-label={title}
-      // Makes the dialog itself eligible for the focus the layout effect gives it.
-      tabIndex={-1}
       // Light dismiss, done by the browser: a click outside the box is a close request, exactly as
       // Escape is. That is what removes the need for an onClick that compared event.target with the
       // dialog - the backdrop is a pseudo-element and was never really clickable in the first place.
@@ -122,7 +123,10 @@ export default function Modal({
           &times;
         </button>
       </header>
-      <div className="rsp-modal-content">{children}</div>
+      {/* Eligible for the focus the layout effect gives it, and out of the Tab order. */}
+      <div className="rsp-modal-content" ref={contentRef} tabIndex={-1}>
+        {children}
+      </div>
       <footer className="rsp-modal-footer">
         <button type="button" className="sbb-btn sbb-btn--secondary" onClick={onCancel}>
           {cancelText}

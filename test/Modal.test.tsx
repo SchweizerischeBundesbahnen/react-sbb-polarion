@@ -201,6 +201,24 @@ describe('Modal', () => {
     expect(q('.rsp-modal-footer').getBoundingClientRect().bottom).toBeLessThanOrEqual(box.bottom + 1);
   });
 
+  it('focuses the content on open, so the keyboard scrolls a tall one', async () => {
+    openModal({
+      children: (
+        <div>
+          {Array.from({ length: 80 }, (_, i) => (
+            <p key={i}>Paragraph {i + 1}</p>
+          ))}
+        </div>
+      ),
+    });
+    const content = q<HTMLElement>('.rsp-modal-content');
+    expect(document.activeElement).toBe(content);
+    expect(content.tabIndex).toBe(-1);
+
+    await userEvent.keyboard('{PageDown}');
+    await vi.waitFor(() => expect(content.scrollTop).toBeGreaterThan(0));
+  });
+
   it('uses default button labels (Cancel / Accept) and honors custom ones', () => {
     openModal();
     expect(cancelBtn().textContent).toBe('Cancel');
