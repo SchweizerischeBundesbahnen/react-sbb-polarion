@@ -27,6 +27,17 @@
   box-shadow: var(--sbb-control-shadow-hover);
 }
 
+/* A read-only editor is filled like a control rather than like an input, so it does not look editable. It takes
+   no hover lift either, the way a disabled input does not. The selection band composites over this fill a shade
+   darker than over white, which keeps the code readable through it. */
+.code-editor--readonly {
+  background: var(--sbb-btn-control-bg);
+}
+
+.code-editor--readonly:hover {
+  box-shadow: none;
+}
+
 /* The focus ring belongs to the wrapper: the textarea itself is transparent and edge-to-edge, so its
    own outline would be clipped by the wrapper's overflow. */
 .code-editor:focus-within {
