@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useId, useLayoutEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import './Modal.css';
 
@@ -39,6 +39,7 @@ export default function Modal({
 }: Readonly<ModalProps>) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
   // Set by the `cancel` handler below, which fires for a close REQUEST - Escape or the light dismiss -
   // and not for the buttons. The focus cleanup needs to tell those apart; see it for why.
   const closedByRequest = useRef(false);
@@ -77,6 +78,8 @@ export default function Modal({
     // every browser - a scroller that is only a descendant of the focused element is not scrolled by
     // them. Done here rather than with `autoFocus`, because React does not render that as the attribute
     // the focusing steps read; it focuses the node itself, which is not the same thing for a <dialog>.
+    // Marked, so the stylesheet draws no ring for this focus: see Modal.css. The mark goes with the focus.
+    contentRef.current?.setAttribute('data-focused-on-open', '');
     contentRef.current?.focus();
 
     return () => {
@@ -118,13 +121,25 @@ export default function Modal({
       }}
     >
       <header className="rsp-modal-header">
-        <h2 className="rsp-modal-title">{title}</h2>
+        <h2 className="rsp-modal-title" id={titleId}>
+          {title}
+        </h2>
         <button type="button" className="rsp-modal-close" aria-label="Close" onClick={onCancel}>
           &times;
         </button>
       </header>
-      {/* Eligible for the focus the layout effect gives it, and out of the Tab order. */}
-      <div className="rsp-modal-content" ref={contentRef} tabIndex={-1}>
+      {/* The dialog's only scroller, so it stays in the Tab order: the arrow keys and Page Down scroll the
+          nearest scrollable ancestor of the focused element, and the header and footer controls are not in
+          it. A user who tabbed to a button tabs back here to scroll. Named after the dialog, since a
+          focusable element without a name is announced as nothing. */}
+      <div
+        className="rsp-modal-content"
+        ref={contentRef}
+        tabIndex={0}
+        role="region"
+        aria-labelledby={titleId}
+        onBlur={(event) => event.currentTarget.removeAttribute('data-focused-on-open')}
+      >
         {children}
       </div>
       <footer className="rsp-modal-footer">

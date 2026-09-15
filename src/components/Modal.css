@@ -6,12 +6,19 @@
   background: rgba(0, 0, 0, 0.5);
 }
 
-/* The content area takes focus on open (tabindex -1), which the UA would draw a ring around. The ring
-   is meaningful on controls a keyboard user moved to; this area is not reachable by Tab and was focused
-   programmatically, so the ring here only says "the dialog opened", which the dialog already says by
-   existing. The controls inside keep their own focus indicators. */
+/* The content area takes focus on open and is reachable by Tab. The focus given on open shows no ring: the
+   ring would only say "the dialog opened", which the dialog already says by existing - and a script's focus
+   matches :focus-visible whenever no pointer was used before, so the marker attribute the component sets
+   for that focus, and removes on blur, is what tells it apart. A keyboard user who tabs back gets the ring,
+   drawn inside the box because the dialog clips what overflows it. The color is the one of
+   --sbb-btn-focus-ring, stated here since the modal renders without the design tokens too. */
 .rsp-modal-content:focus {
   outline: none;
+}
+
+.rsp-modal-content:focus-visible:not([data-focused-on-open]) {
+  outline: 2px solid rgb(0 121 147 / 35%);
+  outline-offset: -2px;
 }
 
 .rsp-modal {

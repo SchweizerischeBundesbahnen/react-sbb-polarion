@@ -213,7 +213,32 @@ describe('Modal', () => {
     });
     const content = q<HTMLElement>('.rsp-modal-content');
     expect(document.activeElement).toBe(content);
-    expect(content.tabIndex).toBe(-1);
+    expect(content.tabIndex).toBe(0);
+    expect(content).toHaveAttribute('role', 'region');
+    expect(content).toHaveAccessibleName('Dialog title');
+    // The focus given on open draws no ring.
+    expect(getComputedStyle(content).outlineStyle).toBe('none');
+
+    await userEvent.keyboard('{PageDown}');
+    await vi.waitFor(() => expect(content.scrollTop).toBeGreaterThan(0));
+  });
+
+  it('keeps the content in the Tab order, so the keyboard scrolls it again after leaving it', async () => {
+    openModal({
+      children: (
+        <div>
+          {Array.from({ length: 80 }, (_, i) => (
+            <p key={i}>Paragraph {i + 1}</p>
+          ))}
+        </div>
+      ),
+    });
+    const content = q<HTMLElement>('.rsp-modal-content');
+    cancelBtn().focus();
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+    expect(document.activeElement).toBe(content);
+    // Reached with the keyboard, it shows where the focus is.
+    expect(getComputedStyle(content).outlineStyle).toBe('solid');
 
     await userEvent.keyboard('{PageDown}');
     await vi.waitFor(() => expect(content.scrollTop).toBeGreaterThan(0));
@@ -293,8 +318,8 @@ describe('Modal', () => {
   });
 
   // Only a close request dismisses the dialog. Enter and Space are in this list precisely because
-  // focus rests on the dialog itself rather than on the close button the focusing steps would have
-  // picked - so neither activates anything, which is the point of focusing the container.
+  // focus rests on the content area rather than on the close button the focusing steps would have
+  // picked - so neither activates anything, which is the point of focusing the content.
   it('ignores keys other than Escape', async () => {
     const { onCancel } = openModal();
     await userEvent.keyboard('a{Enter}{ }{ArrowDown}{Tab}');
