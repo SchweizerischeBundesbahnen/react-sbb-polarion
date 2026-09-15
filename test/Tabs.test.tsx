@@ -141,6 +141,14 @@ describe('Tabs', () => {
     renderTabs({ activeId: 'second', items: [ITEMS[0], { ...ITEMS[1], disabled: true }, ITEMS[2]] });
     expect(activeLabels()).toEqual(['Second']);
     expect(tabs()[1].className).toBe('tab active disabled');
+    // The disabled look wins over the active one, whatever order the stylesheets load in.
+    const label = tabs()[1].querySelector('label')!;
+    const disabledColor = getComputedStyle(tabs()[0].closest('.sbb-ui')!).getPropertyValue('--sbb-btn-dlg-disabled-fg');
+    expect(disabledColor.trim()).toBe('#9999a9');
+    const probe = document.createElement('span');
+    probe.style.color = disabledColor;
+    container!.appendChild(probe);
+    expect(getComputedStyle(label).color).toBe(getComputedStyle(probe).color);
   });
 
   it('renders an empty bar for an empty list rather than failing', () => {

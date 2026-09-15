@@ -113,6 +113,12 @@ describe.skipIf(!__PIXEL_REFERENCES__)('Tabs visual states', () => {
     await barShot('tabs-disabled');
   });
 
+  // Disabling the active tab keeps it active: it stays connected to the panel, dimmed.
+  it('disabled active tab', async () => {
+    renderBar({ activeId: 'second', items: [THREE[0], { ...THREE[1], disabled: true }, THREE[2]] });
+    await barShot('tabs-disabled-active');
+  });
+
   // A disabled tab takes no hover effect: its label ignores the pointer.
   it('hover over a disabled tab', async () => {
     renderBar({ activeId: 'first', items: [THREE[0], { ...THREE[1], disabled: true }, THREE[2]] });
