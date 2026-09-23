@@ -624,10 +624,28 @@ export default class SearchableDropdown {
             return;
         }
         if (this.originalElement.value !== this.trigger.value) {
-            this.originalElement.value = this.trigger.value;
-            this.originalElement.dispatchEvent(new Event('change', { bubbles: true }));
+            this._writeEditableValue(this.trigger.value);
             this._fireChangeListener();
         }
+    }
+
+    // react-sbb-polarion patch (not in upstream generic): write the wrapped <input> the way typing
+    // does. React tracks a controlled input's value through the element's own `value` setter and
+    // reads its onChange from the `input` event, so a plain assignment plus `change` never reached
+    // it: the committed value was dropped, and React put the old one back on its next render. The
+    // prototype's setter slips past that tracking, and `change` stays for the listeners that use it.
+    _writeEditableValue(value) {
+        this._setEditableValue(value);
+        this.originalElement.dispatchEvent(new Event('input', { bubbles: true }));
+        this.originalElement.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // The bare write, no event. The programmatic paths use it rather than assigning `.value`, so a
+    // value React never received is not left in React's tracking, which would swallow a later user
+    // commit of the same value.
+    _setEditableValue(value) {
+        const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this.originalElement), 'value').set;
+        setter.call(this.originalElement, value);
     }
 
     _renderOptions(list) {
@@ -1263,9 +1281,8 @@ export default class SearchableDropdown {
                 new Event('change', { bubbles: true })
             );
         } else if (this.editable && this.originalElement) {
-            // Editable wraps a plain <input>: mirror the picked value onto it and fire change.
-            this.originalElement.value = item ? String(item.value) : '';
-            this.originalElement.dispatchEvent(new Event('change', { bubbles: true }));
+            // Editable wraps a plain <input>: mirror the picked value onto it, as typing would.
+            this._writeEditableValue(item ? String(item.value) : '');
         }
 
         this._saveSelection(item ? item.value : null);
@@ -1431,7 +1448,7 @@ export default class SearchableDropdown {
                 // Editable wraps a live <input>: mirror the programmatic value onto it too, so the
                 // backing element isn't left stale until the next blur (and a later syncFromElement
                 // won't revert the trigger to the old element value).
-                this.originalElement.value = val;
+                this._setEditableValue(val);
             }
         }
         this._refreshTriggerIcon();
