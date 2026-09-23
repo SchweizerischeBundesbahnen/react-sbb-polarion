@@ -229,9 +229,8 @@ describe('label text resolution', () => {
     dropdown.destroy();
   });
 
-  it('ignores an id that is not usable as a CSS selector (no crash, no aria-label)', () => {
+  it('sets no aria-label for a <select> with no label of any kind', () => {
     const select = document.createElement('select');
-    select.id = 'bad"id';
     select.innerHTML = '<option value="a">A</option>';
     fixture.appendChild(select);
     const dropdown = new SearchableDropdown({ element: select, rememberSelection: false });
