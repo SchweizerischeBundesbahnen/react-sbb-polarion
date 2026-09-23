@@ -753,7 +753,7 @@ export default class SearchableDropdown {
     }
 
     // Accessible name for the combobox — from the passed label, the <select>'s aria-label, or the
-    // associated <label for="…">.
+    // <select>'s own labels.
     _resolveLabelText() {
         if (this.label && this.label.textContent) {
             return this.label.textContent.trim();
@@ -763,19 +763,24 @@ export default class SearchableDropdown {
             if (ariaLabel) {
                 return ariaLabel;
             }
-            const id = this.originalElement.id;
-            if (id) {
-                try {
-                    const labelEl = document.querySelector('label[for="' + id + '"]');
-                    if (labelEl && labelEl.textContent) {
-                        return labelEl.textContent.trim();
-                    }
-                } catch (e) {
-                    // id not usable as a selector — ignore
-                }
+            // react-sbb-polarion patch (not in upstream generic): read the labels from the <select>'s
+            // own `labels` list instead of document.querySelector('label[for="…"]'). The query misses a
+            // <label for> inside a shadow root (the form-extension panels) and a <label> wrapped around
+            // the control; `labels` covers both. A wrapping label also holds the <select> and this
+            // dropdown, so their text is left out, or the options would end up in the name.
+            const labels = Array.from(this.originalElement.labels || []);
+            const text = labels.map(SearchableDropdown._labelTextWithoutControls).filter(Boolean).join(' ');
+            if (text) {
+                return text;
             }
         }
         return '';
+    }
+
+    static _labelTextWithoutControls(label) {
+        const copy = label.cloneNode(true);
+        copy.querySelectorAll('select, input, textarea, button, .searchable-dropdown').forEach((el) => el.remove());
+        return copy.textContent.replace(/\s+/g, ' ').trim();
     }
 
     // Point aria-activedescendant (on whichever element has focus) at the highlighted option so
