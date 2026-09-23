@@ -66,6 +66,7 @@ describe('SearchableDropdown - shadow-DOM patches (RSP-specific)', () => {
     await expect.element(page.elementLocator(host)).toMatchAriaInlineSnapshot(`
       - text: "Project:"
       - combobox "Project:": A
+      - text: outside
     `);
     dd.destroy();
   });

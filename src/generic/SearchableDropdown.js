@@ -219,6 +219,18 @@ export default class SearchableDropdown {
         this.originalElement.style.opacity = '0';
         this.originalElement.style.pointerEvents = 'none';
 
+        // react-sbb-polarion patch (not in upstream generic): hiding by style alone left the wrapped
+        // element in the Tab order and the accessibility tree, so a keyboard user met an invisible stop
+        // before the trigger and a screen reader announced every dropdown twice. Take it out of both,
+        // and hand any focus it still receives (a <label> click, a consumer's element.focus()) to the
+        // trigger. destroy() puts both attributes back as they were.
+        this._originalTabIndex = this.originalElement.getAttribute('tabindex');
+        this._originalAriaHidden = this.originalElement.getAttribute('aria-hidden');
+        this.originalElement.setAttribute('tabindex', '-1');
+        this.originalElement.setAttribute('aria-hidden', 'true');
+        this._forwardFocusHandler = () => this.trigger.focus();
+        this.originalElement.addEventListener('focus', this._forwardFocusHandler);
+
         this._visibilityObserver = new MutationObserver(() => {
             this.container.style.display = this.originalElement.style.display || '';
             this.container.style.visibility = this.originalElement.style.visibility || '';
@@ -1134,9 +1146,22 @@ export default class SearchableDropdown {
             if (this.originalElement && this._originalElementCssText !== undefined) {
                 this.originalElement.style.cssText = this._originalElementCssText;
             }
+            if (this.originalElement && this._forwardFocusHandler) {
+                this.originalElement.removeEventListener('focus', this._forwardFocusHandler);
+                SearchableDropdown._restoreAttribute(this.originalElement, 'tabindex', this._originalTabIndex);
+                SearchableDropdown._restoreAttribute(this.originalElement, 'aria-hidden', this._originalAriaHidden);
+            }
             if (this.originalElement && this.isSelect && this._originalSelectedIndex !== undefined) {
                 this.originalElement.selectedIndex = this._originalSelectedIndex;
             }
+        }
+    }
+
+    static _restoreAttribute(element, name, value) {
+        if (value === null) {
+            element.removeAttribute(name);
+        } else {
+            element.setAttribute(name, value);
         }
     }
 
