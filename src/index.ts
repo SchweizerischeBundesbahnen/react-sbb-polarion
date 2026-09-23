@@ -36,6 +36,33 @@ export { default as BreadcrumbInjector } from './components/BreadcrumbInjector';
 export { default as RestAuthTest } from './components/RestAuthTest';
 export { default as About } from './components/About';
 export { default as UserGuide } from './components/UserGuide';
+// The Usage Disclaimer page (build-generated DISCLAIMER article from generic's /disclaimer endpoint),
+// alongside About and UserGuide.
+export { default as Disclaimer } from './components/Disclaimer';
+// Single-bundle admin app router: picks the page from `?feature=<id>`, with a fallback for no match.
+export { default as FeatureRouter, findFeature } from './components/FeatureRouter';
+export type { Feature } from './components/FeatureRouter';
+// The documentation site: a manifest-driven set of articles with a sidebar, search, breadcrumb, prev/next
+// and an "on this page" rail. Wrap the app in DocsProvider with the manifest (and the build-generated
+// section index for search); render each article page as <DocLayout activeId><DocArticle name source/>.
+// DocLinkInterceptor turns the cross-document `.html` links inside articles into in-app feature navigation.
+export { DocsProvider, useDocs, buildDocsConfig } from './docs/DocsContext';
+export type { DocEntry, DocSearchRecord, DocsConfig, BuildDocsConfigOptions } from './docs/DocsContext';
+export { default as DocLayout } from './components/DocLayout';
+export { default as DocArticle } from './components/DocArticle';
+export { default as DocPage } from './components/DocPage';
+export { default as DocSidebar } from './components/DocSidebar';
+export { default as DocBreadcrumb } from './components/DocBreadcrumb';
+export { default as PrevNext } from './components/PrevNext';
+export { default as OnThisPage } from './components/OnThisPage';
+export { default as DocSearch } from './components/DocSearch';
+export { default as DocLinkInterceptor } from './components/DocLinkInterceptor';
+export { featureHref, docLinkTarget, parseDocLink } from './services/docsNav';
+// Admin-shell node sync: keeps Polarion's breadcrumb/left-menu in step with in-app `?feature=` navigation.
+// Build it with the extension's admin context and feature->node mapping, then feed switchToFeatureNode to
+// the docs site's onDocLinkNavigate and call resumePendingDoc before the first render.
+export { createAdminNav, docNodeForFeature, retargetNodeHash, pendingTarget } from './services/adminNav';
+export type { AdminNav, AdminNavOptions, DocNodeForFeatureOptions, PendingDoc } from './services/adminNav';
 export { ConfigurationsPane } from './components/ConfigurationsPane';
 export type {
   ConfigurationsPaneHandle,
