@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
+import { page } from 'vitest/browser';
 import SearchableSelect, { type SelectOption } from '../src/components/SearchableSelect';
 import { flush, keydown, mousedown, mouseover, typeInto } from './helpers';
 
@@ -272,6 +273,24 @@ describe('SearchableSelect (React wrapper, single-select)', () => {
     expect(t.getAttribute('aria-expanded')).toBe('true');
     expect(q('.sd-portal .items').getAttribute('role')).toBe('listbox');
     expect(options()[0].getAttribute('role')).toBe('option');
+  });
+
+  it('names the trigger from a <label> wrapped around the component', async () => {
+    render(
+      <div className="sbb-ui" data-testid="labelled">
+        <label>
+          <span>Direction:</span>
+          <SearchableSelect value="a" onChange={() => undefined} options={OPTIONS} searchable={false} />
+        </label>
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    expect(trigger()).toHaveAccessibleName('Direction:');
+    // What a screen reader is given, for a reviewer to read: a pixel reference cannot show a name.
+    await expect.element(page.getByTestId('labelled')).toMatchAriaInlineSnapshot(`
+      - text: "Direction:"
+      - combobox "Direction:": First
+    `);
   });
 
   it('re-extracts items when the options prop changes (MutationObserver)', async () => {

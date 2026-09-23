@@ -208,9 +208,29 @@ describe('label text resolution', () => {
     dropdown.destroy();
   });
 
-  it('ignores an id that is not usable as a CSS selector (no crash, no aria-label)', () => {
+  it('falls back to the text of a <label for> pointing at the <select>', () => {
+    const label = document.createElement('label');
+    label.htmlFor = 'single';
+    label.textContent = 'Size:';
+    fixture.appendChild(label);
+    const dropdown = new SearchableDropdown({ element: single(), rememberSelection: false });
+    expect(dropdown.trigger).toHaveAccessibleName('Size:');
+    dropdown.destroy();
+  });
+
+  // react-sbb-polarion patch: generic finds only a <label for>, so a wrapping label left the trigger unnamed.
+  it('falls back to the text of a <label> wrapped around the <select>, without the option texts', () => {
+    const label = document.createElement('label');
+    label.innerHTML =
+      '<span>Direction:</span><select><option value="d">Direct</option><option value="r">Reverse</option></select>';
+    fixture.appendChild(label);
+    const dropdown = new SearchableDropdown({ element: label.querySelector('select')!, rememberSelection: false });
+    expect(dropdown.trigger).toHaveAccessibleName('Direction:');
+    dropdown.destroy();
+  });
+
+  it('sets no aria-label for a <select> with no label of any kind', () => {
     const select = document.createElement('select');
-    select.id = 'bad"id';
     select.innerHTML = '<option value="a">A</option>';
     fixture.appendChild(select);
     const dropdown = new SearchableDropdown({ element: select, rememberSelection: false });

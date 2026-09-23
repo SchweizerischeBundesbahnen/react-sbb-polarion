@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { page } from 'vitest/browser';
 import SearchableDropdown from '../src/generic/SearchableDropdown.js';
 import { mousedown } from './helpers';
 
@@ -6,7 +7,8 @@ import { mousedown } from './helpers';
 // SearchableDropdown.js (see CLAUDE.md "Vendored generic code"): the option-list portal must follow the
 // control into a shadow root (getRootNode, for the form-extension panels), and outside-click detection
 // must use event.composedPath() so it works across the shadow boundary. If a future re-copy from generic
-// drops these patches, these tests fail.
+// drops these patches, these tests fail. The same goes for the trigger's name: generic looks up a
+// <label for> with document.querySelector, which cannot see into a shadow root.
 
 let fixture: HTMLDivElement;
 
@@ -49,6 +51,22 @@ describe('SearchableDropdown - shadow-DOM patches (RSP-specific)', () => {
     expect(dd.isOpen).toBe(true);
     mousedown(root.querySelector('#elsewhere')!); // inside the shadow, outside the dropdown
     expect(dd.isOpen).toBe(false);
+    dd.destroy();
+  });
+
+  it('names the trigger from a <label for> in the same shadow root', async () => {
+    const { host, root, select } = shadowHost();
+    select.id = 'panel-project';
+    const label = document.createElement('label');
+    label.htmlFor = 'panel-project';
+    label.textContent = 'Project:';
+    root.querySelector('.sbb-ui')!.prepend(label);
+    const dd = new SearchableDropdown({ element: select, rememberSelection: false });
+    expect(dd.trigger).toHaveAccessibleName('Project:');
+    await expect.element(page.elementLocator(host)).toMatchAriaInlineSnapshot(`
+      - text: "Project:"
+      - combobox "Project:": A
+    `);
     dd.destroy();
   });
 
