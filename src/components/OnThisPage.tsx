@@ -45,7 +45,10 @@ export default function OnThisPage({ contentRef }: Readonly<OnThisPageProps>) {
       (entries) => {
         const visible = entries.filter((e) => e.isIntersecting);
         if (visible.length > 0) {
-          const top = visible.reduce((a, b) => (a.boundingClientRect.top < b.boundingClientRect.top ? a : b));
+          const top = visible.reduce(
+            (a, b) => (a.boundingClientRect.top < b.boundingClientRect.top ? a : b),
+            visible[0],
+          );
           setActiveId(top.target.id);
         }
       },

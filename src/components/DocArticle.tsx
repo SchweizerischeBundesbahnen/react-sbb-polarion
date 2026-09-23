@@ -60,7 +60,7 @@ export default function DocArticle({ name, source }: Readonly<DocArticleProps>) 
             <a href={sourceHref} target="_blank" rel="noreferrer">
               the online documentation
             </a>
-            .
+            {'.'}
           </>
         ) : null}
       </p>

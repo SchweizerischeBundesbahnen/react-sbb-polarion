@@ -55,7 +55,7 @@ export default function Disclaimer({ sendRequest, sourceUrl }: Readonly<Disclaim
             <a href={sourceUrl} target="_blank" rel="noreferrer">
               the online documentation
             </a>
-            .
+            {'.'}
           </>
         ) : null}
       </p>
