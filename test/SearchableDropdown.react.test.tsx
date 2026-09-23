@@ -82,4 +82,14 @@ describe('SearchableDropdown - editable, wrapping a React-controlled input (RSP-
     expect(onValue).toHaveBeenCalledWith('1200');
     await vi.waitFor(() => expect(wrapped().value).toBe('1200'));
   });
+
+  it('still hands a picked value to the React onChange after the same value was set programmatically', async () => {
+    const onValue = await mount();
+    type Dropdown = { value: string; items: unknown[]; selectItem: (item: unknown) => void };
+    const dropdown = (wrapped() as HTMLInputElement & { _searchableDropdown: Dropdown })._searchableDropdown;
+    dropdown.value = '1200';
+    // What a click on the option calls. With the value already in the trigger, focusing it opens no list.
+    dropdown.selectItem(dropdown.items[0]);
+    expect(onValue).toHaveBeenCalledWith('1200');
+  });
 });

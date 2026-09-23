@@ -635,10 +635,17 @@ export default class SearchableDropdown {
     // it: the committed value was dropped, and React put the old one back on its next render. The
     // prototype's setter slips past that tracking, and `change` stays for the listeners that use it.
     _writeEditableValue(value) {
-        const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this.originalElement), 'value').set;
-        setter.call(this.originalElement, value);
+        this._setEditableValue(value);
         this.originalElement.dispatchEvent(new Event('input', { bubbles: true }));
         this.originalElement.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // The bare write, no event. The programmatic paths use it rather than assigning `.value`, so a
+    // value React never received is not left in React's tracking, which would swallow a later user
+    // commit of the same value.
+    _setEditableValue(value) {
+        const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(this.originalElement), 'value').set;
+        setter.call(this.originalElement, value);
     }
 
     _renderOptions(list) {
@@ -1441,7 +1448,7 @@ export default class SearchableDropdown {
                 // Editable wraps a live <input>: mirror the programmatic value onto it too, so the
                 // backing element isn't left stale until the next blur (and a later syncFromElement
                 // won't revert the trigger to the old element value).
-                this.originalElement.value = val;
+                this._setEditableValue(val);
             }
         }
         this._refreshTriggerIcon();
