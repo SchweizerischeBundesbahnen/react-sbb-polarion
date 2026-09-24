@@ -205,34 +205,31 @@ describe('documentation site', () => {
 });
 
 describe('DocLinkInterceptor', () => {
-  it('routes a cross-document .html link click through onDocLinkNavigate', async () => {
+  it.each([
+    {
+      kind: 'a .html article link',
+      href: 'configuration.html#bulk-processing-api-key',
+      hash: '#bulk-processing-api-key',
+    },
+    {
+      kind: 'a .md source mapped through mdLinkMap',
+      href: 'CONFIGURATION.md#weasyprint-configuration',
+      hash: '#weasyprint-configuration',
+    },
+    { kind: 'a ./-prefixed .html article link', href: './configuration.html#enabling-cors', hash: '#enabling-cors' },
+  ])('routes $kind through onDocLinkNavigate to its feature', async ({ href, hash }) => {
     const onDocLinkNavigate = vi.fn(() => true);
     render(
       <DocsProvider config={{ ...CONFIG, onDocLinkNavigate }}>
         <DocLinkInterceptor>
-          <a href="configuration.html#bulk-processing-api-key">to configuration</a>
+          <a href={href}>to configuration</a>
         </DocLinkInterceptor>
       </DocsProvider>,
     );
 
     await vi.waitFor(() => expect(document.querySelector('a')).not.toBeNull());
     document.querySelector<HTMLAnchorElement>('a')!.click();
-    expect(onDocLinkNavigate).toHaveBeenCalledWith('configuration', '#bulk-processing-api-key');
-  });
-
-  it('routes a cross-document .md link click to the mapped feature', async () => {
-    const onDocLinkNavigate = vi.fn(() => true);
-    render(
-      <DocsProvider config={{ ...CONFIG, onDocLinkNavigate }}>
-        <DocLinkInterceptor>
-          <a href="CONFIGURATION.md#weasyprint-configuration">to configuration</a>
-        </DocLinkInterceptor>
-      </DocsProvider>,
-    );
-
-    await vi.waitFor(() => expect(document.querySelector('a')).not.toBeNull());
-    document.querySelector<HTMLAnchorElement>('a')!.click();
-    expect(onDocLinkNavigate).toHaveBeenCalledWith('configuration', '#weasyprint-configuration');
+    expect(onDocLinkNavigate).toHaveBeenCalledWith('configuration', hash);
   });
 
   it('opens a repo-relative link (e.g. docs/openapi.json) at the source base URL', async () => {
@@ -311,21 +308,6 @@ describe('DocLinkInterceptor', () => {
     }
     expect(onDocLinkNavigate).not.toHaveBeenCalled();
     expect(openSpy).not.toHaveBeenCalled();
-  });
-
-  it('recognizes a ./-prefixed article link as a cross-document link', async () => {
-    const onDocLinkNavigate = vi.fn(() => true);
-    render(
-      <DocsProvider config={{ ...CONFIG, onDocLinkNavigate }}>
-        <DocLinkInterceptor>
-          <a href="./configuration.html#enabling-cors">to configuration</a>
-        </DocLinkInterceptor>
-      </DocsProvider>,
-    );
-
-    await vi.waitFor(() => expect(document.querySelector('a')).not.toBeNull());
-    document.querySelector<HTMLAnchorElement>('a')!.click();
-    expect(onDocLinkNavigate).toHaveBeenCalledWith('configuration', '#enabling-cors');
   });
 
   it('does not resolve a link named like an Object.prototype member through mdLinkMap', async () => {
