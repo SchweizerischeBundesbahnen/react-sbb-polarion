@@ -1,0 +1,272 @@
+/* Documentation-site layout: sidebar (search + navigation + on-this-page) | article. Colours reuse the
+   generic --sbb-* tokens the shared library defines, with plain fallbacks so the page still reads if a
+   token is missing. */
+
+.docs {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.docs-sidebar {
+  position: sticky;
+  top: 16px;
+  align-self: start;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.docs-main {
+  min-width: 0; /* let the content column shrink instead of overflowing the grid */
+}
+
+/* --- Breadcrumb (spans all columns) --- */
+
+.docs-breadcrumb {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--sbb-color-cloud, #e0e0e0);
+  font-size: 0.85em;
+}
+
+.docs-breadcrumb-root {
+  color: var(--sbb-color-metal, #767676);
+  text-decoration: none;
+}
+
+.docs-breadcrumb-root:hover {
+  text-decoration: underline;
+}
+
+.docs-breadcrumb-sep {
+  color: var(--sbb-color-graphite, #999);
+}
+
+.docs-breadcrumb-current {
+  font-weight: 600;
+}
+
+/* --- Search --- */
+
+.docs-search {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.docs-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 1px solid var(--sbb-color-graphite, #ccc);
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.docs-search-results {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--sbb-color-white, #fff);
+  border: 1px solid var(--sbb-color-graphite, #ccc);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.docs-search-empty {
+  padding: 8px 10px;
+  color: var(--sbb-color-metal, #767676);
+  font-size: 0.85em;
+}
+
+.docs-search-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.docs-search-result:hover,
+.docs-search-result:focus {
+  background: var(--sbb-color-milk, #f0f0f0);
+}
+
+.docs-search-result-doc {
+  font-size: 0.72em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--sbb-color-metal, #767676);
+}
+
+.docs-search-result-title {
+  font-size: 0.9em;
+}
+
+/* --- Sidebar navigation --- */
+
+.docs-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.docs-nav-link {
+  display: block;
+  padding: 4px 8px;
+  border-left: 2px solid transparent;
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.9em;
+  border-radius: 0 3px 3px 0;
+}
+
+.docs-nav-link:hover {
+  background: var(--sbb-color-milk, #f0f0f0);
+}
+
+.docs-nav-link-active {
+  border-left-color: var(--sbb-color-red, #c60018);
+  color: var(--sbb-color-red, #c60018);
+  font-weight: 600;
+  background: var(--sbb-color-milk, #f7f7f7);
+}
+
+/* --- On this page (below the navigation, in the same left sidebar) --- */
+
+.docs-onthispage {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--sbb-color-cloud, #e0e0e0);
+}
+
+.docs-onthispage-title {
+  font-size: 0.72em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sbb-color-metal, #767676);
+  margin-bottom: 6px;
+}
+
+.docs-onthispage ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 1px solid var(--sbb-color-cloud, #e0e0e0);
+}
+
+.docs-toc-l3 {
+  padding-left: 12px;
+}
+
+.docs-toc-link {
+  display: block;
+  width: 100%;
+  padding: 3px 10px;
+  margin-left: -1px;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: transparent;
+  color: var(--sbb-color-metal, #555);
+  text-align: left;
+  font-size: 0.82em;
+  cursor: pointer;
+  line-height: 1.35;
+}
+
+.docs-toc-link:hover {
+  color: inherit;
+}
+
+.docs-toc-link-active {
+  border-left-color: var(--sbb-color-red, #c60018);
+  color: var(--sbb-color-red, #c60018);
+}
+
+/* --- Prev / Next --- */
+
+.docs-prevnext {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--sbb-color-cloud, #e0e0e0);
+}
+
+.docs-prevnext-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid var(--sbb-color-cloud, #e0e0e0);
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+  max-width: 48%;
+}
+
+.docs-prevnext-link:hover {
+  border-color: var(--sbb-color-graphite, #999);
+}
+
+.docs-prevnext-next {
+  text-align: right;
+  margin-left: auto;
+}
+
+.docs-prevnext-dir {
+  font-size: 0.75em;
+  color: var(--sbb-color-metal, #767676);
+}
+
+.docs-prevnext-title {
+  font-weight: 600;
+}
+
+/* --- In-article same-page anchors (turned into scroll targets by useInPageAnchors) --- */
+
+.docs-anchor {
+  color: var(--sbb-color-accent, #0d5c9e);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.docs-anchor:hover,
+.docs-anchor:focus-visible {
+  text-decoration: underline;
+}
+
+/* --- Responsive: narrow the sidebar, then stack it above the article, on narrow admin panes --- */
+
+@media (max-width: 1100px) {
+  .docs {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .docs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .docs-sidebar {
+    position: static;
+    max-height: none;
+  }
+}
