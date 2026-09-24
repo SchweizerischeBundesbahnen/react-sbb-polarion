@@ -110,6 +110,53 @@ describe('createAdminNav', () => {
     expect(nav.resumePendingDoc()).toBe(false);
     expect(sessionStorage.getItem('pdf-export.docs.pending')).toBeNull();
   });
+
+  it('resumePendingDoc sets a fragment on the same page in place and lets the caller render', () => {
+    const origUrl = window.location.pathname + window.location.search + window.location.hash;
+    try {
+      window.history.replaceState(null, '', '?feature=disclaimer&scope=');
+      const nav = createAdminNav({ adminBase: 'pdf-export', nodeForFeature: (f) => f });
+      const pending = { feature: 'disclaimer', hash: '#section', ts: Date.now() };
+      sessionStorage.setItem('pdf-export.docs.pending', JSON.stringify(pending));
+      expect(nav.resumePendingDoc()).toBe(false);
+      expect(window.location.hash).toBe('#section');
+      expect(new URLSearchParams(window.location.search).get('feature')).toBe('disclaimer');
+    } finally {
+      window.history.replaceState(null, '', origUrl);
+    }
+  });
+
+  it('resumePendingDoc clears a fragment on the same page when the stashed target has none', () => {
+    const origUrl = window.location.pathname + window.location.search + window.location.hash;
+    try {
+      window.history.replaceState(null, '', '?feature=disclaimer&scope=#old');
+      const nav = createAdminNav({ adminBase: 'pdf-export', nodeForFeature: (f) => f });
+      const pending = { feature: 'disclaimer', hash: '', ts: Date.now() };
+      sessionStorage.setItem('pdf-export.docs.pending', JSON.stringify(pending));
+      expect(nav.resumePendingDoc()).toBe(false);
+      expect(window.location.hash).toBe('');
+      expect(new URLSearchParams(window.location.search).get('feature')).toBe('disclaimer');
+    } finally {
+      window.history.replaceState(null, '', origUrl);
+    }
+  });
+
+  it('resumePendingDoc navigates to another feature and tells the caller to skip the render', () => {
+    const origUrl = window.location.pathname + window.location.search + window.location.hash;
+    try {
+      window.history.replaceState(null, '', '?feature=quick-start');
+      // A fragment-only URL, so the navigation does not reload the test frame.
+      const featureHref = vi.fn(() => `${window.location.pathname}${window.location.search}#resumed`);
+      const nav = createAdminNav({ adminBase: 'pdf-export', nodeForFeature: (f) => f, featureHref });
+      const pending = { feature: 'configuration', hash: '#x', ts: Date.now() };
+      sessionStorage.setItem('pdf-export.docs.pending', JSON.stringify(pending));
+      expect(nav.resumePendingDoc()).toBe(true);
+      expect(featureHref).toHaveBeenCalledWith('configuration', '#x');
+      expect(window.location.hash).toBe('#resumed');
+    } finally {
+      window.history.replaceState(null, '', origUrl);
+    }
+  });
 });
 
 describe('docNodeForFeature', () => {
