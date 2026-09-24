@@ -8,10 +8,11 @@ interface DocBreadcrumbProps {
 /**
  * In-content breadcrumb "Documentation › <article>" shown at the top of every documentation page.
  *
- * Polarion's own left-menu highlight and header breadcrumb live in the shell (top) window and are not
- * synced by content-internal links. This is the robust, self-contained alternative: it makes the "you are
- * in Documentation" context explicit inside the app's own frame. The root links to the section landing (the
- * first article by default).
+ * Polarion's own left-menu highlight and header breadcrumb live in the shell (top) window, which in-frame
+ * `?feature=` navigation does not touch: `createAdminNav` switches the shell only when a link crosses to
+ * another admin node, and every article shares the one documentation node. This breadcrumb makes the "you
+ * are in Documentation › <article>" context explicit inside the app's own frame, whatever the shell shows.
+ * The root links to the section landing (the first article by default).
  */
 export default function DocBreadcrumb({ activeId }: Readonly<DocBreadcrumbProps>) {
   const { byId, featureHref, breadcrumbRootLabel, breadcrumbLandingId } = useDocs();

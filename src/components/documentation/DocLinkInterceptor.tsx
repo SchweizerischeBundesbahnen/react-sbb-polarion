@@ -1,22 +1,28 @@
-import { type ReactNode, useCallback, useEffect, useRef } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useDocs } from '../../docs/DocsContext';
 import { parseDocLink } from '../../services/docsNav';
 
 /**
  * Wraps a subtree in one delegated click handler that turns clicks on the articles' relative links into the
  * right navigation. The build leaves these links relative (no rewriting at build time):
- *   - a cross-document link to another article - `<feature>.html` or a `.md` source mapped through
- *     {@link DocsConfig.mdLinkMap} - becomes in-app feature navigation (`?feature=`); without this the
- *     browser would resolve it against the app URL and 404.
- *   - any other relative link (e.g. `docs/openapi.json`) points at a file in the source repo and opens at
- *     {@link DocsConfig.sourceBaseUrl} in a new tab.
+ *   - a cross-document link to another page of the app - `<feature>.html` for a known feature (an article, or
+ *     a page {@link DocsConfig.mdLinkMap} maps to) or a `.md` source mapped through `mdLinkMap` - becomes
+ *     in-app feature navigation (`?feature=`); without this the browser would resolve it against the app URL
+ *     and 404.
+ *   - any other relative link (e.g. `docs/openapi.json`, or an `.html` no feature renders) points at a file in
+ *     the source repo and opens at {@link DocsConfig.sourceBaseUrl} in a new tab.
  *
  * A modified click (new tab/window) is left to the browser. The extension may pass `onDocLinkNavigate`
  * through the {@link DocsProvider} to sync Polarion's admin shell; when it returns false (or is absent) the
  * interceptor falls back to a plain in-frame navigation via `featureHref`.
  */
 export default function DocLinkInterceptor({ children }: Readonly<{ children: ReactNode }>) {
-  const { featureHref, onDocLinkNavigate, mdLinkMap, sourceBaseUrl } = useDocs();
+  const { byId, featureHref, onDocLinkNavigate, mdLinkMap, sourceBaseUrl } = useDocs();
+
+  // The features a `<feature>.html` link may switch to: every article, plus the non-article pages the
+  // markdown sources map to (About, Disclaimer, ...). Any other `.html` is not a page of this app, so it is
+  // treated like any other repo-relative link instead of switching to a feature that renders the fallback.
+  const knownFeatures = useMemo(() => new Set([...Object.keys(byId), ...Object.values(mdLinkMap)]), [byId, mdLinkMap]);
 
   const handleClick = useCallback(
     (event: MouseEvent) => {
@@ -58,7 +64,7 @@ export default function DocLinkInterceptor({ children }: Readonly<{ children: Re
       const docLink = parseDocLink(cleaned);
       let feature: string | undefined;
       let targetHash = hash;
-      if (docLink) {
+      if (docLink && knownFeatures.has(docLink.feature)) {
         feature = docLink.feature;
         targetHash = docLink.hash;
       } else if (Object.prototype.hasOwnProperty.call(mdLinkMap, path)) {
@@ -80,7 +86,7 @@ export default function DocLinkInterceptor({ children }: Readonly<{ children: Re
         window.open(`${sourceBaseUrl}/${href}`, '_blank', 'noopener');
       }
     },
-    [featureHref, mdLinkMap, onDocLinkNavigate, sourceBaseUrl],
+    [featureHref, knownFeatures, mdLinkMap, onDocLinkNavigate, sourceBaseUrl],
   );
 
   // A delegated click listener rather than an onClick on the wrapper: the wrapper is not itself an

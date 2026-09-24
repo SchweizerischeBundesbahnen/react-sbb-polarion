@@ -226,7 +226,8 @@ before renaming or moving either.
 
 **Components**: `PageLayout`, `SearchableSelect`, `Tabs`, `Modal`, `Toaster`, `BreadcrumbInjector`,
 `RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
-`CodeEditor`, `DateInput`, `DateRangePicker`, `AuthorizationSettings`, `StylePackageWeights`.
+`CodeEditor`, `DateInput`, `DateRangePicker`, `AuthorizationSettings`, `StylePackageWeights`, `Disclaimer`,
+`FeatureRouter`, `DocsProvider`, `DocPage`, `DocLinkInterceptor`.
 
 `SearchableSelect` is the shared combobox for both selection modes. By default it is a single-select
 (`value: string`); pass `multiple` and it renders checkbox options in the popup and one removable chip
@@ -306,20 +307,101 @@ which builds the calls over generic's own endpoints (`/roles` and the single-set
 supplies the title and its own Quick Help text. Note that `/roles` is opt-in on the Java side: the extension 
 has to name generic's `RolesInternalController` and `RolesApiController` in its REST application.
 
+### Single-bundle admin app and documentation site
+
+`FeatureRouter` is the router of an admin app that ships as one `index.html`: every administration entry in
+`hivemodule.xml` points at `index.html?feature=<id>&embedded=true&scope=$scope$`, and the router renders the
+`features` entry whose `id` matches, or `fallback` when none does. The ids must equal the extender ids -
+a mismatch is a blank page. `Feature` is the `{ id, component }` it routes on; extend it with whatever the
+app lists besides (a label, a description). `findFeature(features, id)` is the same lookup.
+
+`Disclaimer` is the Usage Disclaimer page next to `About` and `UserGuide`: it reads generic's `/disclaimer`
+endpoint, shows the build-generated article, links `sourceUrl` when the endpoint answers an empty body
+(nothing was generated), and reports a failed request as an error.
+
+The documentation site renders build-generated help articles (one markdown file each) with a sidebar, a
+search over a build-generated section index, a breadcrumb, prev/next and an "on this page" rail. An
+extension supplies only its data:
+
+```tsx
+// App.tsx
+const docsConfig = buildDocsConfig({
+  docs: [
+    { id: 'quick-start', title: 'Quick Start', source: 'QUICK_START.md' },
+    { id: 'configuration', title: 'Configuration', source: 'CONFIGURATION.md' },
+  ], // reading order: the sidebar and prev/next follow it
+  searchIndex, // optional; search is hidden without it
+  sourceBaseUrl: 'https://github.com/<org>/<repo>/blob/main', // "not generated" and repo-file links
+  extraMdLinks: { 'README.md': 'about', 'DISCLAIMER.md': 'disclaimer' }, // non-article .md targets
+  onDocLinkNavigate: adminNav.switchToFeatureNode, // optional admin-shell sync, see below
+});
+
+const FEATURES: Feature[] = [
+  { id: 'about', component: AboutPage },
+  { id: 'disclaimer', component: DisclaimerPage },
+  ...docsConfig.docs.map((doc) => ({ id: doc.id, component: () => <DocPage doc={doc} /> })),
+  // ...the settings pages
+];
+
+export default function App() {
+  return (
+    <DocsProvider config={docsConfig}>
+      <DocLinkInterceptor>
+        <div className="standard-admin-page">
+          <FeatureRouter features={FEATURES} fallback={Landing} />
+        </div>
+      </DocLinkInterceptor>
+    </DocsProvider>
+  );
+}
+```
+
+- Build `docsConfig` once (module level or `useMemo`): an inline `buildDocsConfig({...})` is a new context
+  value on every render.
+- `DocPage` fetches `../../html/<id>.html` relative to the app by default (`articleHtmlUrl` overrides it).
+- `DocLinkInterceptor` is what makes the articles' own relative links work: a `<feature>.html` of a known
+  page or a `.md` source (mapped from each article's `source` plus `extraMdLinks`) becomes a `?feature=`
+  switch; any other relative link opens at `sourceBaseUrl` in a new tab. Wrap the whole app in it, not only
+  the documentation pages, so links inside About or the Disclaimer work the same way.
+
+**Admin-shell sync** (optional). Polarion's breadcrumb and left menu follow the top window's hash, which an
+in-frame `?feature=` switch does not change. `createAdminNav` switches the shell to the node that serves the
+target when a link crosses nodes (e.g. an article linking to the Disclaimer), handing the intended article
+and fragment across the node reload through `sessionStorage`:
+
+```tsx
+// adminNav.ts
+export const adminNav = createAdminNav({
+  adminBase: 'pdf-export', // the context in #/[project/<id>/]administration/<adminBase>/<node>
+  // every article lives under the `documentation` node; About and Disclaimer are their own nodes
+  nodeForFeature: docNodeForFeature({ docs, selfNodes: ['about', 'disclaimer'] }),
+});
+
+// main.tsx - before the first render: when a node switch stashed a target, go there instead
+if (!adminNav.resumePendingDoc()) {
+  ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
+}
+```
+
+A stashed target expires after 30 seconds, so a switch that never reloaded the frame (cancelled, or ignored
+by Polarion) cannot redirect a later, unrelated page load.
+
 **Config / helpers**: `createEditableSelect` / `createSearchableSelect` (the vendored
 generic combobox factories, for controls `SearchableSelect` does not cover - a free-text editable input,
 the class's build mode or clearable trigger, a non-React-controlled `<select>`), `getCookie`/`setCookie`,
 `isEmbedded()`, `getScope()` / `getProjectIdFromScope(scope)`.
 
 **Functions**: `createAuthorizationService(sendRequest, settingName)`,
-`createStylePackageWeightsService(sendRequest)`.
+`createStylePackageWeightsService(sendRequest)`, `buildDocsConfig(options)`, `findFeature(features, id)`,
+`createAdminNav(options)`, `docNodeForFeature(options)`.
 
 **Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableSelectProps`, `SingleSelectProps`,
 `MultiSelectProps`, `SearchableDropdownInstance`, `CodeLanguage`, `ConfigurationsPaneHandle`,
 `ConfigurationsService<T>`, `ConfigurationsVisibility`, `AuthorizationService`, `AuthorizationContent`, `RolesInfo`,
 `StylePackageWeight`, `StylePackageWeightsService`, `WeightEntry`,
 `SettingName`, `Revision`, `Version`, `ConfigurationProperty`, `ConfigurationPropertiesModel`,
-`ConfigurationStatus`, `SendRequest`.
+`ConfigurationStatus`, `SendRequest`, `Feature`, `DocEntry`, `DocSearchRecord`, `DocsConfig`,
+`BuildDocsConfigOptions`, `AdminNav`, `AdminNavOptions`, `DocNodeForFeatureOptions`.
 
 Component **and** generic control CSS are bundled into one stylesheet, imported once by the consumer:
 `import '@sbb-polarion/react-sbb-polarion/style.css'`.

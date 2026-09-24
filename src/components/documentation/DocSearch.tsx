@@ -83,7 +83,8 @@ export default function DocSearch() {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && results.length > 0) {
+          // Only while the list is showing: after Escape the reader no longer sees a first result to pick.
+          if (e.key === 'Enter' && open && results.length > 0) {
             go(results[0]);
           } else if (e.key === 'Escape') {
             setOpen(false);

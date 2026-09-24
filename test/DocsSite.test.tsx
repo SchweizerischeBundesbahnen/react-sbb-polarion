@@ -5,6 +5,7 @@ import DocLayout from '../src/components/documentation/DocLayout';
 import DocLinkInterceptor from '../src/components/documentation/DocLinkInterceptor';
 import DocPage from '../src/components/documentation/DocPage';
 import { type DocsConfig, DocsProvider } from '../src/docs/DocsContext';
+import { keydown } from './helpers';
 
 /** Set a controlled input's value the way React's onChange listens for (bypassing its value tracker). */
 function typeInto(input: HTMLInputElement, text: string) {
@@ -174,6 +175,44 @@ describe('documentation site', () => {
     expect((document.querySelector('.docs-search-input') as HTMLInputElement).value).toBe('');
   });
 
+  it('opens the first result on Enter, but not once Escape has closed the list', async () => {
+    stubFetch(CONFIG_HTML);
+    const scrollIntoView = vi.fn();
+    vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView').mockImplementation(scrollIntoView);
+    renderConfig();
+    await vi.waitFor(() => expect(q('.docs-search-input')).not.toBeNull());
+    const input = document.querySelector<HTMLInputElement>('.docs-search-input')!;
+
+    typeInto(input, 'CORS');
+    await vi.waitFor(() => expect(q('.docs-search-result')).not.toBeNull());
+    keydown(input, 'Escape');
+    await vi.waitFor(() => expect(q('.docs-search-results')).toBeNull());
+    keydown(input, 'Enter');
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    // typing again reopens the list, and Enter then picks the first result
+    typeInto(input, 'CORS origins');
+    await vi.waitFor(() => expect(q('.docs-search-result')).not.toBeNull());
+    keydown(input, 'Enter');
+    await vi.waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+    expect((scrollIntoView.mock.instances[0] as HTMLElement).id).toBe('enabling-cors');
+  });
+
+  it('says so when nothing matches, and closes when focus leaves the widget', async () => {
+    stubFetch(CONFIG_HTML);
+    renderConfig();
+    await vi.waitFor(() => expect(q('.docs-search-input')).not.toBeNull());
+    const input = document.querySelector<HTMLInputElement>('.docs-search-input')!;
+
+    input.focus();
+    typeInto(input, 'nonexistent');
+    await vi.waitFor(() => expect(q('.docs-search-empty')?.textContent).toBe('No matches'));
+
+    // focus moving to something outside the search widget closes the list
+    document.querySelector<HTMLAnchorElement>('.docs-nav-link')!.focus();
+    await vi.waitFor(() => expect(q('.docs-search-results')).toBeNull());
+  });
+
   it('turns the article’s own #anchor links into scroll targets without an href', async () => {
     stubFetch('<h2 id="enabling-cors">Enabling CORS</h2><p>See <a href="#weasyprint-configuration">above</a>.</p>');
     renderConfig();
@@ -308,6 +347,42 @@ describe('DocLinkInterceptor', () => {
     }
     expect(onDocLinkNavigate).not.toHaveBeenCalled();
     expect(openSpy).not.toHaveBeenCalled();
+  });
+
+  it('routes an .html link to a non-article page that mdLinkMap maps to (e.g. about.html)', async () => {
+    const onDocLinkNavigate = vi.fn(() => true);
+    render(
+      <DocsProvider config={{ ...CONFIG, mdLinkMap: { ...CONFIG.mdLinkMap, 'README.md': 'about' }, onDocLinkNavigate }}>
+        <DocLinkInterceptor>
+          <a href="about.html">About</a>
+        </DocLinkInterceptor>
+      </DocsProvider>,
+    );
+
+    await vi.waitFor(() => expect(document.querySelector('a')).not.toBeNull());
+    document.querySelector<HTMLAnchorElement>('a')!.click();
+    expect(onDocLinkNavigate).toHaveBeenCalledWith('about', '');
+  });
+
+  it('opens an .html link no feature renders at the source base URL instead of switching to it', async () => {
+    const onDocLinkNavigate = vi.fn(() => true);
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    render(
+      <DocsProvider config={{ ...CONFIG, onDocLinkNavigate }}>
+        <DocLinkInterceptor>
+          <a href="changelog.html">Changelog</a>
+        </DocLinkInterceptor>
+      </DocsProvider>,
+    );
+
+    await vi.waitFor(() => expect(document.querySelector('a')).not.toBeNull());
+    document.querySelector<HTMLAnchorElement>('a')!.click();
+    expect(onDocLinkNavigate).not.toHaveBeenCalled();
+    expect(openSpy).toHaveBeenCalledWith(
+      'https://github.com/example/repo/blob/main/changelog.html',
+      '_blank',
+      'noopener',
+    );
   });
 
   it('does not resolve a link named like an Object.prototype member through mdLinkMap', async () => {
