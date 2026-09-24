@@ -64,8 +64,10 @@ Splitting them across two PRs makes the visual suite red on whichever lands firs
 the one group that must never automerge, which is why it overrides the shared preset: a green \
 build does NOT mean the reference screenshots were regenerated, and the regeneration is a human \
 step. prCreation immediate so the branch surfaces as a pull request straight away instead of \
-waiting for the checks to settle.",
-      matchPackageNames: ['playwright', '@vitest/browser-playwright'],
+waiting for the checks to settle. @vitest/browser-playwright stays out of this group: vitest pins \
+it as an exact peer, so it must share the vitest monorepo PR, or both PRs fail npm install with \
+ERESOLVE. It only takes playwright as a peer and does not move the image.",
+      matchPackageNames: ['playwright'],
       groupName: 'playwright',
       automerge: false,
       prCreation: 'immediate',
