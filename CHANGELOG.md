@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.5.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.4.0...v2.5.0) (2026-09-24)
+
+
+### Features
+
+* add documentation-site toolkit and feature router for admin apps ([#148](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/148)) ([8b886af](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/8b886afa8652df5a7ec87cd970d969f8ac002cc8)), closes [#147](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/147)
+* add jsx-a11y and axe accessibility checks ([#152](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/152)) ([a7cce2f](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/a7cce2f853a1dbe2ffb162b39728988ecf685b4d)), closes [#151](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/151)
+
+
+### Bug Fixes
+
+* hand a value committed in an editable dropdown to a React-controlled input ([#146](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/146)) ([f217c9e](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/f217c9ee8a741a1dbf7f4133880b6c56d5af419b)), closes [#144](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/144)
+* name the searchable select from its labels in a shadow root or a wrapping label ([#142](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/142)) ([c036e9b](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/c036e9ba65bbfac187b7191edb4feac01f0b2255)), closes [#140](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/140)
+* render the page when a node switch changes only the hash ([#150](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/150)) ([06dd221](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/06dd2211fa2e4d5ec8906ac075650defaf45e2bc))
+* take the hidden native element out of the Tab order and the accessibility tree ([#145](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/145)) ([1a0479f](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/1a0479f15d2306baad6fa41f19ce2b7bff18d134)), closes [#141](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/141)
+* update dependency eslint to v10.11.0 ([7da4eaf](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/7da4eafcab580f20ffe1f7f4767d2d13451d47d9))
+* update dependency prettier to v3.9.7 ([8a048e7](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/8a048e73aceed646b2398c518e35b2ab70bd7a53))
+* update dependency prettier to v3.9.8 ([a8023a5](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/a8023a5eb9c20feeb5081443e39d500189a7f97b))
+* update vitest monorepo to v5.0.1 ([#138](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/138)) ([f88132b](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/f88132b01e0418f2fe379371113ad5d28d25f14d))
+
 ## [2.4.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.3.1...v2.4.0) (2026-09-15)
 
 
