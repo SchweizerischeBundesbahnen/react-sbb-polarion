@@ -16,17 +16,26 @@ interface DisclaimerProps {
  * Shared Usage Disclaimer page: the build-generated DISCLAIMER article, read from generic's `/disclaimer`
  * endpoint (the same way About and User Guide read theirs). The endpoint answers with an empty body when
  * nothing was generated, which is how "not generated" is told from "not applicable"; that case points at
- * the online source when `sourceUrl` is given.
+ * the online source when `sourceUrl` is given. A failed request (non-OK status, network error) is shown as
+ * an error instead.
  */
 export default function Disclaimer({ sendRequest, sourceUrl }: Readonly<DisclaimerProps>) {
   const [html, setHtml] = useState<string | null>(null);
   const [missing, setMissing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     sendRequest({ method: 'GET', url: '/disclaimer' })
       .then(async (response) => {
-        const article = response.ok ? (await response.text()).trim() : '';
+        if (cancelled) return;
+        // Only an OK empty body means "not generated"; any other status is a real failure (a server error,
+        // missing permissions) and is reported as one, like UserGuide does, rather than hidden as absent.
+        if (!response.ok) {
+          setError(`Failed to load the disclaimer (HTTP ${response.status}).`);
+          return;
+        }
+        const article = (await response.text()).trim();
         // Re-checked after the body is read: an unmount during that await must not set state.
         if (cancelled) return;
         if (article) {
@@ -35,8 +44,8 @@ export default function Disclaimer({ sendRequest, sourceUrl }: Readonly<Disclaim
           setMissing(true);
         }
       })
-      .catch(() => {
-        if (!cancelled) setMissing(true);
+      .catch((e) => {
+        if (!cancelled) setError(`Failed to load the disclaimer (${(e as Error).message}).`);
       });
     return () => {
       cancelled = true;
@@ -44,7 +53,9 @@ export default function Disclaimer({ sendRequest, sourceUrl }: Readonly<Disclaim
   }, [sendRequest]);
 
   let content: ReactNode;
-  if (missing) {
+  if (error) {
+    content = <div className="alert alert-error">{error}</div>;
+  } else if (missing) {
     content = (
       <p>
         No disclaimer has been generated during build.

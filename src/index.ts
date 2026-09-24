@@ -40,7 +40,8 @@ export { default as UserGuide } from './components/UserGuide';
 // alongside About and UserGuide.
 export { default as Disclaimer } from './components/documentation/Disclaimer';
 // Single-bundle admin app router: picks the page from `?feature=<id>`, with a fallback for no match.
-export { default as FeatureRouter } from './components/documentation/FeatureRouter';
+export { default as FeatureRouter, findFeature } from './components/documentation/FeatureRouter';
+export type { Feature } from './components/documentation/FeatureRouter';
 // The documentation site: a manifest-driven set of articles with a sidebar, search, breadcrumb, prev/next
 // and an "on this page" rail. Wrap the app in DocsProvider with the manifest (and the build-generated
 // section index for search); render each article page with <DocPage>.

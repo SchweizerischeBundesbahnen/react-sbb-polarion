@@ -18,6 +18,13 @@ export interface PendingDoc {
   hash: string;
 }
 
+/**
+ * How long a stashed handoff stays valid. The node switch reloads the frame within a moment; an entry older
+ * than this was never consumed (the switch was cancelled, or Polarion did not reload the node) and must not
+ * hijack a later, unrelated page load of the app.
+ */
+export const PENDING_MAX_AGE_MS = 30_000;
+
 export interface AdminNav {
   /** Switches the admin shell to the node serving `feature`, stashing the intended article for
    *  {@link AdminNav.resumePendingDoc}. Returns false (changing nothing) when it cannot or need not act -
@@ -91,15 +98,22 @@ export function retargetNodeHash(currentHash: string, nodeId: string, adminBase:
 
 /**
  * What resume should navigate to given the stored handoff and the feature currently shown, or null when
- * there is nothing pending or it is already the current feature. Pure, so it is unit-tested directly.
+ * there is nothing pending, the entry is stale (older than {@link PENDING_MAX_AGE_MS}, or without a
+ * timestamp), or it is already the current feature. Pure, so it is unit-tested directly.
  */
-export function pendingTarget(raw: string | null, currentFeature: string | null, currentHash = ''): PendingDoc | null {
+export function pendingTarget(
+  raw: string | null,
+  currentFeature: string | null,
+  currentHash = '',
+  now = Date.now(),
+): PendingDoc | null {
   if (!raw) {
     return null;
   }
   try {
-    const pending = JSON.parse(raw) as Partial<PendingDoc>;
-    if (pending.feature) {
+    const pending = JSON.parse(raw) as Partial<PendingDoc> & { ts?: number };
+    const fresh = typeof pending.ts === 'number' && now - pending.ts >= 0 && now - pending.ts <= PENDING_MAX_AGE_MS;
+    if (pending.feature && fresh) {
       const hash = pending.hash ?? '';
       // Resume when EITHER the feature or the fragment differs: an article that links into the very page its
       // node opens (a self-node like disclaimer, or the documentation node's landing article) keeps the same
@@ -138,7 +152,7 @@ export function createAdminNav(options: AdminNavOptions): AdminNav {
       if (!newHash) {
         return false;
       }
-      sessionStorage.setItem(pendingKey, JSON.stringify({ feature, hash }));
+      sessionStorage.setItem(pendingKey, JSON.stringify({ feature, hash, ts: Date.now() }));
       shell.location.hash = newHash;
       return true;
     } catch {

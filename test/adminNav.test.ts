@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createAdminNav, docNodeForFeature, pendingTarget, retargetNodeHash } from '../src/services/adminNav';
+import {
+  PENDING_MAX_AGE_MS,
+  createAdminNav,
+  docNodeForFeature,
+  pendingTarget,
+  retargetNodeHash,
+} from '../src/services/adminNav';
 
 const DOCS = [
   { id: 'quick-start', title: 'Quick Start', source: 'QUICK_START.md' },
@@ -41,30 +47,44 @@ describe('retargetNodeHash', () => {
 });
 
 describe('pendingTarget', () => {
+  const NOW = 1_000_000;
+  const stash = (entry: object) => JSON.stringify({ ts: NOW, ...entry });
+
   it('returns the stashed article when it differs from the current feature', () => {
-    const raw = JSON.stringify({ feature: 'configuration', hash: '#weasyprint-configuration' });
-    expect(pendingTarget(raw, 'quick-start')).toEqual({ feature: 'configuration', hash: '#weasyprint-configuration' });
+    const raw = stash({ feature: 'configuration', hash: '#weasyprint-configuration' });
+    expect(pendingTarget(raw, 'quick-start', '', NOW)).toEqual({
+      feature: 'configuration',
+      hash: '#weasyprint-configuration',
+    });
   });
 
   it('defaults a missing hash to empty', () => {
-    expect(pendingTarget(JSON.stringify({ feature: 'upgrade' }), 'quick-start')).toEqual({
+    expect(pendingTarget(stash({ feature: 'upgrade' }), 'quick-start', '', NOW)).toEqual({
       feature: 'upgrade',
       hash: '',
     });
   });
 
   it('returns null when nothing is pending, already there, or corrupt', () => {
-    expect(pendingTarget(null, 'quick-start')).toBeNull();
-    expect(pendingTarget(JSON.stringify({ feature: 'configuration' }), 'configuration')).toBeNull();
-    expect(pendingTarget('not json', 'quick-start')).toBeNull();
+    expect(pendingTarget(null, 'quick-start', '', NOW)).toBeNull();
+    expect(pendingTarget(stash({ feature: 'configuration' }), 'configuration', '', NOW)).toBeNull();
+    expect(pendingTarget('not json', 'quick-start', '', NOW)).toBeNull();
   });
 
   it('resumes on a fragment change even when the feature is unchanged (self-node / landing article)', () => {
-    const raw = JSON.stringify({ feature: 'disclaimer', hash: '#section' });
+    const raw = stash({ feature: 'disclaimer', hash: '#section' });
     // same feature, but the page arrived without the fragment -> still resume so it scrolls
-    expect(pendingTarget(raw, 'disclaimer', '')).toEqual({ feature: 'disclaimer', hash: '#section' });
+    expect(pendingTarget(raw, 'disclaimer', '', NOW)).toEqual({ feature: 'disclaimer', hash: '#section' });
     // both feature and fragment already match -> nothing to do
-    expect(pendingTarget(raw, 'disclaimer', '#section')).toBeNull();
+    expect(pendingTarget(raw, 'disclaimer', '#section', NOW)).toBeNull();
+  });
+
+  it('ignores a stale entry, one without a timestamp, and one from the future', () => {
+    const raw = stash({ feature: 'configuration' });
+    expect(pendingTarget(raw, 'quick-start', '', NOW + PENDING_MAX_AGE_MS)).not.toBeNull();
+    expect(pendingTarget(raw, 'quick-start', '', NOW + PENDING_MAX_AGE_MS + 1)).toBeNull();
+    expect(pendingTarget(JSON.stringify({ feature: 'configuration' }), 'quick-start', '', NOW)).toBeNull();
+    expect(pendingTarget(raw, 'quick-start', '', NOW - 1)).toBeNull();
   });
 });
 
@@ -81,6 +101,14 @@ describe('createAdminNav', () => {
     const nav = createAdminNav({ adminBase: 'pdf-export', nodeForFeature: (f) => f });
     sessionStorage.removeItem('pdf-export.docs.pending');
     expect(nav.resumePendingDoc()).toBe(false);
+  });
+
+  it('resumePendingDoc drops a stale handoff instead of navigating to it', () => {
+    const nav = createAdminNav({ adminBase: 'pdf-export', nodeForFeature: (f) => f });
+    const stale = { feature: 'configuration', hash: '', ts: Date.now() - PENDING_MAX_AGE_MS - 1000 };
+    sessionStorage.setItem('pdf-export.docs.pending', JSON.stringify(stale));
+    expect(nav.resumePendingDoc()).toBe(false);
+    expect(sessionStorage.getItem('pdf-export.docs.pending')).toBeNull();
   });
 });
 
