@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import About from '../src/components/About';
+import { a11yViolations } from '../src/testing';
 import type { ConfigurationPropertiesModel, ConfigurationStatus, Version } from '../src/types';
 import { keydown } from './helpers';
 
@@ -306,5 +307,17 @@ describe('About', () => {
         scrollIntoView.mockRestore();
       }
     });
+  });
+});
+
+describe('About accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    render(
+      <div className="sbb-ui">
+        <About sendRequest={makeSendRequest({})} appIcon="/icon.svg" restApiUrl="/rest/api/version" />
+      </div>,
+    );
+    await vi.waitFor(() => expect(q('.about-table')).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
   });
 });

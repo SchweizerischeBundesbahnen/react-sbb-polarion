@@ -10,6 +10,7 @@ import StylePackageWeights, {
 } from '../src/components/StylePackageWeights';
 import Toaster from '../src/components/Toaster';
 import type { StylePackageWeight, StylePackageWeightsService } from '../src/services/stylePackageWeights';
+import { a11yViolations } from '../src/testing';
 
 // The exporters' style-package ordering page. The weight arithmetic is the part worth pinning down: it
 // decides both the stored numbers and which package the export panel preselects, and it came over from
@@ -664,5 +665,18 @@ describe('StylePackageWeights', () => {
 
     await vi.waitFor(() => expect(document.querySelector('.alert-error')).not.toBeNull());
     expect(document.querySelector('.alert-error')!.textContent).toContain('Error occurred loading the data');
+  });
+});
+
+describe('StylePackageWeights accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    render(
+      <div className="sbb-ui">
+        <Toaster />
+        <StylePackageWeights title="PDF Exporter: Style Package Weights" service={makeService()} />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.weights-list')).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
   });
 });

@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import { createEditableSelect } from '../src/generic/searchableSelect.js';
+import { a11yViolations } from '../src/testing';
 import { mousedown } from './helpers';
 
 // Guards an RSP patch to the vendored SearchableDropdown.js: an editable dropdown must hand what the
@@ -91,5 +92,12 @@ describe('SearchableDropdown - editable, wrapping a React-controlled input (RSP-
     // What a click on the option calls. With the value already in the trigger, focusing it opens no list.
     dropdown.selectItem(dropdown.items[0]);
     expect(onValue).toHaveBeenCalledWith('1200');
+  });
+});
+
+describe('SearchableDropdown accessibility, editable', () => {
+  it('has no WCAG A/AA violations', async () => {
+    await mount();
+    expect(await a11yViolations()).toEqual([]);
   });
 });

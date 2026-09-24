@@ -3,6 +3,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import CodeEditor, { type CodeLanguage, renderNode } from '../src/components/CodeEditor';
+import { a11yViolations } from '../src/testing';
 
 // Behavior tests for the code editor (screenshot-free, so they run on any host). The look - token
 // colors and the highlight layer sitting exactly under the text - is covered in
@@ -336,5 +337,12 @@ describe('CodeEditor', () => {
     renderEditor({});
 
     expect(document.querySelector('.code-editor')!.className).toBe('code-editor');
+  });
+});
+
+describe('CodeEditor accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    renderEditor({ ariaLabel: 'Configuration', value: 'key=value' });
+    expect(await a11yViolations()).toEqual([]);
   });
 });

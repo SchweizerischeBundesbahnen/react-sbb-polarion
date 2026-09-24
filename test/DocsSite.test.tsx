@@ -5,6 +5,7 @@ import DocLayout from '../src/components/documentation/DocLayout';
 import DocLinkInterceptor from '../src/components/documentation/DocLinkInterceptor';
 import DocPage from '../src/components/documentation/DocPage';
 import { type DocsConfig, DocsProvider } from '../src/docs/DocsContext';
+import { pageViolations } from '../src/testing';
 import { keydown } from './helpers';
 
 /** Set a controlled input's value the way React's onChange listens for (bypassing its value tracker). */
@@ -213,6 +214,63 @@ describe('documentation site', () => {
     await vi.waitFor(() => expect(q('.docs-search-results')).toBeNull());
   });
 
+  it('names the search box, not only by its placeholder', async () => {
+    stubFetch(CONFIG_HTML);
+    renderConfig();
+    await vi.waitFor(() => expect(q('.docs-search-input')).not.toBeNull());
+    expect(q('.docs-search-input')!.getAttribute('aria-label')).toBe('Search documentation');
+  });
+
+  it('announces the number of results through a status that stays mounted', async () => {
+    stubFetch(CONFIG_HTML);
+    renderConfig();
+    await vi.waitFor(() => expect(q('.docs-search-input')).not.toBeNull());
+    const input = document.querySelector<HTMLInputElement>('.docs-search-input')!;
+    const status = q('.docs-search-status')!;
+    // <output> carries the status role, and with it a polite live region.
+    expect(status.tagName).toBe('OUTPUT');
+    expect(status.textContent).toBe('');
+
+    typeInto(input, 'CORS');
+    await vi.waitFor(() => expect(status.textContent).toBe('1 result'));
+    typeInto(input, 'o');
+    await vi.waitFor(() => expect(status.textContent).toBe('2 results'));
+    typeInto(input, 'nonexistent');
+    await vi.waitFor(() => expect(status.textContent).toBe('No matches'));
+    keydown(input, 'Escape');
+    await vi.waitFor(() => expect(status.textContent).toBe(''));
+    expect(q('.docs-search-status')).toBe(status);
+  });
+
+  it('marks the "on this page" entry of the current section with aria-current', async () => {
+    stubFetch(CONFIG_HTML);
+    vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView').mockImplementation(() => undefined);
+    renderConfig();
+    await vi.waitFor(() => expect(document.querySelectorAll('.docs-toc-link')).toHaveLength(2));
+    const [first, second] = Array.from(document.querySelectorAll<HTMLButtonElement>('.docs-toc-link'));
+
+    second.click();
+    await vi.waitFor(() => expect(second.getAttribute('aria-current')).toBe('location'));
+    expect(first.hasAttribute('aria-current')).toBe(false);
+  });
+
+  it('follows an in-page anchor on Enter but leaves Space to the page, as a native link does', async () => {
+    stubFetch('<h2 id="enabling-cors">Enabling CORS</h2><p>See <a href="#enabling-cors">here</a>.</p>');
+    const scrollIntoView = vi.fn();
+    vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView').mockImplementation(scrollIntoView);
+    renderConfig();
+    await vi.waitFor(() => expect(q('article.markdown-body .docs-anchor')).not.toBeNull());
+    const anchor = q('article.markdown-body .docs-anchor') as HTMLElement;
+
+    const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+    anchor.dispatchEvent(space);
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    expect(space.defaultPrevented).toBe(false);
+
+    keydown(anchor, 'Enter');
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
   it('turns the article’s own #anchor links into scroll targets without an href', async () => {
     stubFetch('<h2 id="enabling-cors">Enabling CORS</h2><p>See <a href="#weasyprint-configuration">above</a>.</p>');
     renderConfig();
@@ -418,5 +476,41 @@ describe('DocLinkInterceptor', () => {
       .querySelector<HTMLAnchorElement>('a')!
       .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     expect(onDocLinkNavigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('documentation site accessibility', () => {
+  it('has no WCAG A/AA violations on an article page', async () => {
+    stubFetch(
+      '<h1 id="configuration">Configuration</h1><h2 id="weasyprint-configuration">WeasyPrint configuration</h2>' +
+        '<p>See <a href="#enabling-cors">below</a>.</p><h2 id="enabling-cors">Enabling CORS</h2><p>Allow origins.</p>',
+    );
+    renderDocPage(CONFIG.docs[2]);
+    await vi.waitFor(() => expect(q('article.markdown-body .docs-anchor')).not.toBeNull());
+    await vi.waitFor(() => expect(q('.docs-onthispage .docs-toc-link')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with search results and with no match', async () => {
+    stubFetch(CONFIG_HTML);
+    renderConfig();
+    await vi.waitFor(() => expect(q('.docs-search-input')).not.toBeNull());
+    const input = document.querySelector<HTMLInputElement>('.docs-search-input')!;
+
+    input.focus();
+    typeInto(input, 'CORS');
+    await vi.waitFor(() => expect(q('.docs-search-result')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+
+    typeInto(input, 'nonexistent');
+    await vi.waitFor(() => expect(q('.docs-search-empty')).not.toBeNull());
+    expect(await pageViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations on the "not generated" fallback', async () => {
+    stubFetch('', 404);
+    renderConfig();
+    await vi.waitFor(() => expect(document.body.textContent).toContain('has not been generated'));
+    expect(await pageViolations()).toEqual([]);
   });
 });

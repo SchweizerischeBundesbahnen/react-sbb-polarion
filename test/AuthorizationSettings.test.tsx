@@ -3,6 +3,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import AuthorizationSettings from '../src/components/AuthorizationSettings';
 import Toaster from '../src/components/Toaster';
 import type { AuthorizationContent, AuthorizationService } from '../src/services/authorizationSettings';
+import { a11yViolations } from '../src/testing';
 import { mousedown } from './helpers';
 
 // The role-authorization administration page. The extensions that had this page each wrote it out; this
@@ -384,5 +385,18 @@ describe('AuthorizationSettings', () => {
     await mount();
 
     expect(document.querySelector('.quick-help')).toBeNull();
+  });
+});
+
+describe('AuthorizationSettings accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    render(
+      <div className="sbb-ui">
+        <Toaster />
+        <AuthorizationSettings title="Repair Authorization" service={makeService()} />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.roles-group .sd-trigger-multi')).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
   });
 });

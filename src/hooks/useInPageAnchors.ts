@@ -39,7 +39,8 @@ export function useInPageAnchors(ref: RefObject<HTMLElement | null>, dep: unknow
       };
       a.addEventListener('click', scrollToTarget);
       a.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        // Enter only, as on a native link: Space keeps scrolling the page.
+        if (e.key === 'Enter') {
           e.preventDefault();
           scrollToTarget();
         }

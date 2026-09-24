@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import UserGuide from '../src/components/UserGuide';
+import { a11yViolations } from '../src/testing';
 import type { SendRequest } from '../src/types';
 
 // UserGuide GETs /user-guide via the injected sendRequest and renders the returned HTML (trusted,
@@ -66,5 +67,18 @@ describe('UserGuide', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(q('.alert-error')).toBeNull();
+  });
+});
+
+describe('UserGuide accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    const sendRequest: SendRequest = vi.fn(async () => new Response('<h2>Guide</h2><p>Body</p>', { status: 200 }));
+    render(
+      <div className="sbb-ui">
+        <UserGuide sendRequest={sendRequest} />
+      </div>,
+    );
+    await vi.waitFor(() => expect(q('article.user-guide-page h2')).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
   });
 });

@@ -60,6 +60,14 @@ export default function DocSearch() {
     return null;
   }
 
+  const showResults = open && query.trim() !== '';
+  let status = '';
+  if (showResults && results.length === 0) {
+    status = 'No matches';
+  } else if (showResults) {
+    status = results.length === 1 ? '1 result' : `${results.length} results`;
+  }
+
   return (
     <div
       className="docs-search"
@@ -76,6 +84,7 @@ export default function DocSearch() {
         type="search"
         className="docs-search-input"
         placeholder="Search documentation..."
+        aria-label="Search documentation"
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -91,7 +100,9 @@ export default function DocSearch() {
           }
         }}
       />
-      {open && query.trim() !== '' && (
+      {/* Always mounted: a live region inserted together with its text is not announced by every screen reader. */}
+      <output className="docs-search-status">{status}</output>
+      {showResults && (
         <ul className="docs-search-results">
           {results.length === 0 ? (
             <li className="docs-search-empty">No matches</li>

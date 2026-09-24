@@ -9,6 +9,7 @@ import {
   type ConfigurationsVisibility,
 } from '../src/components/ConfigurationsPane';
 import type SearchableDropdown from '../src/generic/SearchableDropdown.js';
+import { a11yViolations } from '../src/testing';
 import { mousedown } from './helpers';
 
 // Behavior tests for the shared ConfigurationsPane. It is decoupled from any extension: the REST ops
@@ -618,5 +619,37 @@ describe('ConfigurationsPane visibility of the global-scope configurations', () 
     );
     expect(dialog()).not.toBeNull();
     expect(service.loadConfigurationNames).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ConfigurationsPane accessibility', () => {
+  const pane = () =>
+    render(
+      <div className="sbb-ui">
+        <ConfigurationsPane<Content>
+          scope=""
+          service={makeService()}
+          cookieKey="ck-test"
+          label="configuration"
+          onContentLoaded={vi.fn()}
+          onSelectedChange={vi.fn()}
+          onEditingNameChange={vi.fn()}
+        />
+      </div>,
+    );
+
+  it('has no WCAG A/AA violations while choosing a configuration', async () => {
+    pane();
+    await vi.waitFor(() => expect(document.querySelector('.configurations-pane .sd-trigger')).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations while naming a new one, which takes the focus', async () => {
+    pane();
+    await vi.waitFor(() => expect(document.querySelector('.configurations-pane .sd-trigger')).not.toBeNull());
+    btn('Add new').click();
+    await vi.waitFor(() => expect(nameInput()).not.toBeNull());
+    await vi.waitFor(() => expect(document.activeElement).toBe(nameInput()));
+    expect(await a11yViolations()).toEqual([]);
   });
 });

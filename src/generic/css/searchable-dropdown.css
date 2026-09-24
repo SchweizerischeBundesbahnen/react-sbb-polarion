@@ -362,23 +362,23 @@
     gap: 6px;
 }
 
-.sd-portal .option.multiselect-option input[type="checkbox"] {
+/* react-sbb-polarion patch (not in upstream generic): the checkmark is a decorative span (see
+   SearchableDropdown.js), drawn with the same images the <input type="checkbox"> it replaces had. */
+.sd-portal .option.multiselect-option .sd-checkbox {
     flex: none;
     margin: 0;
-    /* Let clicks fall through to the option row so a single handler toggles selection
-       (avoids a double-toggle between the native checkbox and our handler). */
+    /* Let clicks fall through to the option row so a single handler toggles selection. */
     pointer-events: none;
     /* Polarion-styled checkbox (the portal lives in <body>, outside the wrappers checkboxes.css
        scopes to, so replicate the image styling here — only for in-list multi-select checkboxes). */
-    -webkit-appearance: none;
-    appearance: none;
+    display: inline-block;
     width: var(--sbb-toggle-size);
     height: var(--sbb-toggle-size);
     background: var(--sbb-checkbox-unchecked) no-repeat center;
     background-size: var(--sbb-toggle-size) var(--sbb-toggle-size);
 }
 
-.sd-portal .option.multiselect-option input[type="checkbox"]:checked {
+.sd-portal .option.multiselect-option .sd-checkbox.checked {
     background-image: var(--sbb-checkbox-checked);
 }
 

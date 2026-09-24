@@ -670,10 +670,13 @@ export default class SearchableDropdown {
 
             if (this.multiselect) {
                 option.classList.add('multiselect-option');
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = !!item.selected;
-                checkbox.tabIndex = -1;
+                // react-sbb-polarion patch (not in upstream generic): the checkmark is drawn by a span, not
+                // an <input type="checkbox">. A control inside role="option" is nested interactive content,
+                // announced apart from its option and with no name, and aria-hidden does not make a native
+                // input stop being one. The option's aria-selected already carries the state.
+                const checkbox = document.createElement('span');
+                checkbox.className = item.selected ? 'sd-checkbox checked' : 'sd-checkbox';
+                checkbox.setAttribute('aria-hidden', 'true');
                 option.appendChild(checkbox);
                 if (item.icon) {
                     option.appendChild(this._createOptionIcon(item.icon, item.iconBg));

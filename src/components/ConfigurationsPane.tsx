@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from 'react';
 import type { ReactNode, Ref } from 'react';
 import useConfirm from '../hooks/useConfirm';
 import { getCookie, setCookie } from '../services/cookies';
@@ -120,6 +120,16 @@ export function ConfigurationsPane<T>({
    * consumer's rendering: create / rename / delete change which options exist, which the observer sees.
    */
   const [selectorEpoch, setSelectorEpoch] = useState(0);
+  const selectorId = useId();
+  const nameInputId = useId();
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // The name field opens because the user asked for it (Add new / Rename), so it takes the focus then.
+  useEffect(() => {
+    if (mode !== 'view') {
+      nameInputRef.current?.focus();
+    }
+  }, [mode]);
 
   // Keep the latest callbacks in refs so fetchNames/selectConfig stay stable across parent renders.
   const contentLoadedRef = useRef(onContentLoaded);
@@ -305,9 +315,10 @@ export function ConfigurationsPane<T>({
       {mode === 'view' ? (
         <>
           <div className="config-row">
-            <label>Selected {label}:</label>
+            <label htmlFor={selectorId}>Selected {label}:</label>
             <SearchableSelect
               key={selectorEpoch}
+              id={selectorId}
               value={selected}
               onChange={selectConfig}
               options={names.map((n) => ({ id: n.name, name: n.name, inherited: n.scope !== scope }))}
@@ -379,12 +390,13 @@ export function ConfigurationsPane<T>({
         </>
       ) : (
         <div className="config-row config-edit-row">
-          <label>{mode === 'new' ? `New ${label} name:` : `Rename ${label} to:`}</label>
+          <label htmlFor={nameInputId}>{mode === 'new' ? `New ${label} name:` : `Rename ${label} to:`}</label>
           <input
+            id={nameInputId}
+            ref={nameInputRef}
             type="text"
             maxLength={NAME_MAX_LENGTH}
             value={nameInput}
-            autoFocus
             onChange={(e) => setNameInput(e.target.value)}
           />
           <button type="button" className="sbb-btn sbb-btn--control" onClick={closeEditor}>

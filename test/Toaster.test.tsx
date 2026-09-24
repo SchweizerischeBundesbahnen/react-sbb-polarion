@@ -3,6 +3,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { toast } from 'sonner';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Toaster from '../src/components/Toaster';
+import { a11yViolations } from '../src/testing';
 
 // Behavior tests for the shared Toaster (screenshot-free; the colored look is covered in
 // Toaster.visual.test.tsx). The component is a thin wrapper over sonner's Toaster preconfigured with
@@ -64,5 +65,15 @@ describe('Toaster', () => {
     await vi.waitFor(() => expect(host()).not.toBeNull());
     expect(host()!.getAttribute('data-y-position')).toBe('bottom');
     expect(host()!.getAttribute('data-x-position')).toBe('right');
+  });
+});
+
+describe('Toaster accessibility', () => {
+  it('has no WCAG A/AA violations with a success and an error toast shown', async () => {
+    mount();
+    toast.success('Data successfully saved.');
+    toast.error('Saving failed.');
+    await vi.waitFor(() => expect(document.querySelectorAll('[data-sonner-toast]')).toHaveLength(2));
+    expect(await a11yViolations()).toEqual([]);
   });
 });

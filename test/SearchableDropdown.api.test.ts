@@ -125,7 +125,7 @@ describe('selectValue + selectMultipleValues open re-render', () => {
     dropdown.addOption('b', 'B');
     mousedown(dropdown.trigger);
     dropdown.selectMultipleValues(['a', 'b']);
-    expect(dropdown.itemsEl.querySelectorAll('input[type="checkbox"]:checked')).toHaveLength(2);
+    expect(dropdown.itemsEl.querySelectorAll('.sd-checkbox.checked')).toHaveLength(2);
     dropdown.destroy();
   });
 });

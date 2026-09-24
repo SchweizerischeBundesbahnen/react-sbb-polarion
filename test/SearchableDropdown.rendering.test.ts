@@ -70,7 +70,7 @@ describe('option rendering: icons, classes, mouse', () => {
     mousedown(dropdown.trigger);
     const opt = dropdown.itemsEl.children[0] as HTMLElement;
     expect(opt.classList.contains('multiselect-option')).toBe(true);
-    expect(opt.querySelector('input[type="checkbox"]')).not.toBeNull();
+    expect(opt.querySelector('.sd-checkbox')).not.toBeNull();
     expect(opt.querySelector('img.option-icon')?.getAttribute('src')).toBe('/i/a.svg');
     dropdown.destroy();
   });

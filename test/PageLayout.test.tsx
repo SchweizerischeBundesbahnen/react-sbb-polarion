@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import PageLayout from '../src/components/PageLayout';
+import { a11yViolations } from '../src/testing';
 
 // PageLayout shows the body always, the title only when the `title` prop is given, and the "← Overview"
 // back link only when NOT embedded (isEmbedded/getScope read window.location.search). Drive the URL with
@@ -67,5 +68,19 @@ describe('PageLayout', () => {
     expect(q('.page h1')).toBeNull();
     expect(q('.page-body [data-testid="child"]')).not.toBeNull();
     expect(q('.page-nav a')?.textContent).toContain('Overview');
+  });
+});
+
+describe('PageLayout accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    setSearch('');
+    await mount(
+      <div className="sbb-ui">
+        <PageLayout title="Mappings">
+          <p>hello</p>
+        </PageLayout>
+      </div>,
+    );
+    expect(await a11yViolations()).toEqual([]);
   });
 });

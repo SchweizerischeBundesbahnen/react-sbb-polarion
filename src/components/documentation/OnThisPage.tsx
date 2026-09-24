@@ -76,6 +76,7 @@ export default function OnThisPage({ contentRef }: Readonly<OnThisPageProps>) {
             <button
               type="button"
               className={item.id === activeId ? 'docs-toc-link docs-toc-link-active' : 'docs-toc-link'}
+              aria-current={item.id === activeId ? 'location' : undefined}
               onClick={() => scrollTo(item.id)}
             >
               {item.text}

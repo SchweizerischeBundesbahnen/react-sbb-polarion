@@ -29,6 +29,9 @@ Non-obvious rules for this repo. How-to (build, test, lint) is in `package.json`
 
 - `react` / `react-dom` are **peer dependencies** and must stay external - never add them as bundled
   dependencies or import them in a way that bundles a second React copy into `dist/`.
+- `axe-core` and the ESLint packages are **optional peer dependencies** of the `./testing` and
+  `./eslint-config` entry points. Keep them external and out of `dependencies`, and never import them
+  from `src/` outside `src/testing`, or the main bundle requires them.
 - `--sbb-*` design tokens are declared on the `.sbb-ui` / `.standard-admin-page` / `.modal__container` /
   `.form-wrapper` scopes, **not `:root`**. A component only renders styled under one of those ancestors
   (tests wrap the render in `.sbb-ui`); a component that looks unstyled is usually missing that scope.
