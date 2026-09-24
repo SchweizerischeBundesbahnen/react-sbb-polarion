@@ -281,6 +281,71 @@ describe('DocLinkInterceptor', () => {
     expect(openSpy).not.toHaveBeenCalled();
   });
 
+  it('leaves query-relative ?feature= links from a custom featureHref to the browser (no source-repo tab)', async () => {
+    const onDocLinkNavigate = vi.fn(() => true);
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const featureHref = (feature: string, hash = '') => `?feature=${feature}${hash}`;
+    window.history.replaceState({}, '', '?feature=configuration');
+    render(
+      <DocsProvider config={{ ...CONFIG, featureHref, onDocLinkNavigate }}>
+        <DocLinkInterceptor>
+          <DocLayout activeId="configuration">
+            <p>body</p>
+          </DocLayout>
+        </DocLinkInterceptor>
+      </DocsProvider>,
+    );
+
+    await vi.waitFor(() => expect(q('.docs-nav-link')).not.toBeNull());
+    const preventNav = (e: Event) => e.preventDefault();
+    document.addEventListener('click', preventNav);
+    try {
+      // a sidebar link and a prev/next link, both relative `?feature=` URLs
+      for (const sel of ['.docs-nav-link', '.docs-prevnext-next']) {
+        const link = document.querySelector<HTMLAnchorElement>(sel)!;
+        expect(link.getAttribute('href')).toMatch(/^\?feature=/);
+        link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      }
+    } finally {
+      document.removeEventListener('click', preventNav);
+    }
+    expect(onDocLinkNavigate).not.toHaveBeenCalled();
+    expect(openSpy).not.toHaveBeenCalled();
+  });
+
+  it('recognizes a ./-prefixed article link as a cross-document link', async () => {
+    const onDocLinkNavigate = vi.fn(() => true);
+    render(
+      <DocsProvider config={{ ...CONFIG, onDocLinkNavigate }}>
+        <DocLinkInterceptor>
+          <a href="./configuration.html#enabling-cors">to configuration</a>
+        </DocLinkInterceptor>
+      </DocsProvider>,
+    );
+
+    await vi.waitFor(() => expect(document.querySelector('a')).not.toBeNull());
+    document.querySelector<HTMLAnchorElement>('a')!.click();
+    expect(onDocLinkNavigate).toHaveBeenCalledWith('configuration', '#enabling-cors');
+  });
+
+  it('does not resolve a link named like an Object.prototype member through mdLinkMap', async () => {
+    const onDocLinkNavigate = vi.fn(() => true);
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    render(
+      <DocsProvider config={{ ...CONFIG, onDocLinkNavigate }}>
+        <DocLinkInterceptor>
+          <a href="constructor">inherited name</a>
+        </DocLinkInterceptor>
+      </DocsProvider>,
+    );
+
+    await vi.waitFor(() => expect(document.querySelector('a')).not.toBeNull());
+    document.querySelector<HTMLAnchorElement>('a')!.click();
+    // not a feature switch to the inherited Object constructor - a plain repo-relative link instead
+    expect(onDocLinkNavigate).not.toHaveBeenCalled();
+    expect(openSpy).toHaveBeenCalledWith('https://github.com/example/repo/blob/main/constructor', '_blank', 'noopener');
+  });
+
   it('leaves a non-doc link alone', async () => {
     const onDocLinkNavigate = vi.fn(() => true);
     render(

@@ -34,19 +34,17 @@ export default function DocLinkInterceptor({ children }: Readonly<{ children: Re
       const anchor = (event.target as HTMLElement).closest('a');
       const href = anchor?.getAttribute('href') ?? '';
       // Leave it to the browser when it is: empty, an in-page anchor (handled elsewhere), a scheme URL
-      // (http:, mailto:, ...), a protocol-relative URL, or a site-absolute path - the latter is the app's own
-      // navigation (the sidebar/prev-next/breadcrumb `?feature=` links, whose pathname is absolute), which must
-      // not be mistaken for a repo-relative content link below.
+      // (http:, mailto:, ...), or the app's own navigation - the sidebar/prev-next/breadcrumb `?feature=` links,
+      // either query-relative (`?...`, from a featureHref returning a relative URL) or with an absolute pathname
+      // (`/...`, which also covers a protocol-relative `//host` URL). Those must not be mistaken for a
+      // repo-relative content link below.
       if (
         !href ||
         href.startsWith('#') ||
         href.startsWith('?') ||
         href.startsWith('/') ||
-        href.startsWith('//') ||
         /^[a-z][a-z0-9+.-]*:/i.test(href)
       ) {
-        // `?...` is the app's own query navigation (sidebar / prev-next / breadcrumb links built by a
-        // featureHref that returns a relative `?feature=` URL) - leave it to the browser, not the repo branch.
         return;
       }
 
@@ -58,15 +56,17 @@ export default function DocLinkInterceptor({ children }: Readonly<{ children: Re
       const hash = hashAt < 0 ? '' : cleaned.slice(hashAt);
 
       const docLink = parseDocLink(cleaned);
-      // Object.hasOwn, not a truthy index read, so a source named like an Object.prototype member does not
-      // resolve to an inherited value.
-      const feature = docLink
-        ? docLink.feature
-        : Object.prototype.hasOwnProperty.call(mdLinkMap, path)
-          ? mdLinkMap[path]
-          : undefined;
+      let feature: string | undefined;
+      let targetHash = hash;
+      if (docLink) {
+        feature = docLink.feature;
+        targetHash = docLink.hash;
+      } else if (Object.prototype.hasOwnProperty.call(mdLinkMap, path)) {
+        // An own-property check, not a truthy index read, so a source named like an Object.prototype member
+        // does not resolve to an inherited value. (Object.hasOwn is ES2022; the lib here is ES2020.)
+        feature = mdLinkMap[path];
+      }
       if (feature) {
-        const targetHash = docLink ? docLink.hash : hash;
         event.preventDefault();
         if (!onDocLinkNavigate?.(feature, targetHash)) {
           window.location.assign(featureHref(feature, targetHash));
