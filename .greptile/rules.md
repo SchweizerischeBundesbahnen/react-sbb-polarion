@@ -14,7 +14,9 @@ RSP rewrites each file in idiomatic React — `SearchableDropdown.js`'s logic fo
 
 So it is a transit artifact with a scheduled death, and effort spent polishing it is wasted:
 
-- To change it, **re-copy from generic**. Never hand-edit, restyle or modernise it. It is excluded
+- To change it, **re-copy from generic**. Never hand-edit, restyle or modernise it. The only exception
+  is a fix that cannot wait for generic: mark it `react-sbb-polarion patch (not in upstream generic)` in
+  the file and add it to the table below. It is excluded
   from Prettier and ESLint on purpose, so "fixing" its formatting is noise, not cleanup.
 - RSP owns the *behavior* tests for this code in `test/` (generic will delete its own tests first).
   Those tests are written behavior-level deliberately, so they also guard the eventual React
@@ -27,9 +29,12 @@ A faithful re-copy from generic silently deletes these. Treat their removal as a
 | Where | Deviation | What breaks without it |
 | --- | --- | --- |
 | `SearchableDropdown.js` | Option-list portal appends to `getRootNode()` (shadow-root aware), outside-click uses `event.composedPath()` | The dropdown stops working inside the form-extension shadow roots |
+| `SearchableDropdown.js` | `_portalHost()` puts the option-list portal inside an open `dialog:modal`, re-homed on every open | The list of a control inside RSP's `Modal` paints behind the dialog and cannot be clicked (top layer, inert outside) |
+| `SearchableDropdown.js` | Escape on an open popup is cancelled and returns the focus to the trigger; on a closed control Escape passes through | One Escape closes both the list and the enclosing `Modal`, and the focus falls to the inert body |
 | `SearchableDropdown.js` | `_resolveLabelText()` reads the `<select>`'s own `labels`, not `document.querySelector('label[for]')`, and strips the controls from a wrapping label's text | The trigger has no name inside a shadow root or a wrapping `<label>` |
 | `SearchableDropdown.js` | The wrapped element gets `tabindex="-1"` and `aria-hidden="true"`, and hands any focus to the trigger; `destroy()` restores both | An invisible extra Tab stop, and every dropdown announced twice |
 | `SearchableDropdown.js` | An editable dropdown writes its wrapped `<input>` through the prototype's `value` setter (`_setEditableValue()`): with `input` and `change` for a user commit (`_writeEditableValue()`), with no event from the `value` setter | A value the user types or picks never reaches a React-controlled `<input>`, and React puts the old one back; after a programmatic `value`, a user commit of the same value is swallowed |
+| `SearchableDropdown.js` + `css/searchable-dropdown.css` | A multi-select option draws its checkmark with an `aria-hidden` `<span class="sd-checkbox">`, not an `<input type="checkbox">`; the option's `aria-selected` carries the state | Every multi-select option holds a nameless nested control, flagged by axe as `label` and `nested-interactive` |
 | `control-tokens.css` | Generic's `inline:` icon placeholders rewritten to real `url(../images/…)`; `ensureSharedStyles.js` is a local no-op | Icons vanish — the CSS here is bundled by Vite, not injected at runtime |
 | `control-tokens.css` | Two Selawik `@font-face` blocks (400 + 700) pointing at `/polarion/ria/fonts/selawik/*.ttf` | Every admin page falls back to Arial — **and the test suite stays green**, since nothing serves those fonts under test |
 
@@ -69,6 +74,9 @@ otherwise identical runs is this bug, not flaky rendering — find the pointer, 
 
 - `react` / `react-dom` are **peer** dependencies and must stay external. Nothing may bundle a
   second React copy into `dist/`.
+- The packages of the tooling entry points are **optional** peers and stay external too: `axe-core`
+  (imported only by `src/testing`) and the ESLint packages (imported only by `eslint/`). As regular
+  dependencies, every extension would install them for its production build.
 - The `--sbb-*` design tokens live on the `.sbb-ui` / `.standard-admin-page` / `.modal__container` /
   `.form-wrapper` scopes, **not `:root`**. A component only renders styled under one of those
   ancestors, and tests wrap the render in `.sbb-ui`. A component that "looks unstyled" is usually

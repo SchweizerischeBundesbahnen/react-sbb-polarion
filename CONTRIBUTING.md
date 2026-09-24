@@ -22,13 +22,15 @@ There is deliberately one place for each thing, so that nothing has to be kept i
 | How do I build, format, lint and publish this? | [`README.md`](./README.md) |
 | How do I run the tests, and how do I regenerate a reference screenshot? | [`test/README.md`](./test/README.md) |
 | What are the non-obvious rules and traps of this repository? | [`CLAUDE.md`](./CLAUDE.md) |
+| Which local patches does the vendored `src/generic` carry? | [`.greptile/rules.md`](./.greptile/rules.md) |
 | What commands exist? | [`package.json`](./package.json) |
 
 `CLAUDE.md` is named for the agent that reads it automatically, but it is written for anyone working
 here. It is the single source for the cases where every check stays green and the product is still
-broken - the vendored `src/generic` directory and the local patches it carries, the rule that a
-reference screenshot is only canonical when regenerated inside the pinned Playwright image, and the
-packaging constraints on `react` and `react-dom`. Read it before your first change.
+broken - the rule that a reference screenshot is only canonical when regenerated inside the pinned
+Playwright image, and the packaging constraints on the peer dependencies. Read it before your first
+change. The vendored `src/generic` directory and the local patches it carries are described in
+[`.greptile/rules.md`](./.greptile/rules.md), which also guides the automated review.
 
 ## Asking questions
 
@@ -61,9 +63,9 @@ request.
 ## Submitting changes
 
 1. Create a branch from `main`.
-2. Make the change, **with tests**. A component change needs behaviour tests; a visual change needs its
-   reference screenshot regenerated in the pinned Docker image, never on your own machine - see
-   [`test/README.md`](./test/README.md).
+2. Make the change, **with tests**. A component change needs behaviour tests, and an axe case for each
+   state that renders new markup; a visual change needs its reference screenshot regenerated in the
+   pinned Docker image, never on your own machine - see [`test/README.md`](./test/README.md).
 3. Run the checks locally. Installing the hooks with `pre-commit install` runs the relevant ones on
    every commit, which is the least effort way to keep them passing.
 4. Commit with **both** a cryptographic signature and a sign-off. They are two different things and
@@ -111,7 +113,8 @@ on the checklist item in the pull-request template. Please read that item before
 - **Never silence a check to make it pass.** No `eslint-disable`, no `@ts-ignore`, no type weakened to
   `any`, no skipped test, no overwritten reference screenshot, no lowered coverage threshold. Fix the
   cause, or ask in the issue or pull request.
-- `src/generic/**` is a vendored copy and is never hand-edited. See [`CLAUDE.md`](./CLAUDE.md).
+- `src/generic/**` is a vendored copy and is never hand-edited, except for the registered local
+  patches. See [`.greptile/rules.md`](./.greptile/rules.md).
 
 ## Releases
 

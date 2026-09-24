@@ -4,6 +4,7 @@ import { cleanup, render } from 'vitest-browser-react';
 import { userEvent } from 'vitest/browser';
 import DateInput from '../src/components/DateInput';
 import DateRangePicker from '../src/components/DateRangePicker';
+import { a11yViolations } from '../src/testing';
 
 // Behavior tests for the date field and the period it composes into. The appearance - the control
 // height, border and font that make a date sit in a row of Polarion controls - is covered in
@@ -205,5 +206,35 @@ describe('DateRangePicker', () => {
     await ready(2);
 
     expect(inputs().map((i) => i.disabled)).toEqual([true, true]);
+  });
+});
+
+describe('DateInput and DateRangePicker accessibility', () => {
+  const scan = async (ui: React.ReactNode) => {
+    render(<div className="sbb-ui">{ui}</div>);
+    await vi.waitFor(() => expect(document.querySelector('input[type="date"]')).not.toBeNull());
+    return a11yViolations();
+  };
+
+  it('has no violations with a visible label', async () => {
+    expect(await scan(<DateInput label="Due date" value="" onChange={() => {}} />)).toEqual([]);
+  });
+
+  it('has no violations named by ariaLabel instead', async () => {
+    expect(await scan(<DateInput ariaLabel="Due date" value="" onChange={() => {}} />)).toEqual([]);
+  });
+
+  it('has no violations as a range with its default labels', async () => {
+    expect(await scan(<DateRangePicker start="" end="" onStartChange={() => {}} onEndChange={() => {}} />)).toEqual([]);
+  });
+
+  it('has no violations as a bare range, whose fields keep a name', async () => {
+    expect(
+      await scan(
+        <DateRangePicker start="" end="" startLabel="" endLabel="" onStartChange={() => {}} onEndChange={() => {}} />,
+      ),
+    ).toEqual([]);
+    expect(document.querySelectorAll('input[type="date"]')[0]).toHaveAccessibleName('From');
+    expect(document.querySelectorAll('input[type="date"]')[1]).toHaveAccessibleName('To');
   });
 });

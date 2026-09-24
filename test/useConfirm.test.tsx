@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import useConfirm from '../src/hooks/useConfirm';
 import type { ConfirmOptions } from '../src/hooks/useConfirm';
+import { a11yViolations } from '../src/testing';
 
 // The promise-based confirm dialog: what it resolves to, and the cases a plain component would not
 // have - a second question asked while one is open, and a page that goes away with one pending.
@@ -133,6 +134,18 @@ describe('useConfirm', () => {
 
     teardown();
 
+    await expect(answer).resolves.toBe(false);
+  });
+});
+
+describe('useConfirm accessibility', () => {
+  it('has no WCAG A/AA violations with a question open', async () => {
+    const host = renderHost();
+    const answer = host.ask('Delete it?', { title: 'Delete configuration' });
+    await vi.waitFor(() => expect(dialog()).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
+
+    footerButton('Cancel').click();
     await expect(answer).resolves.toBe(false);
   });
 });

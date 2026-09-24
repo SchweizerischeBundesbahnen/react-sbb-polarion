@@ -10,6 +10,9 @@ export interface DateRangePickerProps {
   /** Labels above the fields. Pass empty strings for a bare, unlabelled row. */
   startLabel?: string;
   endLabel?: string;
+  /** Accessible names of the fields in a bare row, where no label is shown. */
+  startAriaLabel?: string;
+  endAriaLabel?: string;
   /** Bounds for the range as a whole, e.g. a period that cannot start before the project did. */
   min?: string;
   max?: string;
@@ -31,6 +34,8 @@ export default function DateRangePicker({
   onEndChange,
   startLabel = 'From',
   endLabel = 'To',
+  startAriaLabel = 'From',
+  endAriaLabel = 'To',
   min,
   max,
   disabled = false,
@@ -39,13 +44,22 @@ export default function DateRangePicker({
     <div className="sbb-date-range">
       <DateInput
         label={startLabel}
+        ariaLabel={startLabel ? undefined : startAriaLabel}
         value={start}
         onChange={onStartChange}
         min={min}
         max={end || max}
         disabled={disabled}
       />
-      <DateInput label={endLabel} value={end} onChange={onEndChange} min={start || min} max={max} disabled={disabled} />
+      <DateInput
+        label={endLabel}
+        ariaLabel={endLabel ? undefined : endAriaLabel}
+        value={end}
+        onChange={onEndChange}
+        min={start || min}
+        max={max}
+        disabled={disabled}
+      />
     </div>
   );
 }

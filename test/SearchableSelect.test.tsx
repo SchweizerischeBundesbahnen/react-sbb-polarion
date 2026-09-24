@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import { page } from 'vitest/browser';
 import SearchableSelect, { type SelectOption } from '../src/components/SearchableSelect';
+import { a11yViolations } from '../src/testing';
 import { flush, keydown, mousedown, mouseover, typeInto } from './helpers';
 
 // Behavior tests driven through the REAL React wrapper (the feature RSP exposes), asserting observable
@@ -343,8 +344,18 @@ describe('SearchableSelect (React wrapper, multi-select)', () => {
   it('renders the popup options as checkboxes reflecting the selection', async () => {
     await mountMulti({ initial: ['b'] });
     mousedown(multiTrigger());
-    const boxes = options().map((o) => o.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
-    expect(boxes.map((b) => b.checked)).toEqual([false, true, false]);
+    const boxes = options().map((o) => o.querySelector<HTMLElement>('.sd-checkbox')!);
+    expect(boxes.map((b) => b.classList.contains('checked'))).toEqual([false, true, false]);
+    expect(options().map((o) => o.getAttribute('aria-selected'))).toEqual(['false', 'true', 'false']);
+  });
+
+  // An RSP patch to the vendored dropdown: a real checkbox inside role="option" is a control nested in a
+  // control, announced apart from its option and with no name of its own.
+  it('draws the checkmark without a form control, hidden from assistive technology', async () => {
+    await mountMulti({ initial: ['b'] });
+    mousedown(multiTrigger());
+    expect(document.querySelectorAll('.sd-portal .option input')).toHaveLength(0);
+    expect(options().every((o) => o.querySelector('.sd-checkbox')!.getAttribute('aria-hidden') === 'true')).toBe(true);
   });
 
   it('removing a chip drops that value and leaves the others', async () => {
@@ -612,5 +623,52 @@ describe('SearchableSelect option decorations', () => {
   it('shows only the name on the trigger when an inherited option is selected', async () => {
     await mount({ initial: 'b', options: SCOPED });
     expect(trigger()).toHaveValue('From global');
+  });
+});
+
+// The hosts above render the control bare. A consumer has to name it, here through `ariaLabel`.
+describe('SearchableSelect accessibility', () => {
+  it('has no WCAG A/AA violations as a single-select', async () => {
+    render(
+      <div className="sbb-ui">
+        <SearchableSelect value="a" onChange={() => undefined} options={OPTIONS} ariaLabel="Colour" />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations as a multi-select', async () => {
+    render(
+      <div className="sbb-ui">
+        <SearchableSelect
+          multiple
+          value={['a', 'b']}
+          onChange={() => undefined}
+          options={OPTIONS}
+          ariaLabel="Colours"
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger-multi')).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the multi-select popup open', async () => {
+    render(
+      <div className="sbb-ui">
+        <SearchableSelect
+          multiple
+          value={['a', 'b']}
+          onChange={() => undefined}
+          options={OPTIONS}
+          ariaLabel="Colours"
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger-multi')).not.toBeNull());
+    mousedown(multiTrigger());
+    await vi.waitFor(() => expect(options()).toHaveLength(3));
+    expect(await a11yViolations()).toEqual([]);
   });
 });

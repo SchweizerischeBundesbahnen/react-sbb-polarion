@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import RevisionsTable from '../src/components/RevisionsTable';
+import { a11yViolations } from '../src/testing';
 import type { Revision } from '../src/types';
 
 // Behavior tests for the shared RevisionsTable (screenshot-free, so they run on Windows and Docker
@@ -137,5 +138,17 @@ describe('RevisionsTable', () => {
     await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(document.querySelector('.alert-error')).toBeNull();
+  });
+});
+
+describe('RevisionsTable accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    render(
+      <div className="sbb-ui">
+        <RevisionsTable name="cfg" scope="" reloadToken={0} loadRevisions={async () => REVISIONS} onRevert={() => {}} />
+      </div>,
+    );
+    await vi.waitFor(() => expect(rows()).toHaveLength(2));
+    expect(await a11yViolations()).toEqual([]);
   });
 });

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import RestAuthTest from '../src/components/RestAuthTest';
+import { a11yViolations } from '../src/testing';
 
 // RestAuthTest grabs the session token via window.top.getRestApiToken() (injected by the Polarion
 // shell; absent standalone) and GETs restApiUrl with the X-Polarion-REST-Token header, rendering the
@@ -115,5 +116,17 @@ describe('RestAuthTest', () => {
     await vi.waitFor(() => expect(button().disabled).toBe(true));
     resolveFetch(new Response('{}', { status: 200 }));
     await vi.waitFor(() => expect(button().disabled).toBe(false));
+  });
+});
+
+describe('RestAuthTest accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    render(
+      <div className="sbb-ui">
+        <RestAuthTest restApiUrl={URL} />
+      </div>,
+    );
+    await vi.waitFor(() => expect(button()).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
   });
 });

@@ -20,7 +20,7 @@ public, Apache-2.0, with npm provenance on every release.
 
 ```bash
 npm install
-npm run build   # -> dist/index.js (ESM) + dist/*.d.ts + the two shell scripts
+npm run build   # -> dist/index.js (ESM) + dist/*.d.ts + the two shell scripts + dist/testing.js
 ```
 
 `dist/breadcrumb-bridge.js` and `dist/dle-toolbar-starter.js` come from two further, separate builds
@@ -28,8 +28,14 @@ npm run build   # -> dist/index.js (ESM) + dist/*.d.ts + the two shell scripts
 Polarion page rather than in the app, so each has to be a classic script a consumer serves. See
 [Shell scripts](#shell-scripts).
 
+`dist/testing.js` is the fourth build (`vite.testing.config.ts`): the test helpers the extensions import as
+`@sbb-polarion/react-sbb-polarion/testing`. It is a separate entry so that `axe-core` stays out of
+`dist/index.js`. The shared ESLint config (`eslint/`) is shipped as source and is not built. See
+[Accessibility checks for the extensions](#accessibility-checks-for-the-extensions).
+
 `react` / `react-dom` are **peer dependencies** and are left external in the bundle, so the consuming
-app supplies the single React instance at runtime.
+app supplies the single React instance at runtime. The packages of the two tooling entry points
+(`axe-core` and the ESLint packages) are **optional** peer dependencies, left external in the same way.
 
 `refractor` (the Prism grammars behind `CodeEditor`) is a regular **dependency**, so npm installs it for
 the consumer automatically - but it is left external too, so `dist/index.js` carries an import of it
@@ -49,6 +55,10 @@ npm run test:docker   # CI-equivalent run inside the pinned Playwright image (au
 > [!IMPORTANT]
 > Full testing guide - how to run, the two test layers, and the **Docker-only** rule for
 > (re)generating reference screenshots - lives in **[`test/README.md`](./test/README.md)**.
+
+Each component's behavior suite also runs [axe-core](https://github.com/dequelabs/axe-core) over the
+component as an extension shows it (inside `.sbb-ui`), through the same `a11yViolations` and
+`pageViolations` helpers the extensions use - see [Accessibility checks for the extensions](#accessibility-checks-for-the-extensions).
 
 ## Code formatting
 
@@ -87,10 +97,13 @@ verbatim from `ch.sbb.polarion.extension.generic` and must be re-copied to updat
 
 ## Linting
 
-Uses [ESLint](https://eslint.org/) with a flat config (`eslint.config.js`): `@eslint/js` +
+Uses [ESLint](https://eslint.org/) with a flat config (`eslint.config.js`), built from the shared config
+this library publishes (`eslint/index.js`), so RSP lints the way the extensions do: `@eslint/js` +
 `typescript-eslint` recommended, the `eslint-plugin-react-hooks` rules (rules-of-hooks +
-exhaustive-deps), and `eslint-config-prettier` last so ESLint never fights Prettier over formatting.
-`src/generic/` and the test artifacts are ignored.
+exhaustive-deps), the `eslint-plugin-jsx-a11y` recommended rules on the TypeScript sources in `src/`, and `eslint-config-prettier`
+last so ESLint never fights Prettier over formatting. `src/generic/` and the test artifacts are ignored.
+RSP adds one exception on top: `Modal`'s content `<section>` may take the focus, because it is the
+dialog's only scroller and the keyboard scrolls only the focused element's scrollable ancestor.
 
 ```bash
 npm run lint      # report problems
@@ -198,6 +211,142 @@ present) only mattered for the `file:` symlink, which nests its own React. A reg
 nested React, so the dedupe is a no-op - harmless to keep, and it is what makes a temporary switch back
 to a local checkout work without touching the config.
 
+## Accessibility checks for the extensions
+
+Two entry points let an extension check its React UI the way RSP checks its own components: a shared
+ESLint config with `eslint-plugin-jsx-a11y`, and an axe-core helper for the tests. Both are optional. The
+packages they need are **optional peer dependencies**, so an extension that uses neither installs nothing
+extra.
+
+1. Add the dev dependencies (the other ESLint packages are already in every extension):
+
+   ```bash
+   npm install --save-dev eslint-plugin-jsx-a11y axe-core
+   ```
+
+2. Add this to the extension's `package.json`. `eslint-plugin-jsx-a11y` declares peers only up to
+   ESLint 9, and npm applies `overrides` only in the root project, so every extension needs it until
+   [upstream supports ESLint 10](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/issues/1075):
+
+   ```json
+   "overrides": {
+     "eslint-plugin-jsx-a11y": { "eslint": "$eslint" }
+   }
+   ```
+
+### Shared ESLint config: `@sbb-polarion/react-sbb-polarion/eslint-config`
+
+```js
+// <ext>/ui/eslint.config.js
+import { polarionEslintConfig } from '@sbb-polarion/react-sbb-polarion/eslint-config';
+
+export default polarionEslintConfig({
+  appFiles: ['src/**/*.{ts,tsx}'], // what jsx-a11y checks (the default); tests stay out, their JSX is fixture markup
+  ignores: ['test/expected', '.vitest'], // on top of dist, node_modules and coverage
+  configs: [
+    // the extension's own blocks, e.g. plain JS/JSX sources, E2E specs, tooling
+  ],
+});
+```
+
+Pass the extension's own blocks in `configs` rather than appending them to the result: they are placed
+before Prettier's rule set, which has to come last. A recommended set added after it, such as
+`js.configs.recommended`, would switch formatting rules like `no-unexpected-multiline` back on.
+
+### axe-core helper: `@sbb-polarion/react-sbb-polarion/testing`
+
+```tsx
+import { a11yViolations } from '@sbb-polarion/react-sbb-polarion/testing';
+
+it('has no WCAG A/AA violations', async () => {
+  render(<div className="sbb-ui"><MyPage /></div>);
+  await vi.waitFor(() => expect(document.querySelector('.my-page')).not.toBeNull());
+  expect(await a11yViolations()).toEqual([]);
+});
+```
+
+`a11yViolations(context?, options?)` runs the WCAG 2.0-2.2 A and AA rules over `context` (default: the
+whole document) and returns the violations as a list that reads in a test diff. It walks into open shadow
+roots, so a form-extension panel is checked through its host element. `options.exclude` takes CSS
+selectors of subtrees not to check, such as HTML the server renders rather than the component. Wait until
+the component has rendered before calling it, and render inside `.sbb-ui` so the page looks as it does in
+production. Add `'@sbb-polarion/react-sbb-polarion/testing'` and `'axe-core'` to `optimizeDeps.include` in
+the Vitest config, so Vite does not discover them mid-run.
+
+Two rules are excluded on purpose, because fixing them requires significant design changes: `color-contrast`
+(the placeholder and inactive-tab text color is a shared token in the vendored generic CSS) and
+`target-size` (the compact Polarion controls are smaller than 24x24 px).
+
+### Where the axe cases go in an extension
+
+The team standard: each page's own test file calls `pageViolations()` from
+`@sbb-polarion/react-sbb-polarion/testing`. Do not collect the cases in a separate `a11y.test.tsx`. A
+separate file needs its own copy of each page's mount code, routes and wait conditions, and a page missing
+from it goes unnoticed. In the page's own file, a case reuses the mount helper, the fixtures and the
+interaction helpers already there, so a new state costs a few lines.
+
+`pageViolations(options?)` scans `document.body` with `.sbb-ui` set on it, as `index.html` does in
+production. It sets the class only for the scan, so the visual references stay unchanged. It takes the
+same `exclude` option as `a11yViolations`.
+
+1. In each page's test file, add an `accessibility` block. Mount the page with that file's helper, bring
+   it into the state to check, wait until it has rendered, then scan:
+
+   ```tsx
+   // <ext>/ui/test/Repair.test.tsx
+   import { pageViolations } from '@sbb-polarion/react-sbb-polarion/testing';
+
+   describe('accessibility', () => {
+     it('has no WCAG A/AA violations with the results expanded', async () => {
+       await mountRepair();
+       await runScan();
+       document.querySelector<HTMLElement>('.issues-table .col-issues.clickable')!.click();
+       await vi.waitFor(() => expect(document.querySelector('.issue-list')).not.toBeNull());
+       expect(await pageViolations()).toEqual([]);
+     });
+   });
+   ```
+
+2. Cover every page, and every state that renders more markup: an open dialog, an error banner, an edit
+   mode, expanded rows, an alternative mode of a form.
+
+3. Where a control's name matters, add a name test. axe does not fail a control named by its placeholder:
+
+   ```tsx
+   it('names every scan control after its label', async () => {
+     await mountRepair();
+     expect(page.getByRole('combobox', { name: 'Entity Type' }).element()).toBeVisible();
+     expect(page.getByRole('textbox', { name: 'Sort By' }).element()).toBeVisible();
+   });
+   ```
+
+   `getByRole({ name })` also falls back to the placeholder. Where the placeholder text equals the label
+   text, it finds the control whether it has a name or not. Check the attribute that carries the name instead:
+
+   ```tsx
+   const triggers = Array.from(document.querySelectorAll('.filter-bar .sd-trigger'));
+   expect(triggers.map((t) => t.getAttribute('aria-label'))).toEqual(['Project', 'Document', 'Revision']);
+   ```
+
+4. Run each new case against the old component once, to prove that it fails without the fix.
+
+Two variations:
+
+- A form-extension panel in a shadow root is scanned through its host: `a11yViolations(panel.host)`. Its
+  mount already puts `.sbb-ui` inside the shadow root, so `pageViolations` is not needed there.
+- HTML that the server renders is excluded with `options.exclude`, for example
+  `pageViolations({ exclude: ['.diff-leaf'] })`. Keep the selector list in one constant of the test code.
+
+xml-repair and diff-tool follow this layout: an `accessibility` block in each page test.
+
+What these checks cannot tell you:
+
+- axe checks only what a test renders. A dialog, an error state or an edit mode needs a test that opens it.
+- axe and `getByRole({ name })` accept a `placeholder` as a name, so a control can pass while it is
+  announced by its placeholder instead of its label.
+- jsx-a11y cannot see into components, and it assumes that a `{expression}` inside a `<label>` may render
+  the control, so it does not report such a label that names nothing.
+
 ## Releasing
 
 Releases are driven by [release-please](https://github.com/googleapis/release-please), through the SBB
@@ -239,12 +388,15 @@ locale-formatted display - wearing the control look of every other input here, w
 default box does not: it is taller, rounded and in the system font, so a date used to break the line of
 a control row. It is controlled (`value`, `onChange`) on the ISO `yyyy-MM-dd` string the input itself
 uses, never a `Date`, and takes an optional `label`, `min`, `max`, `disabled` and `title`. An empty
-`min` / `max` means unbounded, so a form holding "no date yet" as `''` can forward its state as is.
+`min` / `max` means unbounded, so a form holding "no date yet" as `''` can forward its state as is. A
+field shown without a `label`, e.g. under a heading, takes its accessible name from `ariaLabel`.
 
 `DateRangePicker` composes two of them into a period and bounds each end by the other, so neither
 calendar offers a day that would invert the range. `min` / `max` bound the range from the outside; the
-labels default to `From` / `To`. The styling is on the components' own classes (`.sbb-date-input`,
-`.sbb-date-field`, `.sbb-date-range`), so a date input an extension writes itself is left alone.
+labels default to `From` / `To`. With empty labels (a bare row) the fields keep a name, `From` / `To` by
+default, which `startAriaLabel` / `endAriaLabel` change. The styling is on the components' own classes
+(`.sbb-date-input`, `.sbb-date-field`, `.sbb-date-range`), so a date input an extension writes itself is
+left alone.
 
 For the row those fields usually sit in, the same stylesheet carries `.sbb-control-row`: it
 bottom-aligns the labelled fields and pulls a taller control - a toolbar button is 28px against the
@@ -406,6 +558,12 @@ the class's build mode or clearable trigger, a non-React-controlled `<select>`),
 Component **and** generic control CSS are bundled into one stylesheet, imported once by the consumer:
 `import '@sbb-polarion/react-sbb-polarion/style.css'`.
 
+**Separate entry points**, for an extension's tooling rather than its UI (see
+[Accessibility checks for the extensions](#accessibility-checks-for-the-extensions)):
+`@sbb-polarion/react-sbb-polarion/eslint-config` (`polarionEslintConfig`, `PolarionEslintOptions`) and
+`@sbb-polarion/react-sbb-polarion/testing` (`a11yViolations`, `pageViolations`, `A11yViolation`,
+`A11yOptions`).
+
 ## Bundled generic assets
 
 To make the library self-contained (and to work in `vite dev` without a running Polarion), the shared
@@ -416,7 +574,8 @@ Polarion-served generic bundle at runtime:
   `ch.sbb.polarion.extension.generic` (`app/src/main/resources/js/modules/`). `SearchableSelect`
   statically imports them, so they bundle into `dist/index.js` (no runtime fetch). `ensureSharedStyles.js`
   is a local **no-op** (CSS is bundled here rather than injected at runtime). Do not hand-edit these;
-  re-copy from generic to update.
+  re-copy from generic to update, and keep the local patches listed in
+  [`.greptile/rules.md`](./.greptile/rules.md#local-patches-that-must-survive-a-re-copy).
 - `src/generic/css/*` - the generic control stylesheets (`control-tokens`, `checkboxes`, `radios`,
   `inputs`, `searchable-dropdown`, `buttons`, `alerts`, `tabs`, `tables`, `configurations`), aggregated
   by `controls.css` and bundled into `dist/style.css`. `tables.css` styles no component here - it is

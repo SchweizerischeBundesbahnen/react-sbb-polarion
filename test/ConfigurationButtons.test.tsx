@@ -2,6 +2,7 @@ import { flushSync } from 'react-dom';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ConfigurationButtons from '../src/components/ConfigurationButtons';
+import { a11yViolations } from '../src/testing';
 
 // Behavior tests for the shared ConfigurationButtons toolbar (screenshot-free, so they run on Windows
 // and Docker alike). Appearance (the gray bar + control buttons) is covered in
@@ -145,5 +146,12 @@ describe('ConfigurationButtons', () => {
     expect(byLabel('Cancel').getAttribute('title')).toBe('Cancel editing and revert to last persisted state');
     expect(byLabel('Default').getAttribute('title')).toBe('Load default values');
     expect(byLabel('Revisions').getAttribute('title')).toBe('Toggle list of revisions');
+  });
+});
+
+describe('ConfigurationButtons accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    renderButtons();
+    expect(await a11yViolations()).toEqual([]);
   });
 });

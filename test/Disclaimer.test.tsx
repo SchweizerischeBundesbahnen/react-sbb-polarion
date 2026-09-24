@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
 import Disclaimer from '../src/components/documentation/Disclaimer';
+import { a11yViolations } from '../src/testing';
 import type { SendRequest } from '../src/types';
 
 // Disclaimer GETs /disclaimer via the injected sendRequest. An OK empty body means "not generated" and shows
@@ -51,5 +52,29 @@ describe('Disclaimer', () => {
     render(<Disclaimer sendRequest={sendRequest} sourceUrl="https://example.com/DISCLAIMER.md" />);
     await vi.waitFor(() => expect(q('.alert.alert-error')?.textContent).toContain('offline'));
     expect(document.body.textContent).not.toContain('No disclaimer has been generated');
+  });
+});
+
+describe('Disclaimer accessibility', () => {
+  it('has no WCAG A/AA violations with the disclaimer shown', async () => {
+    const sendRequest: SendRequest = vi.fn(async () => new Response('<h2>Terms</h2><p>As is.</p>', { status: 200 }));
+    render(
+      <div className="sbb-ui">
+        <Disclaimer sendRequest={sendRequest} />
+      </div>,
+    );
+    await vi.waitFor(() => expect(q('article.markdown-body h2')).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations on the "not generated" fallback', async () => {
+    const sendRequest: SendRequest = vi.fn(async () => new Response('', { status: 200 }));
+    render(
+      <div className="sbb-ui">
+        <Disclaimer sendRequest={sendRequest} sourceUrl="https://example.com/DISCLAIMER.md" />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.body.textContent).toContain('No disclaimer has been generated'));
+    expect(await a11yViolations()).toEqual([]);
   });
 });

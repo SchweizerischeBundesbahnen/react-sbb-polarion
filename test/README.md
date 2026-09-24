@@ -1,7 +1,7 @@
 # Testing react-sbb-polarion
 
 Unified UI testing for the shared component library. One runner (**Vitest browser mode**, real
-Chromium via the Playwright provider) covers two layers in the same test file:
+Chromium via the Playwright provider) covers three layers in the same test file:
 
 - **Behavior** - interaction/DOM assertions (`click opens the portal`, `outside-click closes it`,
   `onChange fires`). Because tests run in a real browser, computed CSS and layout are real (unlike
@@ -9,6 +9,9 @@ Chromium via the Playwright provider) covers two layers in the same test file:
 - **Visual regression** - `toMatchScreenshot(...)` captures a component's rendered look and pixel-diffs
   it against a committed reference PNG. This is the DOM equivalent of the pdf-exporter PDF→PNG
   reference approach.
+- **Accessibility** - an axe-core scan of the rendered component, `expect(await a11yViolations()).toEqual([])`,
+  in an `accessibility` block of the component's own test file. See
+  [Accessibility cases](#accessibility-cases).
 
 ## Layout
 
@@ -96,3 +99,18 @@ npm run test:update:docker
 `toMatchScreenshot` with no existing reference **creates** the reference and **fails** the run (by
 design, to force review). Add the assertion, generate its reference in Docker (`test:update`), review
 the PNG, commit it, and the assertion passes on subsequent runs.
+
+## Accessibility cases
+
+Every component test file has an `accessibility` block. It scans each state that renders more markup:
+an open popup, a dialog, an error, an alternative mode.
+
+1. Render the component inside `.sbb-ui`, as an extension shows it.
+2. Bring it into the state to check, and wait until that state has rendered.
+3. Assert `expect(await a11yViolations()).toEqual([])`. For a whole page, use `pageViolations()`.
+
+The helpers are `src/testing/index.ts`, the same code the extensions import as
+`@sbb-polarion/react-sbb-polarion/testing`. The `color-contrast` and `target-size` rules are excluded on
+purpose; the reason is in that file. The README section
+[Accessibility checks for the extensions](../README.md#accessibility-checks-for-the-extensions) has the
+limits of these checks and the extension setup.

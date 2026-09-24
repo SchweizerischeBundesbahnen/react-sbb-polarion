@@ -3,6 +3,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Tabs from '../src/components/Tabs';
 import type { TabItem } from '../src/components/Tabs';
+import { a11yViolations } from '../src/testing';
 
 // Behavior tests for the shared tab bar (screenshot-free, so they run on Windows and Docker alike).
 // Appearance - the active tab merging into the panel below - is covered in Tabs.visual.test.tsx.
@@ -155,5 +156,12 @@ describe('Tabs', () => {
     renderTabs({ items: [] });
     expect(document.querySelector('.tabs')).not.toBeNull();
     expect(tabs()).toHaveLength(0);
+  });
+});
+
+describe('Tabs accessibility', () => {
+  it('has no WCAG A/AA violations', async () => {
+    renderTabs();
+    expect(await a11yViolations()).toEqual([]);
   });
 });

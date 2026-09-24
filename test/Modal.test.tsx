@@ -4,6 +4,7 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import Modal from '../src/components/Modal';
+import { a11yViolations } from '../src/testing';
 
 // Behavior tests for the shared Modal (screenshot-free, so they run on Windows and Docker alike).
 // Appearance is covered in Modal.visual.test.tsx.
@@ -324,5 +325,12 @@ describe('Modal', () => {
     const { onCancel } = openModal();
     await userEvent.keyboard('a{Enter}{ }{ArrowDown}{Tab}');
     expect(onCancel).not.toHaveBeenCalled();
+  });
+});
+
+describe('Modal accessibility', () => {
+  it('has no WCAG A/AA violations while open', async () => {
+    openModal();
+    expect(await a11yViolations()).toEqual([]);
   });
 });
