@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
-import DocArticle from '../src/components/DocArticle';
-import DocLayout from '../src/components/DocLayout';
-import DocLinkInterceptor from '../src/components/DocLinkInterceptor';
-import DocPage from '../src/components/DocPage';
+import DocArticle from '../src/components/documentation/DocArticle';
+import DocLayout from '../src/components/documentation/DocLayout';
+import DocLinkInterceptor from '../src/components/documentation/DocLinkInterceptor';
+import DocPage from '../src/components/documentation/DocPage';
 import { type DocsConfig, DocsProvider } from '../src/docs/DocsContext';
 
 /** Set a controlled input's value the way React's onChange listens for (bypassing its value tracker). */
@@ -153,6 +153,25 @@ describe('documentation site', () => {
       const titles = Array.from(document.querySelectorAll('.docs-search-result-title')).map((n) => n.textContent);
       expect(titles).toContain('Enabling CORS');
     });
+  });
+
+  it('navigates to the section when a search result is clicked', async () => {
+    stubFetch(CONFIG_HTML);
+    const scrollIntoView = vi.fn();
+    vi.spyOn(window.HTMLElement.prototype, 'scrollIntoView').mockImplementation(scrollIntoView);
+    renderConfig();
+    await vi.waitFor(() => expect(q('.docs-search-input')).not.toBeNull());
+
+    typeInto(document.querySelector<HTMLInputElement>('.docs-search-input')!, 'CORS');
+    await vi.waitFor(() => expect(q('.docs-search-result')).not.toBeNull());
+    document.querySelector<HTMLButtonElement>('.docs-search-result')!.click();
+
+    // Already on the configuration page, so it scrolls to the section (no reload), closes the list and clears
+    // the query. Also guards the onMouseDown(preventDefault)+onClick pair against a regression to mouse-only.
+    await vi.waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+    expect((scrollIntoView.mock.instances[0] as HTMLElement).id).toBe('enabling-cors');
+    expect(q('.docs-search-results')).toBeNull();
+    expect((document.querySelector('.docs-search-input') as HTMLInputElement).value).toBe('');
   });
 
   it('turns the article’s own #anchor links into scroll targets without an href', async () => {

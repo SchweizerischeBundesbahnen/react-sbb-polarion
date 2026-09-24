@@ -1,4 +1,4 @@
-import type { DocEntry } from '../docs/DocsContext';
+import type { DocEntry } from '../../docs/DocsContext';
 import DocArticle from './DocArticle';
 import DocLayout from './DocLayout';
 

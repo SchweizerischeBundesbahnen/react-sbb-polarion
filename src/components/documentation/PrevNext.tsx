@@ -1,4 +1,4 @@
-import { useDocs } from '../docs/DocsContext';
+import { useDocs } from '../../docs/DocsContext';
 
 interface PrevNextProps {
   /** Feature id of the current article. */

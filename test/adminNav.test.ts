@@ -58,6 +58,14 @@ describe('pendingTarget', () => {
     expect(pendingTarget(JSON.stringify({ feature: 'configuration' }), 'configuration')).toBeNull();
     expect(pendingTarget('not json', 'quick-start')).toBeNull();
   });
+
+  it('resumes on a fragment change even when the feature is unchanged (self-node / landing article)', () => {
+    const raw = JSON.stringify({ feature: 'disclaimer', hash: '#section' });
+    // same feature, but the page arrived without the fragment -> still resume so it scrolls
+    expect(pendingTarget(raw, 'disclaimer', '')).toEqual({ feature: 'disclaimer', hash: '#section' });
+    // both feature and fragment already match -> nothing to do
+    expect(pendingTarget(raw, 'disclaimer', '#section')).toBeNull();
+  });
 });
 
 describe('createAdminNav', () => {

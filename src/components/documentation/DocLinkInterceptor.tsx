@@ -1,6 +1,6 @@
 import { type ReactNode, useCallback, useEffect, useRef } from 'react';
-import { useDocs } from '../docs/DocsContext';
-import { parseDocLink } from '../services/docsNav';
+import { useDocs } from '../../docs/DocsContext';
+import { parseDocLink } from '../../services/docsNav';
 
 /**
  * Wraps a subtree in one delegated click handler that turns clicks on the articles' relative links into the
@@ -40,20 +40,31 @@ export default function DocLinkInterceptor({ children }: Readonly<{ children: Re
       if (
         !href ||
         href.startsWith('#') ||
+        href.startsWith('?') ||
         href.startsWith('/') ||
         href.startsWith('//') ||
         /^[a-z][a-z0-9+.-]*:/i.test(href)
       ) {
+        // `?...` is the app's own query navigation (sidebar / prev-next / breadcrumb links built by a
+        // featureHref that returns a relative `?feature=` URL) - leave it to the browser, not the repo branch.
         return;
       }
 
-      const hashAt = href.indexOf('#');
-      const path = hashAt < 0 ? href : href.slice(0, hashAt);
-      const hash = hashAt < 0 ? '' : href.slice(hashAt);
+      // A cross-document article link: `<feature>.html` or a mapped `.md` source. Strip a leading `./` so
+      // `./configuration.html` is recognized the same as `configuration.html`.
+      const cleaned = href.replace(/^\.\//, '');
+      const hashAt = cleaned.indexOf('#');
+      const path = hashAt < 0 ? cleaned : cleaned.slice(0, hashAt);
+      const hash = hashAt < 0 ? '' : cleaned.slice(hashAt);
 
-      // A cross-document article link: `<feature>.html` or a mapped `.md` source.
-      const docLink = parseDocLink(href);
-      const feature = docLink ? docLink.feature : mdLinkMap[path];
+      const docLink = parseDocLink(cleaned);
+      // Object.hasOwn, not a truthy index read, so a source named like an Object.prototype member does not
+      // resolve to an inherited value.
+      const feature = docLink
+        ? docLink.feature
+        : Object.prototype.hasOwnProperty.call(mdLinkMap, path)
+          ? mdLinkMap[path]
+          : undefined;
       if (feature) {
         const targetHash = docLink ? docLink.hash : hash;
         event.preventDefault();

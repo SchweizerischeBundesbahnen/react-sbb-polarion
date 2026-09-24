@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { useDocs } from '../docs/DocsContext';
-import { useInPageAnchors } from '../hooks/useInPageAnchors';
-import './markdown.css';
+import { useDocs } from '../../docs/DocsContext';
+import { useInPageAnchors } from '../../hooks/useInPageAnchors';
+import '../markdown.css';
 
 interface DocArticleProps {
   /** HTML basename without extension, e.g. `configuration`. Equals this page's feature id and the `.html`

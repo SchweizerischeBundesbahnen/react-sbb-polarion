@@ -1,8 +1,8 @@
 import { type ReactNode, useEffect, useState } from 'react';
-import type { SendRequest } from '../types';
-import PageLayout from './PageLayout';
-import './UserGuide.css';
-import './markdown.css';
+import type { SendRequest } from '../../types';
+import PageLayout from '../PageLayout';
+import '../UserGuide.css';
+import '../markdown.css';
 
 interface DisclaimerProps {
   /** REST request function (an extension's `useRemote().sendRequest`). */

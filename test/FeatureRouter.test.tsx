@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
-import FeatureRouter, { type Feature, findFeature } from '../src/components/FeatureRouter';
+import FeatureRouter, { type Feature, findFeature } from '../src/components/documentation/FeatureRouter';
 
 const origUrl = window.location.pathname + window.location.search;
 

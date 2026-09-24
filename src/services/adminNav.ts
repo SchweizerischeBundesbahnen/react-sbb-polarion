@@ -93,14 +93,20 @@ export function retargetNodeHash(currentHash: string, nodeId: string, adminBase:
  * What resume should navigate to given the stored handoff and the feature currently shown, or null when
  * there is nothing pending or it is already the current feature. Pure, so it is unit-tested directly.
  */
-export function pendingTarget(raw: string | null, currentFeature: string | null): PendingDoc | null {
+export function pendingTarget(raw: string | null, currentFeature: string | null, currentHash = ''): PendingDoc | null {
   if (!raw) {
     return null;
   }
   try {
     const pending = JSON.parse(raw) as Partial<PendingDoc>;
-    if (pending.feature && pending.feature !== currentFeature) {
-      return { feature: pending.feature, hash: pending.hash ?? '' };
+    if (pending.feature) {
+      const hash = pending.hash ?? '';
+      // Resume when EITHER the feature or the fragment differs: an article that links into the very page its
+      // node opens (a self-node like disclaimer, or the documentation node's landing article) keeps the same
+      // feature, so comparing the feature alone would drop the fragment and never scroll to the section.
+      if (pending.feature !== currentFeature || hash !== currentHash) {
+        return { feature: pending.feature, hash };
+      }
     }
   } catch {
     // corrupt entry - ignore
@@ -151,7 +157,7 @@ export function createAdminNav(options: AdminNavOptions): AdminNav {
       return false;
     }
     const currentFeature = new URLSearchParams(window.location.search).get('feature');
-    const target = pendingTarget(raw, currentFeature);
+    const target = pendingTarget(raw, currentFeature, window.location.hash);
     if (!target) {
       return false;
     }

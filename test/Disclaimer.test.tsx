@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from 'vitest-browser-react';
-import Disclaimer from '../src/components/Disclaimer';
+import Disclaimer from '../src/components/documentation/Disclaimer';
 import type { SendRequest } from '../src/types';
 
 // Disclaimer GETs /disclaimer via the injected sendRequest. An empty body means "not generated" and shows

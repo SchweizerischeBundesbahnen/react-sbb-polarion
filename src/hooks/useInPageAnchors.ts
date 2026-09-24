@@ -1,5 +1,15 @@
 import { type RefObject, useEffect } from 'react';
 
+/** decodeURIComponent that falls back to the raw value: a malformed escape (e.g. `#100%`) otherwise throws a
+ *  URIError, and an exception in this effect would unmount the tree up to the nearest error boundary. */
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 /**
  * Turns an article's same-page anchor links (its own cross-references, e.g. `#weasyprint-configuration`)
  * into in-page scroll targets, and scrolls to the fragment the page URL arrived with once the fetched
@@ -18,7 +28,7 @@ export function useInPageAnchors(ref: RefObject<HTMLElement | null>, dep: unknow
 
     root.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
       const href = a.getAttribute('href') ?? '';
-      const id = decodeURIComponent(href.slice(1));
+      const id = safeDecode(href.slice(1));
       a.removeAttribute('href');
       a.title = href;
       a.setAttribute('role', 'link');
@@ -41,7 +51,7 @@ export function useInPageAnchors(ref: RefObject<HTMLElement | null>, dep: unknow
     // target only exists once this fetched article is in the DOM - so bring it into view here.
     const hash = doc.defaultView?.location.hash.slice(1);
     if (hash) {
-      doc.getElementById(decodeURIComponent(hash))?.scrollIntoView({ behavior: 'smooth' });
+      doc.getElementById(safeDecode(hash))?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [ref, dep]);
 }

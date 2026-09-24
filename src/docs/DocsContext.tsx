@@ -85,9 +85,15 @@ const DocsContext = createContext<DocsContextValue | null>(null);
  * pages (or the whole admin app) in it once.
  */
 export function DocsProvider({ config, children }: Readonly<{ config: DocsConfig; children: ReactNode }>) {
-  // Stable identities for the defaults: `buildDocsConfig` returns a fresh object per render (and is meant to
-  // be used inline in JSX), so keying `articleHtmlUrl`/`featureHref` off a per-render arrow would give
-  // DocArticle a new fetch dependency on every ancestor render. useCallback keeps them constant instead.
+  // Stable identities for the DEFAULTS: when a consumer does not supply `articleHtmlUrl`/`featureHref`, these
+  // useCallback'd defaults are used, so DocArticle's fetch dependency (`articleHtmlUrl`) stays constant even
+  // though `buildDocsConfig` returns a fresh config object per render. This is what keeps the common inline
+  // `config={buildDocsConfig({...})}` usage from refetching every article on each ancestor render.
+  //
+  // It does NOT make the whole context value stable: an inline config carries a fresh `mdLinkMap` (and often a
+  // fresh `onDocLinkNavigate`) each render, so the value below is rebuilt and `useDocs()` consumers re-render.
+  // A consumer that wants zero churn should memoize the config (e.g. `useMemo(() => buildDocsConfig({...}), deps)`)
+  // or pass stable fields.
   const defaultArticleHtmlUrl = useCallback(
     (name: string) => new URL(`../../html/${name}.html`, window.location.href).href,
     [],
@@ -119,21 +125,7 @@ export function DocsProvider({ config, children }: Readonly<{ config: DocsConfig
         };
       },
     };
-    // Key on the individual fields rather than the `config` object: an inline buildDocsConfig({...}) is a new
-    // object every render, but its meaningful fields are usually stable, so this avoids rebuilding the value.
-  }, [
-    config.docs,
-    config.searchIndex,
-    config.featureHref,
-    config.articleHtmlUrl,
-    config.sourceBaseUrl,
-    config.mdLinkMap,
-    config.breadcrumbRootLabel,
-    config.breadcrumbLandingId,
-    config.onDocLinkNavigate,
-    defaultArticleHtmlUrl,
-    stableFeatureHref,
-  ]);
+  }, [config, defaultArticleHtmlUrl, stableFeatureHref]);
 
   return <DocsContext.Provider value={value}>{children}</DocsContext.Provider>;
 }

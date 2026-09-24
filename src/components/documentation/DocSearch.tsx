@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { type DocSearchRecord, useDocs } from '../docs/DocsContext';
+import { type DocSearchRecord, useDocs } from '../../docs/DocsContext';
 
 const MAX_RESULTS = 8;
 
@@ -97,7 +97,16 @@ export default function DocSearch() {
           ) : (
             results.map((record) => (
               <li key={`${record.doc}#${record.anchor}`}>
-                <button type="button" className="docs-search-result" onClick={() => go(record)}>
+                <button
+                  type="button"
+                  className="docs-search-result"
+                  // Keep focus in the input on mouse press: Safari/Firefox on macOS do not focus a <button>
+                  // on click, so without this the input blurs, the container onBlur closes the list, and the
+                  // list unmounts before mouseup -> the click never lands. onClick still activates for both
+                  // mouse and keyboard.
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => go(record)}
+                >
                   <span className="docs-search-result-doc">{record.docTitle}</span>
                   <span className="docs-search-result-title">{record.title}</span>
                 </button>

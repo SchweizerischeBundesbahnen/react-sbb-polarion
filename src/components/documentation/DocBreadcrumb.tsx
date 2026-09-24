@@ -1,4 +1,4 @@
-import { useDocs } from '../docs/DocsContext';
+import { useDocs } from '../../docs/DocsContext';
 
 interface DocBreadcrumbProps {
   /** Feature id of the current article. */

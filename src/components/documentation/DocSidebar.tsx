@@ -1,4 +1,4 @@
-import { useDocs } from '../docs/DocsContext';
+import { useDocs } from '../../docs/DocsContext';
 
 interface DocSidebarProps {
   /** Feature id of the article currently shown, highlighted in the list. */
@@ -7,8 +7,9 @@ interface DocSidebarProps {
 
 /**
  * The documentation navigation: the manifest's articles as a single list of links, in reading order. Each
- * link is a real in-app `?feature=` URL (so middle-click / open-in-new-tab work); a plain left click is
- * turned into in-app navigation by the {@link DocLinkInterceptor}.
+ * link is a real in-app `?feature=` URL built by `featureHref` (so middle-click / open-in-new-tab work), and
+ * a plain left click navigates through it as a normal link - the {@link DocLinkInterceptor} deliberately
+ * leaves these alone (it only rewrites the relative `.html`/`.md` cross-links inside article bodies).
  */
 export default function DocSidebar({ activeId }: Readonly<DocSidebarProps>) {
   const { docs, featureHref } = useDocs();
