@@ -32,7 +32,8 @@ export interface AdminNav {
    *  node is already selected - so the caller can fall back to a plain in-iframe navigation. */
   switchToFeatureNode: (feature: string, hash?: string) => boolean;
   /** Called once at startup: if a node switch stashed an intended article, navigate this frame to it and
-   *  return true so the caller skips the initial render; false when there is nothing to resume. */
+   *  return true so the caller skips the initial render. Returns false when there is nothing to resume, or
+   *  when only the fragment differs: it is then set in place and the caller renders as usual. */
   resumePendingDoc: () => boolean;
 }
 
@@ -173,6 +174,16 @@ export function createAdminNav(options: AdminNavOptions): AdminNav {
     const currentFeature = new URLSearchParams(window.location.search).get('feature');
     const target = pendingTarget(raw, currentFeature, window.location.hash);
     if (!target) {
+      return false;
+    }
+    if (target.feature === currentFeature) {
+      // Same page, other fragment. A navigation that changes only the fragment does not reload the frame,
+      // so returning true would leave the page blank. Set the fragment and let the caller render.
+      window.history.replaceState(
+        window.history.state,
+        '',
+        target.hash || window.location.pathname + window.location.search,
+      );
       return false;
     }
     window.location.replace(featureHref(target.feature, target.hash));

@@ -110,6 +110,21 @@ describe('createAdminNav', () => {
     expect(nav.resumePendingDoc()).toBe(false);
     expect(sessionStorage.getItem('pdf-export.docs.pending')).toBeNull();
   });
+
+  it('resumePendingDoc sets a fragment on the same page in place and lets the caller render', () => {
+    const origUrl = window.location.pathname + window.location.search + window.location.hash;
+    try {
+      window.history.replaceState(null, '', '?feature=disclaimer&scope=');
+      const nav = createAdminNav({ adminBase: 'pdf-export', nodeForFeature: (f) => f });
+      const pending = { feature: 'disclaimer', hash: '#section', ts: Date.now() };
+      sessionStorage.setItem('pdf-export.docs.pending', JSON.stringify(pending));
+      expect(nav.resumePendingDoc()).toBe(false);
+      expect(window.location.hash).toBe('#section');
+      expect(new URLSearchParams(window.location.search).get('feature')).toBe('disclaimer');
+    } finally {
+      window.history.replaceState(null, '', origUrl);
+    }
+  });
 });
 
 describe('docNodeForFeature', () => {
