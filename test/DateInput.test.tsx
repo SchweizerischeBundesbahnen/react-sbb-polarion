@@ -224,6 +224,13 @@ describe('DateInput and DateRangePicker accessibility', () => {
     expect(await scan(<DateInput ariaLabel="Due date" value="" onChange={() => {}} />)).toEqual([]);
   });
 
+  it('keeps the visible label as the name when an ariaLabel is passed too', async () => {
+    expect(await scan(<DateInput label="Due date" ariaLabel="Due" value="" onChange={() => {}} />)).toEqual([]);
+    const input = document.querySelector('input[type="date"]');
+    expect(input).toHaveAccessibleName('Due date');
+    expect(input).not.toHaveAttribute('aria-label');
+  });
+
   it('has no violations as a range with its default labels', async () => {
     expect(await scan(<DateRangePicker start="" end="" onStartChange={() => {}} onEndChange={() => {}} />)).toEqual([]);
   });

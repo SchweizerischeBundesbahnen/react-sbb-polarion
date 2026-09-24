@@ -227,7 +227,8 @@ describe('documentation site', () => {
     await vi.waitFor(() => expect(q('.docs-search-input')).not.toBeNull());
     const input = document.querySelector<HTMLInputElement>('.docs-search-input')!;
     const status = q('.docs-search-status')!;
-    expect(status.getAttribute('role')).toBe('status');
+    // <output> carries the status role, and with it a polite live region.
+    expect(status.tagName).toBe('OUTPUT');
     expect(status.textContent).toBe('');
 
     typeInto(input, 'CORS');

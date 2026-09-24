@@ -15,7 +15,8 @@ export interface DateInputProps {
   id?: string;
   /** Native tooltip, e.g. the reason a field is disabled. */
   title?: string;
-  /** Accessible name when there is no visible `label`, e.g. a field titled by a heading or a column. */
+  /** Accessible name when there is no visible `label`, e.g. a field titled by a heading or a column.
+   *  Ignored when `label` is set, so the announced name always matches the visible one. */
   ariaLabel?: string;
 }
 
@@ -57,7 +58,7 @@ export default function DateInput({
         max={max || undefined}
         disabled={disabled}
         title={title}
-        aria-label={ariaLabel}
+        aria-label={label ? undefined : ariaLabel}
         onChange={(e) => onChange(e.target.value)}
       />
     </div>

@@ -62,8 +62,10 @@ export default function DocSearch() {
 
   const showResults = open && query.trim() !== '';
   let status = '';
-  if (showResults) {
-    status = results.length === 0 ? 'No matches' : `${results.length} ${results.length === 1 ? 'result' : 'results'}`;
+  if (showResults && results.length === 0) {
+    status = 'No matches';
+  } else if (showResults) {
+    status = results.length === 1 ? '1 result' : `${results.length} results`;
   }
 
   return (
@@ -99,9 +101,7 @@ export default function DocSearch() {
         }}
       />
       {/* Always mounted: a live region inserted together with its text is not announced by every screen reader. */}
-      <div className="docs-search-status" role="status">
-        {status}
-      </div>
+      <output className="docs-search-status">{status}</output>
       {showResults && (
         <ul className="docs-search-results">
           {results.length === 0 ? (

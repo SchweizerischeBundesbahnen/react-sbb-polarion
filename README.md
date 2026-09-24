@@ -53,7 +53,7 @@ npm run test:docker   # CI-equivalent run inside the pinned Playwright image (au
 ```
 
 > [!IMPORTANT]
-> Full testing guide - how to run, the two test layers, and the **Docker-only** rule for
+> Full testing guide - how to run, the three test layers, and the **Docker-only** rule for
 > (re)generating reference screenshots - lives in **[`test/README.md`](./test/README.md)**.
 
 Each component's behavior suite also runs [axe-core](https://github.com/dequelabs/axe-core) over the
