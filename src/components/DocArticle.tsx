@@ -27,6 +27,10 @@ export default function DocArticle({ name, source }: Readonly<DocArticleProps>) 
 
   useEffect(() => {
     let cancelled = false;
+    // Reset for the new name: without this an in-place switch keeps the previous body (or stays on the
+    // "not generated" message for an absent -> present switch) instead of the Loading -> content sequence.
+    setHtml(null);
+    setMissing(false);
     fetch(articleHtmlUrl(name), { cache: 'no-cache' })
       .then(async (response) => {
         const article = response.ok ? (await response.text()).trim() : '';

@@ -61,7 +61,17 @@ export default function DocSearch() {
   }
 
   return (
-    <div className="docs-search" ref={containerRef}>
+    <div
+      className="docs-search"
+      ref={containerRef}
+      // Close only when focus leaves the whole widget, so Tabbing from the input into a result keeps the
+      // list open (an input-blur timer would unmount it out from under the just-focused result button).
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+          setOpen(false);
+        }
+      }}
+    >
       <input
         type="search"
         className="docs-search-input"
@@ -72,10 +82,6 @@ export default function DocSearch() {
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        onBlur={() => {
-          // let a result's click land before closing
-          window.setTimeout(() => setOpen(false), 150);
-        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && results.length > 0) {
             go(results[0]);
@@ -91,7 +97,7 @@ export default function DocSearch() {
           ) : (
             results.map((record) => (
               <li key={`${record.doc}#${record.anchor}`}>
-                <button type="button" className="docs-search-result" onMouseDown={() => go(record)}>
+                <button type="button" className="docs-search-result" onClick={() => go(record)}>
                   <span className="docs-search-result-doc">{record.docTitle}</span>
                   <span className="docs-search-result-title">{record.title}</span>
                 </button>

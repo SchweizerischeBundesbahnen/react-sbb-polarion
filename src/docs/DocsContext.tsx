@@ -1,4 +1,4 @@
-import { type ReactNode, createContext, useContext, useMemo } from 'react';
+import { type ReactNode, createContext, useCallback, useContext, useMemo } from 'react';
 import { featureHref as defaultFeatureHref } from '../services/docsNav';
 
 /** One documentation article: its feature id, display title and (optional) markdown source filename. */
@@ -85,6 +85,15 @@ const DocsContext = createContext<DocsContextValue | null>(null);
  * pages (or the whole admin app) in it once.
  */
 export function DocsProvider({ config, children }: Readonly<{ config: DocsConfig; children: ReactNode }>) {
+  // Stable identities for the defaults: `buildDocsConfig` returns a fresh object per render (and is meant to
+  // be used inline in JSX), so keying `articleHtmlUrl`/`featureHref` off a per-render arrow would give
+  // DocArticle a new fetch dependency on every ancestor render. useCallback keeps them constant instead.
+  const defaultArticleHtmlUrl = useCallback(
+    (name: string) => new URL(`../../html/${name}.html`, window.location.href).href,
+    [],
+  );
+  const stableFeatureHref = useCallback((feature: string, hash?: string) => defaultFeatureHref(feature, hash), []);
+
   const value = useMemo<DocsContextValue>(() => {
     const docs = config.docs;
     const byId = Object.fromEntries(docs.map((doc) => [doc.id, doc]));
@@ -92,9 +101,8 @@ export function DocsProvider({ config, children }: Readonly<{ config: DocsConfig
       docs,
       byId,
       searchIndex: config.searchIndex ?? [],
-      featureHref: config.featureHref ?? ((feature, hash) => defaultFeatureHref(feature, hash)),
-      articleHtmlUrl:
-        config.articleHtmlUrl ?? ((name) => new URL(`../../html/${name}.html`, window.location.href).href),
+      featureHref: config.featureHref ?? stableFeatureHref,
+      articleHtmlUrl: config.articleHtmlUrl ?? defaultArticleHtmlUrl,
       sourceBaseUrl: config.sourceBaseUrl,
       mdLinkMap: config.mdLinkMap ?? {},
       breadcrumbRootLabel: config.breadcrumbRootLabel ?? 'Documentation',
@@ -111,7 +119,21 @@ export function DocsProvider({ config, children }: Readonly<{ config: DocsConfig
         };
       },
     };
-  }, [config]);
+    // Key on the individual fields rather than the `config` object: an inline buildDocsConfig({...}) is a new
+    // object every render, but its meaningful fields are usually stable, so this avoids rebuilding the value.
+  }, [
+    config.docs,
+    config.searchIndex,
+    config.featureHref,
+    config.articleHtmlUrl,
+    config.sourceBaseUrl,
+    config.mdLinkMap,
+    config.breadcrumbRootLabel,
+    config.breadcrumbLandingId,
+    config.onDocLinkNavigate,
+    defaultArticleHtmlUrl,
+    stableFeatureHref,
+  ]);
 
   return <DocsContext.Provider value={value}>{children}</DocsContext.Provider>;
 }
