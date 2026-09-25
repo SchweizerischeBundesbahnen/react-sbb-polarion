@@ -84,7 +84,7 @@
     "react-dom": "19.3.0",
     "sonner": "2.0.8",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.70.0",
+    "typescript-eslint": "8.70.1",
     "vite": "8.3.0",
     "vitest": "5.0.1",
     "vitest-browser-react": "2.3.0"
