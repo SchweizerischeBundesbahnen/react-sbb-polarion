@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.5.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.5.0...v2.5.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* update dependency prettier to v3.9.9 ([5dd0662](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/5dd0662fbeec8761f1490160777b608c5c718bc3))
+* update dependency typescript-eslint to v8.70.1 ([4e9d20a](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/4e9d20a2f0a1d49d479e714dd8f21caaed82801f))
+* update dependency typescript-eslint to v8.71.0 ([868aeb5](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/868aeb5db08000dbfc434aeb6e0b3a7d352ef3c4))
+* update dependency vite to v8.3.1 ([120cca5](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/120cca5cd7a661ab603335ece51168fa7f1057e7))
+* update vitest monorepo to v5.0.2 ([50fb1eb](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/50fb1eb6aafd77df14a1343f99263d8b5ac89e13))
+* update vitest monorepo to v5.0.3 ([4c380ce](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/4c380ce25b78c523f0ac47e068364ddaac5aa494))
+
 ## [2.5.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.4.0...v2.5.0) (2026-09-24)
 
 
