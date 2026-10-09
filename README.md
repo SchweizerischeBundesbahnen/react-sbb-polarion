@@ -372,6 +372,8 @@ before renaming or moving either.
 ## Exports
 
 **Hooks**: `useConfirm()` — `window.confirm` as a real dialog: returns a promise-returning `confirm(message, options?)` plus the `confirmDialog` element to render.
+`useOfferForPdfExport(title, anchor?)` — offers a Live Report widget for export alone, see
+[Live Report widgets exported alone](#live-report-widgets-exported-alone).
 
 **Components**: `PageLayout`, `SearchableSelect`, `Tabs`, `Modal`, `Toaster`, `BreadcrumbInjector`,
 `RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
@@ -545,7 +547,7 @@ the class's build mode or clearable trigger, a non-React-controlled `<select>`),
 
 **Functions**: `createAuthorizationService(sendRequest, settingName)`,
 `createStylePackageWeightsService(sendRequest)`, `buildDocsConfig(options)`, `findFeature(features, id)`,
-`createAdminNav(options)`, `docNodeForFeature(options)`.
+`createAdminNav(options)`, `docNodeForFeature(options)`, `offerForPdfExport(title, anchor?)`.
 
 **Types**: `ConfirmOptions`, `UseConfirm`, `SelectOption`, `SearchableSelectProps`, `SingleSelectProps`,
 `MultiSelectProps`, `SearchableDropdownInstance`, `CodeLanguage`, `ConfigurationsPaneHandle`,
@@ -553,7 +555,9 @@ the class's build mode or clearable trigger, a non-React-controlled `<select>`),
 `StylePackageWeight`, `StylePackageWeightsService`, `WeightEntry`,
 `SettingName`, `Revision`, `Version`, `ConfigurationProperty`, `ConfigurationPropertiesModel`,
 `ConfigurationStatus`, `SendRequest`, `Feature`, `DocEntry`, `DocSearchRecord`, `DocsConfig`,
-`BuildDocsConfigOptions`, `AdminNav`, `AdminNavOptions`, `DocNodeForFeatureOptions`.
+`BuildDocsConfigOptions`, `AdminNav`, `AdminNavOptions`, `DocNodeForFeatureOptions`, `PdfExportTarget`.
+
+**Constants**: `PDF_EXPORT_TARGETS_KEY`.
 
 Component **and** generic control CSS are bundled into one stylesheet, imported once by the consumer:
 `import '@sbb-polarion/react-sbb-polarion/style.css'`.
@@ -563,6 +567,32 @@ Component **and** generic control CSS are bundled into one stylesheet, imported 
 `@sbb-polarion/react-sbb-polarion/eslint-config` (`polarionEslintConfig`, `PolarionEslintOptions`) and
 `@sbb-polarion/react-sbb-polarion/testing` (`a11yViolations`, `pageViolations`, `A11yViolation`,
 `A11yOptions`).
+
+### Live Report widgets exported alone
+
+pdf-exporter's "Export to PDF" button of a Live Report can export one widget of the report alone. A widget
+offers itself while it is shown:
+
+```tsx
+import { useOfferForPdfExport } from '@sbb-polarion/react-sbb-polarion';
+
+function ReportView() {
+  useOfferForPdfExport('Timesheet Report');
+  // ...
+}
+```
+
+- `title` is the name the button offers: "Only Timesheet Report".
+- An app shown in an iframe of the widget passes no anchor. The iframe is the widget's element then.
+- A widget mounted in the report page passes `anchor`, a function that returns an element of the widget.
+- Outside an iframe and without an anchor, nothing is offered. A standalone page of the same app is safe.
+
+`offerForPdfExport(title, anchor?)` does the same outside React and returns what withdraws the offer. Both
+write to `window.top[PDF_EXPORT_TARGETS_KEY]`, which pdf-exporter reads. Without pdf-exporter nothing reads
+it.
+
+The export does not capture the page. Polarion renders the widget on the server for the PDF, so the widget
+needs HTML of its own for the `PDF_EXPORT` target. JavaScript does not run there, and an iframe stays empty.
 
 ## Bundled generic assets
 
