@@ -91,6 +91,10 @@ export type { StylePackageWeight, StylePackageWeightsService } from './services/
 export type { AuthorizationContent, AuthorizationService, RolesInfo } from './services/authorizationSettings';
 export { getCookie, setCookie } from './services/cookies';
 export { isEmbedded } from './services/params';
+// Lets a Live Report widget be exported alone by pdf-exporter's "Export to PDF" button of the report.
+export { offerForPdfExport, PDF_EXPORT_TARGETS_KEY } from './services/pdfExportTargets';
+export type { PdfExportTarget } from './services/pdfExportTargets';
+export { useOfferForPdfExport } from './hooks/useOfferForPdfExport';
 export { getScope, getProjectIdFromScope } from './services/scope';
 export type {
   SettingName,
