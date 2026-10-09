@@ -92,6 +92,14 @@ describe('offerForPdfExport', () => {
 
     expect(offers()).toEqual([]);
   });
+
+  it('keeps the offer of a page the browser keeps for the way back', () => {
+    // Restored from the back/forward cache, the page runs no effect again: an offer withdrawn here would be lost
+    offer('Timesheet Report');
+    window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }));
+
+    expect(offers().map((target) => target.title)).toEqual(['Timesheet Report']);
+  });
 });
 
 describe('useOfferForPdfExport', () => {

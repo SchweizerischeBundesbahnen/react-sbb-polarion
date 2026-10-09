@@ -60,11 +60,17 @@ export function offerForPdfExport(title: string, anchor?: () => Element | null):
   const target: PdfExportTarget = { title, anchor: resolve };
   targets.add(target);
 
-  // A reloaded iframe offers itself again. Its old offer would call into a document which is gone.
+  // A reloaded iframe offers itself again. Its old offer would call into a document which is gone. A page kept
+  // in the back/forward cache comes back with its documents and nothing offers again, so its offers stay.
   const withdraw = () => {
     targets.delete(target);
-    window.removeEventListener('pagehide', withdraw);
+    window.removeEventListener('pagehide', onPageHide);
   };
-  window.addEventListener('pagehide', withdraw);
+  const onPageHide = (event: PageTransitionEvent) => {
+    if (!event.persisted) {
+      withdraw();
+    }
+  };
+  window.addEventListener('pagehide', onPageHide);
   return withdraw;
 }
