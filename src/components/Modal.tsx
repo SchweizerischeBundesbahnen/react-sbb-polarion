@@ -70,6 +70,15 @@ export default function Modal({
     // dismissal would make every later close of the same instance look like a close request.
     closedByRequest.current = false;
 
+    // Light dismiss, done by the browser: a click outside the box is a close request, exactly as
+    // Escape is. That is what removes the need for an onClick that compared event.target with the
+    // dialog - the backdrop is a pseudo-element and was never really clickable in the first place.
+    // Set here rather than in the JSX, where code analysis does not know the attribute yet.
+    dialog?.setAttribute('closedby', 'any');
+    // The content is the dialog's only scroller, so it is in the Tab order: see the comment at the
+    // <section>. Set before showModal(), so the dialog is shown as it is, and here rather than in the
+    // JSX, where code analysis takes a tabIndex on a section for one on a static element.
+    if (contentRef.current) contentRef.current.tabIndex = 0;
     dialog?.showModal();
     // The dialog focusing steps land on the first focusable descendant, which here is the close button
     // - so Enter, pressed straight after opening, would dismiss the dialog. Focus the content area
@@ -106,10 +115,6 @@ export default function Modal({
       ref={dialogRef}
       className="rsp-modal"
       aria-label={title}
-      // Light dismiss, done by the browser: a click outside the box is a close request, exactly as
-      // Escape is. That is what removes the need for an onClick that compared event.target with the
-      // dialog - the backdrop is a pseudo-element and was never really clickable in the first place.
-      closedby="any"
       // Both close requests - Escape and the light dismiss above - fire `cancel` before the browser
       // closes anything. Preventing that default keeps the element controlled by the `open` prop, so a
       // dismissal closes it the same way the buttons do, through the parent, rather than leaving React
@@ -135,7 +140,6 @@ export default function Modal({
       <section
         className="rsp-modal-content"
         ref={contentRef}
-        tabIndex={0}
         aria-labelledby={titleId}
         onBlur={(event) => {
           delete event.currentTarget.dataset.focusedOnOpen;
