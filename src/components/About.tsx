@@ -4,6 +4,7 @@ import type { ConfigurationPropertiesModel, ConfigurationStatus, SendRequest, Ve
 import './About.css';
 import PageLayout from './PageLayout';
 import RestAuthTest from './RestAuthTest';
+import StatusDetails from './StatusDetails';
 import './markdown.css';
 
 const STATUS_COLORS: Record<ConfigurationStatus['status'], string> = {
@@ -235,7 +236,9 @@ export default function About({ sendRequest, appIcon, restApiUrl }: Readonly<Abo
                     <tr key={status.name}>
                       <td>{status.name}</td>
                       <td style={{ color: STATUS_COLORS[status.status] }}>{status.status}</td>
-                      <td>{status.details}</td>
+                      <td>
+                        <StatusDetails html={status.details} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
