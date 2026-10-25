@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.2](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.6.1...v2.6.2) (2026-10-25)
+
+
+### Bug Fixes
+
+* set the light dismiss and the scroller focus of the Modal in code ([#165](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/165)) ([58306b5](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/58306b5fdd774a332bfaedb4d7f8f4087fb30686))
+* show the About page before the configuration status loads ([#162](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/162)) ([9d85d78](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/9d85d7805f5b7341a72df6e6bcde2b30e734a152))
+
 ## [2.6.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.6.0...v2.6.1) (2026-10-25)
 
 
