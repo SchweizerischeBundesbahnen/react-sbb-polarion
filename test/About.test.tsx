@@ -146,6 +146,18 @@ describe('About', () => {
     expect(link.getAttribute('rel')).toBe('noreferrer');
   });
 
+  it('keeps the inline tags of the details of a status and the text of a link it does not keep', async () => {
+    const info = await detailsOf(
+      '<b>bold</b><br><code>code</code><!-- note --><span>plain</span><a>no address</a><a href="/relative">relative</a>',
+    );
+    expect(info.textContent).toBe('boldcodeplainno addressrelative');
+    expect(info.querySelector('b')!.textContent).toBe('bold');
+    expect(info.querySelector('br')).not.toBeNull();
+    expect(info.querySelector('code')!.textContent).toBe('code');
+    expect(info.querySelector('a')).toBeNull();
+    expect(Array.from(info.querySelectorAll('span')).every((span) => !span.hasAttribute('style'))).toBe(true);
+  });
+
   it('shows the details of a status as text where they are no markup', async () => {
     const info = await detailsOf('java.net.UnknownHostException: a < b & c');
     expect(info.textContent).toBe('java.net.UnknownHostException: a < b & c');
