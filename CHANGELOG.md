@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.6.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.6.0...v2.6.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* show the markup of status details on the About page ([#160](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/160)) ([fa2318a](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/fa2318a96639477f514fd68c71520611600bd852))
+* update dependency eslint to v10.13.0 ([2ee5539](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/2ee553950d7713464409b2077ea7e6008283715e))
+* update dependency playwright to v1.64.1 ([#158](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/158)) ([9bd1357](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/9bd1357cf7d909ee16a253a50b97699bb891a017))
+* update dependency prettier to v3.9.10 ([b8f162b](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/b8f162bc4d3840aca8aaa15d852c945e395c2f7a))
+* update dependency typescript-eslint to v8.71.2 ([c92a5c8](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/c92a5c839dead0f3e3fe71c3bec04d8ebe99f9b5))
+* update dependency typescript-eslint to v8.72.0 ([1a6f010](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/1a6f0105d71751b659246fd49a77254e3a1a7a32))
+* update dependency vite to v8.3.4 ([4a8d417](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/4a8d41715384e9e0cd06b7978d3149a4cf1a6291))
+* update dependency vite to v8.3.5 ([10ad7c6](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/10ad7c616c1acee17f611762ef0286f2f28e5cd9))
+* update react to v19.3.1 ([c7f45dc](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/c7f45dcbb5195b0172c7a757dbf21cefe3ef3280))
+* update vitest monorepo to v5.0.4 ([85218ad](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/85218ad18af598b228093039319fd45342ebc605))
+* update vitest monorepo to v5.0.5 ([bba560c](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/bba560c6c3a22d5f088c3db7a7d6e5f24da2a19d))
+
 ## [2.6.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.5.0...v2.6.0) (2026-10-09)
 
 
