@@ -122,6 +122,65 @@ describe('About', () => {
     expect(statusCell.style.color).toBe('green');
   });
 
+  // The status providers write their details as HTML for the legacy about.jsp
+  const detailsOf = async (details: string) => {
+    const statuses: ConfigurationStatus[] = [{ name: 'Service', status: 'WARNING', details }];
+    render(<About sendRequest={makeSendRequest({ statuses })} appIcon="/i.svg" restApiUrl="/r" />);
+    await vi.waitFor(() =>
+      expect(Array.from(document.querySelectorAll('td')).some((td) => td.textContent === 'Service')).toBe(true),
+    );
+    const row = Array.from(document.querySelectorAll('tr')).find(
+      (tr) => tr.firstElementChild?.textContent === 'Service',
+    )!;
+    return row.lastElementChild as HTMLElement;
+  };
+
+  it('shows a colored span and a link of the details of a status', async () => {
+    const info = await detailsOf(
+      "1.2.0: <span style='color: red;'>use latest compatible</span> <a href='https://example.com/releases/tag/v1.3.0'>v1.3.0</a>",
+    );
+    expect(info.textContent).toBe('1.2.0: use latest compatible v1.3.0');
+    expect(info.querySelector('span')!.style.color).toBe('red');
+    const link = info.querySelector('a')!;
+    expect(link.getAttribute('href')).toBe('https://example.com/releases/tag/v1.3.0');
+    expect(link.getAttribute('rel')).toBe('noreferrer');
+  });
+
+  it('keeps the inline tags of the details of a status and the text of a link it does not keep', async () => {
+    const info = await detailsOf(
+      '<b>bold</b><br><code>code</code><!-- note --><span>plain</span><a>no address</a><a href="/relative">relative</a>',
+    );
+    expect(info.textContent).toBe('boldcodeplainno addressrelative');
+    expect(info.querySelector('b')!.textContent).toBe('bold');
+    expect(info.querySelector('br')).not.toBeNull();
+    expect(info.querySelector('code')!.textContent).toBe('code');
+    expect(info.querySelector('a')).toBeNull();
+    expect(Array.from(info.querySelectorAll('span')).every((span) => !span.hasAttribute('style'))).toBe(true);
+  });
+
+  it('shows the details of a status as text where they are no markup', async () => {
+    const info = await detailsOf('java.net.UnknownHostException: a < b & c');
+    expect(info.textContent).toBe('java.net.UnknownHostException: a < b & c');
+    expect(info.children).toHaveLength(0);
+  });
+
+  it('leaves out scripts, handlers, other attributes and other links of the details of a status', async () => {
+    const info = await detailsOf(
+      '<img src="x" onerror="window.pwned = true">' +
+        '<script>window.pwned = true</script>' +
+        '<a href="javascript:window.pwned = true">link</a>' +
+        '<span onclick="window.pwned = true" class="x" style="color: orange; background: url(https://example.com/x.png)">warning</span>' +
+        '<div>block</div>',
+    );
+    expect(info.textContent).toBe('linkwarningblock');
+    expect(info.querySelector('img, script, div, a')).toBeNull();
+    const spans = Array.from(info.querySelectorAll('span'));
+    expect(spans.every((span) => span.getAttributeNames().every((name) => name === 'style'))).toBe(true);
+    const warning = spans.find((span) => span.textContent === 'warning')!;
+    expect(warning.getAttribute('style')).toBe('color: orange;');
+    expect((window as unknown as { pwned?: boolean }).pwned).toBeUndefined();
+  });
+
   it('renders the README documentation article when /readme returns HTML', async () => {
     render(
       <About

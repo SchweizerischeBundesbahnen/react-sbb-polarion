@@ -62,6 +62,13 @@ const STATUSES: ConfigurationStatus[] = [
   { name: 'Apache POI', status: 'OK', details: 'v5.2.5' },
   { name: 'Mapping "Requirements"', status: 'WARNING', details: 'References a work item type that no longer exists.' },
   { name: 'Mapping "Obsolete"', status: 'ERROR', details: 'Cannot be parsed.' },
+  // Details as the status providers write them for the legacy about.jsp
+  {
+    name: 'Conversion service',
+    status: 'WARNING',
+    details:
+      "1.2.0: <span style='color: orange;'>use latest compatible</span> <a href='https://example.com/releases/tag/v1.3.0'>v1.3.0</a>",
+  },
 ];
 
 const README = '<h1>Excel Importer</h1><p>Imports work items from a spreadsheet into Polarion.</p>';
