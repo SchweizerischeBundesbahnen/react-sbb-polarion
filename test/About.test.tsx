@@ -114,12 +114,64 @@ describe('About', () => {
     const statuses: ConfigurationStatus[] = [{ name: 'Apache POI', status: 'OK', details: 'v5' }];
     render(<About sendRequest={makeSendRequest({ statuses })} appIcon="/i.svg" restApiUrl="/r" />);
     await vi.waitFor(() =>
-      expect(
-        Array.from(document.querySelectorAll('h3')).some((h) => h.textContent === 'Extension configuration status'),
-      ).toBe(true),
+      expect(Array.from(document.querySelectorAll('td')).some((td) => td.textContent === 'OK')).toBe(true),
     );
     const statusCell = Array.from(document.querySelectorAll('td')).find((td) => td.textContent === 'OK') as HTMLElement;
     expect(statusCell.style.color).toBe('green');
+  });
+
+  // A status provider may wait for a service which does not answer, so the page does not wait for the status
+  const statusSection = () => {
+    const heading = Array.from(document.querySelectorAll('h3')).find(
+      (h) => h.textContent === 'Extension configuration status',
+    );
+    return heading?.nextElementSibling ?? null;
+  };
+
+  it('shows the page while the configuration status is still loading, and the status once it answers', async () => {
+    let answer: (response: Response) => void = () => {};
+    const pending = new Promise<Response>((resolve) => {
+      answer = resolve;
+    });
+    const loaded = makeSendRequest({});
+    const sendRequest = vi.fn(async (request: { method: string; url: string }) =>
+      request.url.startsWith('/configuration-status') ? pending : loaded(request),
+    );
+    render(<About sendRequest={sendRequest} appIcon="/i.svg" restApiUrl="/r" />);
+
+    await vi.waitFor(() => expect(q('.about-table')).not.toBeNull());
+    expect(rowsOf(q('.about-table')!)[0]).toEqual(['Bundle-Name', 'Excel Importer']);
+    expect(statusSection()!.textContent).toBe('Loading...');
+
+    answer(json([{ name: 'Apache POI', status: 'OK', details: 'v5' }]));
+
+    await vi.waitFor(() => expect(statusSection()!.querySelector('table')).not.toBeNull());
+    expect(rowsOf(statusSection()!.querySelector('table')!)).toEqual([['Apache POI', 'OK', 'v5']]);
+  });
+
+  it('shows a failed configuration status in its section and the rest of the page as it is', async () => {
+    const loaded = makeSendRequest({});
+    const sendRequest = vi.fn(async (request: { method: string; url: string }) =>
+      request.url.startsWith('/configuration-status') ? json({ errorMessage: 'service down' }, 500) : loaded(request),
+    );
+    render(<About sendRequest={sendRequest} appIcon="/i.svg" restApiUrl="/r" />);
+
+    await vi.waitFor(() => expect(statusSection()?.classList.contains('alert-error')).toBe(true));
+    expect(statusSection()!.textContent).toBe('Failed to load the configuration status (service down).');
+    expect(rowsOf(q('.about-table')!)[0]).toEqual(['Bundle-Name', 'Excel Importer']);
+  });
+
+  it('shows a configuration status which could not be requested in its section', async () => {
+    const loaded = makeSendRequest({});
+    const sendRequest = vi.fn(async (request: { method: string; url: string }) => {
+      if (request.url.startsWith('/configuration-status')) throw new Error('offline');
+      return loaded(request);
+    });
+    render(<About sendRequest={sendRequest} appIcon="/i.svg" restApiUrl="/r" />);
+
+    await vi.waitFor(() => expect(statusSection()?.classList.contains('alert-error')).toBe(true));
+    expect(statusSection()!.textContent).toBe('Failed to load the configuration status (offline).');
+    expect(q('.about-table')).not.toBeNull();
   });
 
   // The status providers write their details as HTML for the legacy about.jsp
