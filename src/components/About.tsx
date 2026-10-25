@@ -25,8 +25,17 @@ interface AboutProps {
 interface AboutData {
   version: Version;
   config: ConfigurationPropertiesModel;
-  statuses: ConfigurationStatus[];
   documentation: string;
+}
+
+/** The configuration status, loaded apart from the rest of the page: a provider may wait for a service which does not answer. */
+type StatusState =
+  { kind: 'loading' } | { kind: 'loaded'; statuses: ConfigurationStatus[] } | { kind: 'failed'; message: string };
+
+/** The message of a failed response: what the server says, or its HTTP status. */
+async function failureDetail(response: Response): Promise<string> {
+  const body = await response.json().catch(() => null);
+  return body?.errorMessage || body?.message || `HTTP ${response.status}`;
 }
 
 /** Manifest entries shown in the "Extension info" table, in the order the legacy JSP used. The
@@ -59,36 +68,56 @@ export default function About({ sendRequest, appIcon, restApiUrl }: Readonly<Abo
 
   const [data, setData] = useState<AboutData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<StatusState>({ kind: 'loading' });
   const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    void (async () => {
       try {
-        const [versionRes, configRes, statusRes, docRes] = await Promise.all([
+        const [versionRes, configRes, docRes] = await Promise.all([
           sendRequest({ method: 'GET', url: '/version' }),
           sendRequest({ method: 'GET', url: '/configuration-properties' }),
-          sendRequest({ method: 'GET', url: `/configuration-status?scope=${encodeURIComponent(scope)}` }),
           sendRequest({ method: 'GET', url: '/readme' }),
         ]);
         if (cancelled) return;
-        if (!versionRes.ok || !configRes.ok || !statusRes.ok) {
-          const failing = [versionRes, configRes, statusRes].find((r) => !r.ok);
-          const body = await failing?.json().catch(() => null);
-          const detail = body?.errorMessage || body?.message || `HTTP ${failing?.status}`;
-          setError(`Failed to load About information (${detail}).`);
+        const failing = [versionRes, configRes].find((r) => !r.ok);
+        if (failing) {
+          const detail = await failureDetail(failing);
+          if (!cancelled) setError(`Failed to load About information (${detail}).`);
           return;
         }
         const version: Version = await versionRes.json();
         const config: ConfigurationPropertiesModel = await configRes.json();
-        const statuses: ConfigurationStatus[] = await statusRes.json();
         // The help article is optional; a non-OK response just leaves it blank.
         const documentation = docRes.ok ? await docRes.text() : '';
         if (cancelled) return;
-        setData({ version, config, statuses, documentation });
+        setData({ version, config, documentation });
       } catch (e) {
         if (cancelled) return;
         setError(`Failed to load About information (${(e as Error).message}).`);
+      }
+    })();
+    // The status providers may wait for a service, so the status comes in on its own and the page does not wait for it.
+    setStatus({ kind: 'loading' });
+    void (async () => {
+      try {
+        const statusRes = await sendRequest({
+          method: 'GET',
+          url: `/configuration-status?scope=${encodeURIComponent(scope)}`,
+        });
+        if (cancelled) return;
+        if (!statusRes.ok) {
+          const detail = await failureDetail(statusRes);
+          if (!cancelled)
+            setStatus({ kind: 'failed', message: `Failed to load the configuration status (${detail}).` });
+          return;
+        }
+        const statuses: ConfigurationStatus[] = await statusRes.json();
+        if (!cancelled) setStatus({ kind: 'loaded', statuses });
+      } catch (e) {
+        if (!cancelled)
+          setStatus({ kind: 'failed', message: `Failed to load the configuration status (${(e as Error).message}).` });
       }
     })();
     return () => {
@@ -219,7 +248,21 @@ export default function About({ sendRequest, appIcon, restApiUrl }: Readonly<Abo
           </>
         )}
 
-        {data.statuses.length > 0 && (
+        {status.kind === 'loading' && (
+          <>
+            <h3>Extension configuration status</h3>
+            <p className="about-status-loading">Loading...</p>
+          </>
+        )}
+
+        {status.kind === 'failed' && (
+          <>
+            <h3>Extension configuration status</h3>
+            <div className="alert alert-error">{status.message}</div>
+          </>
+        )}
+
+        {status.kind === 'loaded' && status.statuses.length > 0 && (
           <>
             <h3>Extension configuration status</h3>
             <div className="about-table-wrap">
@@ -232,12 +275,12 @@ export default function About({ sendRequest, appIcon, restApiUrl }: Readonly<Abo
                   </tr>
                 </thead>
                 <tbody>
-                  {data.statuses.map((status) => (
-                    <tr key={status.name}>
-                      <td>{status.name}</td>
-                      <td style={{ color: STATUS_COLORS[status.status] }}>{status.status}</td>
+                  {status.statuses.map((item) => (
+                    <tr key={item.name}>
+                      <td>{item.name}</td>
+                      <td style={{ color: STATUS_COLORS[item.status] }}>{item.status}</td>
                       <td>
-                        <StatusDetails html={status.details} />
+                        <StatusDetails html={item.details} />
                       </td>
                     </tr>
                   ))}
