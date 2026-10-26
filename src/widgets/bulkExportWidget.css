@@ -16,20 +16,25 @@
    widget set them inline from `LinearGradientColor`, whose default #F0F0F0 button computes to the three
    values used here.
 
-   The --sbb-* tokens are inherited from the host element, which carries .sbb-ui: custom properties cross
-   the shadow boundary, ordinary rules do not. */
+   The --sbb-* tokens come from the host element, where it carries .sbb-ui, or from the stylesheet passed
+   into the root, which declares them on the container: custom properties cross the shadow boundary,
+   ordinary rules do not. */
 
 :host {
   display: block;
   /* .polarion-rpe-content: the rich page content area the widget sits in */
   font-size: 10pt;
-  /* The typeface Polarion's own headings name. Stated rather than inherited from the report page: the
-     shadow root has to look the same in the dev harness and in the visual references, where there is no
-     Polarion page to inherit from - a missing font layer is what turns a reference serif. */
-  font-family: var(--sbb-control-font-family);
   color: #1a1a1a;
   /* widget override */
   margin-bottom: 30px;
+}
+
+/* The typeface Polarion's own headings name. Stated rather than inherited from the report page: the
+   shadow root has to look the same in the dev harness and in the visual references, where there is no
+   Polarion page to inherit from - a missing font layer is what turns a reference serif. Set on the
+   container rather than on :host, which cannot see tokens declared inside the root. */
+:host > div {
+  font-family: var(--sbb-control-font-family);
 }
 
 /* --- Header ------------------------------------------------------------------------------------- */
@@ -77,13 +82,20 @@
   color: #000028;
   /* widget override */
   display: inline-block;
+  /* widget rule: a native button, which must add nothing of the browser's own */
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: normal;
 }
 
 .polarion-TestsExecutionButton-buttons.polarion-TestsExecutionButton-buttons-defaultCursor {
   cursor: default;
 }
 
+/* Laid out as the one-cell table it was in Polarion's markup */
 .polarion-TestsExecutionButton-buttons-content {
+  display: table;
   border-collapse: collapse;
   padding: 0;
   table-layout: fixed;
@@ -92,6 +104,7 @@
 }
 
 .polarion-TestsExecutionButton-buttons-content-labelCell {
+  display: table-cell;
   vertical-align: middle;
   line-height: 1;
   text-align: center;
@@ -100,6 +113,7 @@
 }
 
 .polarion-TestsExecutionButton-labelTextNew {
+  display: block;
   /* widget override of Polarion's 26px */
   font-size: 20px;
   font-weight: bold;
@@ -123,8 +137,22 @@
   margin-top: 30px;
 }
 
+/* Laid out as the table Polarion wraps its tables in, with the browser's defaults of a table: 2px
+   between the cells, 1px inside them */
 .polarion-rpw-table-main {
+  display: table;
+  border-spacing: 2px;
   width: 100%;
+}
+
+.polarion-rpw-table-main-row {
+  display: table-row;
+}
+
+.polarion-rpw-table-main-cell {
+  display: table-cell;
+  padding: 1px;
+  vertical-align: middle;
 }
 
 .polarion-rpw-table-content {
@@ -245,7 +273,8 @@
   margin: 5px auto 0;
   padding: 4px 10px;
   background-color: #f5f5f5;
-  color: #717171;
+  /* Polarion's #717171 falls just short of 4.5:1 on this background */
+  color: #6e6e6e;
   text-align: center;
   font-style: normal;
   overflow-wrap: break-word;
@@ -280,6 +309,7 @@ input[type='checkbox']:indeterminate {
 /* --- States the server-rendered predecessor had no need for, its rows being part of the page ----- */
 
 .widget-loading {
+  display: block;
   margin-top: 30px;
 }
 

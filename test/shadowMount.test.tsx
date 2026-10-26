@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import tokenStyles from '../src/generic/css/control-tokens.css?inline';
 import { a11yViolations } from '../src/testing';
 import BulkExportWidget, { bulkExportWidgetStyles } from '../src/widgets/BulkExportWidget';
 import { adoptPageStyles, mountInShadowRoot } from '../src/widgets/shadowMount';
@@ -43,7 +44,9 @@ describe('mountInShadowRoot', () => {
     await vi.waitFor(() => expect(host.shadowRoot!.querySelector('h3')?.textContent).toBe('Test Runs'));
     // The page sees none of it: the widget's markup is behind the shadow boundary
     expect(document.querySelector('.polarion-rpw-table-content')).toBeNull();
-    await vi.waitFor(() => expect(host.shadowRoot!.querySelectorAll('.polarion-rpw-table-content-row').length).toBe(4));
+    await vi.waitFor(() =>
+      expect(host.shadowRoot!.querySelectorAll('.polarion-rpw-table-content-row')).toHaveLength(4),
+    );
   });
 
   it('gives the shadow root the given styles, and the container its class', async () => {
@@ -63,7 +66,7 @@ describe('mountInShadowRoot', () => {
 
     expect(mount(host)).toBeNull();
 
-    expect(host.shadowRoot!.querySelectorAll('h3').length).toBe(1);
+    expect(host.shadowRoot!.querySelectorAll('h3')).toHaveLength(1);
   });
 
   it('outranks the page stylesheet where the two disagree', async () => {
@@ -107,6 +110,23 @@ describe('mountInShadowRoot', () => {
 
     expect(getComputedStyle(checkbox).appearance).toBe('none');
     expect(getComputedStyle(checkbox).backgroundImage).toContain('data:image/svg+xml');
+  });
+
+  it('takes its font from the tokens in its own root, mounted as the README shows', async () => {
+    // A plain shim, as generic renders it on a page with no tokens of its own: the tokens come in with the
+    // library's stylesheet and sit on the container, which a rule on :host cannot see
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    hosts.push(host);
+    mountInShadowRoot(host, { styles: [tokenStyles, bulkExportWidgetStyles], className: 'sbb-ui' }, widget);
+
+    const container = host.shadowRoot!.querySelector<HTMLElement>('.sbb-ui')!;
+    const token = getComputedStyle(container).getPropertyValue('--sbb-control-font-family').trim();
+    await vi.waitFor(() => expect(host.shadowRoot!.querySelector('h3')).not.toBeNull());
+
+    const unquoted = (families: string) => families.replace(/["']/g, '').replace(/\s*,\s*/g, ',');
+    expect(token).not.toBe('');
+    expect(unquoted(getComputedStyle(host.shadowRoot!.querySelector('h3')!).fontFamily)).toBe(unquoted(token));
   });
 });
 

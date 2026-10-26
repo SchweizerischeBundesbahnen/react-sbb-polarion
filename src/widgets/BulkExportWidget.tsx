@@ -51,7 +51,7 @@ export default function BulkExportWidget({
   onSelectionChange,
   headerRef,
   children,
-}: BulkExportWidgetProps) {
+}: Readonly<BulkExportWidgetProps>) {
   const [data, setData] = useState<BulkExportItems | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -64,17 +64,25 @@ export default function BulkExportWidget({
     let active = true;
     load.current().then(
       (items) => active && setData(items),
-      (failure?: Error) => active && setError(failure?.message || LOAD_ERROR),
+      (error_?: Error) => active && setError(error_?.message || LOAD_ERROR),
     );
     return () => {
       active = false;
     };
   }, []);
 
-  const selectableIndexes = useMemo(
-    () => (data?.items ?? []).map((item, index) => ({ item, index })).filter(({ item }) => item.readable),
+  // A row is selected by its position, which stays put: the rows are loaded once and never reordered. Its key
+  // is the item it stands for; an item the user may not read names nothing, so its key is the position.
+  const rows = useMemo(
+    () =>
+      (data?.items ?? []).map((item, index) => ({
+        item,
+        index,
+        key: item.readable ? `${item.type}/${item.projectId}/${item.spaceId}/${item.id}` : `unreadable-${index}`,
+      })),
     [data],
   );
+  const selectableIndexes = useMemo(() => rows.filter(({ item }) => item.readable), [rows]);
   const selectedItems: BulkExportItem[] = useMemo(
     () => selectableIndexes.filter(({ index }) => selected.has(index)).map(({ item }) => item),
     [selectableIndexes, selected],
@@ -117,33 +125,23 @@ export default function BulkExportWidget({
           className="polarion-TestsExecutionButton-link"
           title={exportDisabled ? 'Please, select at least one item to be exported first' : undefined}
         >
-          <div
+          {/* Polarion's own markup was a div holding a one-cell table. A native button keeps its classes, and
+              spans laid out as that table keep its look. */}
+          <button
+            type="button"
             id={exportButtonId}
-            role="button"
-            tabIndex={0}
             aria-disabled={exportDisabled}
             className={`polarion-TestsExecutionButton-buttons${
               exportDisabled ? ' polarion-TestsExecutionButton-buttons-defaultCursor' : ''
             }`}
             onClick={startExport}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                // The button is a div: on Space the browser would scroll the report page as well
-                event.preventDefault();
-                startExport();
-              }
-            }}
           >
-            <table className="polarion-TestsExecutionButton-buttons-content" role="presentation">
-              <tbody>
-                <tr>
-                  <td className="polarion-TestsExecutionButton-buttons-content-labelCell">
-                    <div className="polarion-TestsExecutionButton-labelTextNew">{exportLabel}</div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <span className="polarion-TestsExecutionButton-buttons-content">
+              <span className="polarion-TestsExecutionButton-buttons-content-labelCell">
+                <span className="polarion-TestsExecutionButton-labelTextNew">{exportLabel}</span>
+              </span>
+            </span>
+          </button>
         </span>
         <div>
           <p>Please select {title} below which you want to export and click button above</p>
@@ -153,120 +151,116 @@ export default function BulkExportWidget({
       {error && <div className="widget-error">{error}</div>}
 
       {!error && !data && (
-        <div className="widget-loading">
-          <span className="sbb-spinner" role="img" aria-label="Loading" />
-        </div>
+        <output className="widget-loading" aria-label="Loading">
+          <span className="sbb-spinner" aria-hidden="true" />
+        </output>
       )}
 
       {data && (
         <div className="export-items">
-          <table className="polarion-rpw-table-main" role="presentation">
-            <tbody>
-              <tr>
-                <td>
-                  <table className="polarion-rpw-table-content">
-                    <tbody>
-                      <tr className="polarion-rpw-table-header-row">
-                        <th>
-                          <input
-                            type="checkbox"
-                            id="export-all"
-                            aria-label="Select all"
-                            checked={allSelected}
-                            ref={(input) => {
-                              if (input) {
-                                input.indeterminate = selected.size > 0 && !allSelected;
-                              }
-                            }}
-                            onChange={toggleAll}
-                          />
-                        </th>
-                        {columns.map((column) => (
-                          <th key={column.id}>{column.label}</th>
-                        ))}
-                      </tr>
-                      {data.items.map((item, index) =>
-                        item.readable ? (
-                          <tr className="polarion-rpw-table-content-row" key={`${item.projectId}/${item.id}/${index}`}>
-                            <td>
-                              <input
-                                type="checkbox"
-                                className="export-item"
-                                aria-label={item.name ?? item.id ?? ''}
-                                data-type={item.type ?? undefined}
-                                data-project={item.projectId ?? undefined}
-                                data-space={item.spaceId ?? undefined}
-                                data-id={item.id ?? undefined}
-                                checked={selected.has(index)}
-                                onChange={() => toggle(index)}
-                              />
-                            </td>
-                            {(item.cells ?? []).map((cell, cellIndex) => (
-                              // The cell is the HTML Polarion rendered for that field of that item
-                              <td
-                                key={columns[cellIndex]?.id ?? cellIndex}
-                                dangerouslySetInnerHTML={{ __html: cell }}
-                              />
-                            ))}
-                          </tr>
-                        ) : (
-                          <tr className="polarion-rpw-table-content-row" key={`unreadable-${index}`}>
-                            <td colSpan={columns.length + 1} className="polarion-rpw-table-not-readable-cell">
-                              {item.message}
-                            </td>
-                          </tr>
-                        ),
-                      )}
-                    </tbody>
-                  </table>
-                </td>
-              </tr>
-              <tr>
-                <td className="polarion-rpw-table-footer">
-                  <div className="polarion-rpw-table-counts">
-                    {data.openInTableUrl ? (
-                      <a href={data.openInTableUrl} target="_top">
-                        {data.countMessage}
-                      </a>
-                    ) : (
-                      data.countMessage
+          {/* Laid out as the table Polarion wraps its tables in, without being one: it holds no data */}
+          <div className="polarion-rpw-table-main">
+            <div className="polarion-rpw-table-main-row">
+              <div className="polarion-rpw-table-main-cell">
+                <table className="polarion-rpw-table-content">
+                  <tbody>
+                    <tr className="polarion-rpw-table-header-row">
+                      <th>
+                        <input
+                          type="checkbox"
+                          id="export-all"
+                          aria-label="Select all"
+                          checked={allSelected}
+                          ref={(input) => {
+                            if (input) {
+                              input.indeterminate = selected.size > 0 && !allSelected;
+                            }
+                          }}
+                          onChange={toggleAll}
+                        />
+                      </th>
+                      {columns.map((column) => (
+                        <th key={column.id}>{column.label}</th>
+                      ))}
+                    </tr>
+                    {rows.map(({ item, index, key }) =>
+                      item.readable ? (
+                        <tr className="polarion-rpw-table-content-row" key={key}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              className="export-item"
+                              aria-label={item.name ?? item.id ?? ''}
+                              data-type={item.type ?? undefined}
+                              data-project={item.projectId ?? undefined}
+                              data-space={item.spaceId ?? undefined}
+                              data-id={item.id ?? undefined}
+                              checked={selected.has(index)}
+                              onChange={() => toggle(index)}
+                            />
+                          </td>
+                          {(item.cells ?? []).map((cell, cellIndex) => (
+                            // The cell is the HTML Polarion rendered for that field of that item
+                            <td key={columns[cellIndex]?.id ?? cellIndex} dangerouslySetInnerHTML={{ __html: cell }} />
+                          ))}
+                        </tr>
+                      ) : (
+                        <tr className="polarion-rpw-table-content-row" key={key}>
+                          <td colSpan={columns.length + 1} className="polarion-rpw-table-not-readable-cell">
+                            {item.message}
+                          </td>
+                        </tr>
+                      ),
                     )}
-                  </div>
-                  {data.openInTableUrl && (
-                    <div className="polarion-rpw-table-open-in-table">
-                      <a href={data.openInTableUrl} target="_blank" rel="noreferrer" aria-label="Open in Table">
-                        {/* Polarion's own icons, by the URL its tables use. Decorative on purpose: the
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="polarion-rpw-table-main-row">
+              <div className="polarion-rpw-table-main-cell polarion-rpw-table-footer">
+                <div className="polarion-rpw-table-counts">
+                  {data.openInTableUrl ? (
+                    <a href={data.openInTableUrl} target="_top">
+                      {data.countMessage}
+                    </a>
+                  ) : (
+                    data.countMessage
+                  )}
+                </div>
+                {data.openInTableUrl && (
+                  <div className="polarion-rpw-table-open-in-table">
+                    <a href={data.openInTableUrl} target="_blank" rel="noreferrer" aria-label="Open in Table">
+                      {/* Polarion's own icons, by the URL its tables use. Decorative on purpose: the
                             accessible name sits on the control, and where the icon is not served - a dev
                             harness without a Polarion, the reference screenshots - an empty alt leaves a
                             blank instead of stray words in the middle of the footer. */}
-                        <img
-                          src="/polarion/ria/images/portlet/portletOpenInTable.png"
-                          title="Open in Table"
-                          alt=""
-                          width={16}
-                          height={16}
-                        />
-                      </a>
-                    </div>
-                  )}
-                  {data.query && (
-                    <div className="polarion-rpw-table-show-query">
-                      <button
-                        type="button"
-                        title="Show Query"
-                        aria-label="Show Query"
-                        aria-expanded={queryShown}
-                        onClick={() => setQueryShown((shown) => !shown)}
-                      >
-                        <img src="/polarion/ria/images/portlet/info.png" alt="" width={16} height={16} />
-                      </button>
-                    </div>
-                  )}
-                  {data.query && queryShown && <div className="polarion-rpw-table-query">{data.query}</div>}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                      <img
+                        src="/polarion/ria/images/portlet/portletOpenInTable.png"
+                        title="Open in Table"
+                        alt=""
+                        width={16}
+                        height={16}
+                      />
+                    </a>
+                  </div>
+                )}
+                {data.query && (
+                  <div className="polarion-rpw-table-show-query">
+                    <button
+                      type="button"
+                      title="Show Query"
+                      aria-label="Show Query"
+                      aria-expanded={queryShown}
+                      onClick={() => setQueryShown((shown) => !shown)}
+                    >
+                      <img src="/polarion/ria/images/portlet/info.png" alt="" width={16} height={16} />
+                    </button>
+                  </div>
+                )}
+                {data.query && queryShown && <div className="polarion-rpw-table-query">{data.query}</div>}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

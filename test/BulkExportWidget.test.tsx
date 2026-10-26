@@ -51,13 +51,13 @@ describe('BulkExportWidget', () => {
 
     deliver(SAMPLE_ITEMS);
     await vi.waitFor(() => expect(document.querySelector('.widget-loading')).toBeNull());
-    expect(rows().length).toBe(4);
+    expect(rows()).toHaveLength(4);
   });
 
   it('asks for the rows once, however often it renders', async () => {
     const loadItems = vi.fn(() => Promise.resolve(SAMPLE_ITEMS));
     const view = await open(SAMPLE_ITEMS, { loadItems });
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
 
     // A new loader on each render, as a caller with an inline arrow passes it
     await view.rerender(
@@ -80,7 +80,7 @@ describe('BulkExportWidget', () => {
   it('renders a column per configured field and the cells as Polarion rendered them', async () => {
     await open();
 
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
     expect(
       Array.from(document.querySelectorAll('.polarion-rpw-table-header-row th')).map((th) => th.textContent),
     ).toEqual(['', 'ID', 'Status', 'Template', 'Author', 'Created']);
@@ -91,7 +91,7 @@ describe('BulkExportWidget', () => {
   it('marks each row with the item it stands for', async () => {
     await open();
 
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
     const first = checkboxes()[0];
     expect(first.dataset).toMatchObject({ type: 'TestRun', project: 'elibrary', id: 'build_quick-20170211-141155' });
     expect(first.dataset.space).toBeUndefined();
@@ -101,17 +101,17 @@ describe('BulkExportWidget', () => {
   it('shows an item the user may not read as a message across the table', async () => {
     await open(SAMPLE_ITEMS_WITH_UNREADABLE);
 
-    await vi.waitFor(() => expect(rows().length).toBe(3));
+    await vi.waitFor(() => expect(rows()).toHaveLength(3));
     const cell = rows()[2].querySelector('.polarion-rpw-table-not-readable-cell')!;
     expect(cell.textContent).toBe('You do not have permission to read this item');
     expect(cell.getAttribute('colspan')).toBe('6');
     // ... and it cannot be exported
-    expect(checkboxes().length).toBe(2);
+    expect(checkboxes()).toHaveLength(2);
   });
 
   it('keeps the export button disabled until something is selected', async () => {
     await open();
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
 
     expect(isDisabled()).toBe(true);
     expect(exportButton().getAttribute('aria-disabled')).toBe('true');
@@ -129,7 +129,7 @@ describe('BulkExportWidget', () => {
 
   it('selects and clears every row from the header checkbox', async () => {
     await open();
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
 
     await userEvent.click(selectAll());
     expect(checkboxes().every((checkbox) => checkbox.checked)).toBe(true);
@@ -140,7 +140,7 @@ describe('BulkExportWidget', () => {
 
   it('shows the header checkbox as indeterminate while only some rows are selected', async () => {
     await open();
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
 
     await userEvent.click(checkboxes()[0]);
     expect(selectAll().indeterminate).toBe(true);
@@ -156,7 +156,7 @@ describe('BulkExportWidget', () => {
   it('hands the selected rows to the extension when the button is pressed', async () => {
     const onExport = vi.fn();
     await open(SAMPLE_ITEMS, { onExport });
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
 
     await userEvent.click(checkboxes()[1]);
     await userEvent.click(checkboxes()[3]);
@@ -169,7 +169,7 @@ describe('BulkExportWidget', () => {
   it('exports from the keyboard as well', async () => {
     const onExport = vi.fn();
     await open(SAMPLE_ITEMS, { onExport });
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
     await userEvent.click(checkboxes()[0]);
 
     exportButton().focus();
@@ -180,18 +180,12 @@ describe('BulkExportWidget', () => {
     expect(onExport).toHaveBeenCalledTimes(2);
   });
 
-  it('keeps the page where it is when Space presses the button', async () => {
-    const onExport = vi.fn();
-    await open(SAMPLE_ITEMS, { onExport });
-    await vi.waitFor(() => expect(rows().length).toBe(4));
-    await userEvent.click(checkboxes()[0]);
+  it('is a native button, which the keyboard presses without scrolling the page', async () => {
+    await open();
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
 
-    // The button is a div, so the browser would scroll the report page on Space
-    const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
-    exportButton().dispatchEvent(space);
-
-    expect(space.defaultPrevented).toBe(true);
-    expect(onExport).toHaveBeenCalledTimes(1);
+    expect(exportButton().tagName).toBe('BUTTON');
+    expect(exportButton().getAttribute('type')).toBe('button');
   });
 
   it('shows its own message when the loader rejects with nothing', async () => {
@@ -205,7 +199,7 @@ describe('BulkExportWidget', () => {
   it('does not export with nothing selected', async () => {
     const onExport = vi.fn();
     await open(SAMPLE_ITEMS, { onExport });
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
 
     // Clicked directly: the button reports itself as disabled, which Playwright refuses to click
     exportButton().click();
@@ -216,7 +210,7 @@ describe('BulkExportWidget', () => {
   it('reports the selection as it changes', async () => {
     const onSelectionChange = vi.fn();
     await open(SAMPLE_ITEMS, { onSelectionChange });
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
 
     await userEvent.click(checkboxes()[1]);
     await userEvent.click(checkboxes()[2]);
@@ -229,7 +223,7 @@ describe('BulkExportWidget', () => {
   it('gives the extension its header and renders the extension dialogs after the table', async () => {
     const header = { current: null as HTMLDivElement | null };
     await open(SAMPLE_ITEMS, { headerRef: header, children: <div className="extension-dialog">dialog</div> });
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
 
     expect(header.current?.querySelector('h3')?.textContent).toBe('Test Runs');
     expect(document.querySelector('.export-items + .extension-dialog')).not.toBeNull();
@@ -238,7 +232,7 @@ describe('BulkExportWidget', () => {
   it('reports how many items were found and links to the table view', async () => {
     await open();
 
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
     expect(document.querySelector('.polarion-rpw-table-counts')?.textContent).toBe('4 items found');
     expect(document.querySelector('.polarion-rpw-table-open-in-table a')?.getAttribute('href')).toBe(
       '/polarion/#/project/elibrary/testruns',
@@ -248,7 +242,7 @@ describe('BulkExportWidget', () => {
   it('shows the count as text where there is no table view, and no query marker without a query', async () => {
     await open(SAMPLE_ITEMS_WITHOUT_TABLE_VIEW);
 
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
     expect(document.querySelector('.polarion-rpw-table-counts')?.textContent).toBe('4 items found');
     expect(document.querySelector('.polarion-rpw-table-counts a')).toBeNull();
     expect(document.querySelector('.polarion-rpw-table-open-in-table')).toBeNull();
@@ -257,7 +251,7 @@ describe('BulkExportWidget', () => {
 
   it('shows the query behind the info icon on demand', async () => {
     await open();
-    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await vi.waitFor(() => expect(rows()).toHaveLength(4));
 
     expect(document.querySelector('.polarion-rpw-table-query')).toBeNull();
     await userEvent.click(document.querySelector<HTMLElement>('.polarion-rpw-table-show-query img')!);
@@ -275,7 +269,7 @@ describe('BulkExportWidget', () => {
     await vi.waitFor(() =>
       expect(document.querySelector('.polarion-rpw-table-counts')?.textContent).toBe('0 items found'),
     );
-    expect(rows().length).toBe(0);
+    expect(rows()).toHaveLength(0);
     expect(document.querySelector('.widget-error')).toBeNull();
     expect(isDisabled()).toBe(true);
     expect(selectAll().checked).toBe(false);
@@ -319,7 +313,7 @@ describe('BulkExportWidget', () => {
 
 describe('accessibility', () => {
   const loaded = async (count = 4) => {
-    await vi.waitFor(() => expect(rows().length).toBe(count));
+    await vi.waitFor(() => expect(rows()).toHaveLength(count));
   };
 
   it('has no WCAG A/AA violations with the table loaded and nothing selected', async () => {
@@ -350,16 +344,12 @@ describe('accessibility', () => {
     expect(await pageViolations()).toEqual([]);
   });
 
-  it('marks the tables that only lay out the button and the frame as presentation', async () => {
+  it('lays out the button and the frame without tables, so that only the items read as a table', async () => {
     await open();
     await loaded();
-    // Only the table of items has headers; a screen reader should not announce the others as data tables
-    const layoutTables = Array.from(document.querySelectorAll('table')).filter((table) => !table.querySelector('th'));
-    expect(layoutTables.length).toBe(1);
-    expect(document.querySelector('.polarion-TestsExecutionButton-buttons-content')!.getAttribute('role')).toBe(
-      'presentation',
-    );
-    expect(document.querySelector('.polarion-rpw-table-main')!.getAttribute('role')).toBe('presentation');
+    const tables = Array.from(document.querySelectorAll('table'));
+    expect(tables).toHaveLength(1);
+    expect(tables[0].querySelectorAll('th').length).toBeGreaterThan(0);
   });
 
   it('has no WCAG A/AA violations when the rows could not be loaded', async () => {
