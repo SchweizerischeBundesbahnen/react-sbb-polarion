@@ -350,6 +350,18 @@ describe('accessibility', () => {
     expect(await pageViolations()).toEqual([]);
   });
 
+  it('marks the tables that only lay out the button and the frame as presentation', async () => {
+    await open();
+    await loaded();
+    // Only the table of items has headers; a screen reader should not announce the others as data tables
+    const layoutTables = Array.from(document.querySelectorAll('table')).filter((table) => !table.querySelector('th'));
+    expect(layoutTables.length).toBe(1);
+    expect(document.querySelector('.polarion-TestsExecutionButton-buttons-content')!.getAttribute('role')).toBe(
+      'presentation',
+    );
+    expect(document.querySelector('.polarion-rpw-table-main')!.getAttribute('role')).toBe('presentation');
+  });
+
   it('has no WCAG A/AA violations when the rows could not be loaded', async () => {
     await open(SAMPLE_ITEMS, { loadItems: () => Promise.reject(new Error('Reload the page.')) });
     await vi.waitFor(() => expect(document.querySelector('.widget-error')).not.toBeNull());

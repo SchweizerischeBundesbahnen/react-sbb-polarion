@@ -134,7 +134,7 @@ export default function BulkExportWidget({
               }
             }}
           >
-            <table className="polarion-TestsExecutionButton-buttons-content">
+            <table className="polarion-TestsExecutionButton-buttons-content" role="presentation">
               <tbody>
                 <tr>
                   <td className="polarion-TestsExecutionButton-buttons-content-labelCell">
@@ -160,7 +160,7 @@ export default function BulkExportWidget({
 
       {data && (
         <div className="export-items">
-          <table className="polarion-rpw-table-main">
+          <table className="polarion-rpw-table-main" role="presentation">
             <tbody>
               <tr>
                 <td>

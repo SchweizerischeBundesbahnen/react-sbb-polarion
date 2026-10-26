@@ -58,7 +58,7 @@
 .polarion-TestsExecutionButton-buttons {
   table-layout: fixed;
   font-size: 18px;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   cursor: pointer;
   text-align: center;
   border: 1px solid;
@@ -104,7 +104,7 @@
   font-size: 20px;
   font-weight: bold;
   color: #43a134;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   text-align: center;
   text-shadow: 1px 1px 0 white;
   padding-bottom: 1px;
