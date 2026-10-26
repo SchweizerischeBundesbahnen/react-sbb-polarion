@@ -180,6 +180,28 @@ describe('BulkExportWidget', () => {
     expect(onExport).toHaveBeenCalledTimes(2);
   });
 
+  it('keeps the page where it is when Space presses the button', async () => {
+    const onExport = vi.fn();
+    await open(SAMPLE_ITEMS, { onExport });
+    await vi.waitFor(() => expect(rows().length).toBe(4));
+    await userEvent.click(checkboxes()[0]);
+
+    // The button is a div, so the browser would scroll the report page on Space
+    const space = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+    exportButton().dispatchEvent(space);
+
+    expect(space.defaultPrevented).toBe(true);
+    expect(onExport).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows its own message when the loader rejects with nothing', async () => {
+    await open(SAMPLE_ITEMS, { loadItems: () => Promise.reject(undefined) });
+
+    await vi.waitFor(() =>
+      expect(document.querySelector('.widget-error')?.textContent).toBe('Could not load the items of this widget.'),
+    );
+  });
+
   it('does not export with nothing selected', async () => {
     const onExport = vi.fn();
     await open(SAMPLE_ITEMS, { onExport });

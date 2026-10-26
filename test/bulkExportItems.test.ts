@@ -41,6 +41,20 @@ describe('loadBulkExportItems', () => {
   });
 });
 
+describe('loadBulkExportItems on an answer that is not a table', () => {
+  it('rejects a successful answer without rows, so that the widget shows an error instead of loading forever', async () => {
+    await expect(loadBulkExportItems(answering(200, 'not json'), SAMPLE_SHIM)).rejects.toThrow(
+      'Could not load the items of this widget.',
+    );
+    await expect(loadBulkExportItems(answering(200, '{"columns":[]}'), SAMPLE_SHIM)).rejects.toThrow(
+      'Could not load the items of this widget.',
+    );
+    await expect(loadBulkExportItems(answering(200, '{"items":[]}'), SAMPLE_SHIM)).rejects.toThrow(
+      'Could not load the items of this widget.',
+    );
+  });
+});
+
 describe('readBulkExportWidgetShim', () => {
   it('reads what the renderer put on the shim', () => {
     const host = document.createElement('div');

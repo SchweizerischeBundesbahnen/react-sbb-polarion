@@ -76,5 +76,9 @@ export async function loadBulkExportItems(
   if (!response.ok) {
     throw new Error(payload?.message ?? payload?.errorMessage ?? LOAD_ERROR);
   }
+  // A table, or the widget would wait for rows forever
+  if (!Array.isArray(payload?.items) || !Array.isArray(payload?.columns)) {
+    throw new Error(LOAD_ERROR);
+  }
   return payload as BulkExportItems;
 }

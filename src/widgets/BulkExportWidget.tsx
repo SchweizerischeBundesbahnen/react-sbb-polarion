@@ -64,7 +64,7 @@ export default function BulkExportWidget({
     let active = true;
     load.current().then(
       (items) => active && setData(items),
-      (failure: Error) => active && setError(failure.message || LOAD_ERROR),
+      (failure?: Error) => active && setError(failure?.message || LOAD_ERROR),
     );
     return () => {
       active = false;
@@ -126,7 +126,13 @@ export default function BulkExportWidget({
               exportDisabled ? ' polarion-TestsExecutionButton-buttons-defaultCursor' : ''
             }`}
             onClick={startExport}
-            onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && startExport()}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                // The button is a div: on Space the browser would scroll the report page as well
+                event.preventDefault();
+                startExport();
+              }
+            }}
           >
             <table className="polarion-TestsExecutionButton-buttons-content">
               <tbody>
