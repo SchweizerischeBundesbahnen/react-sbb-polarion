@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.6.2...v2.7.0) (2026-10-26)
+
+
+### Features
+
+* add a shared bulk export widget ([#167](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/167)) ([528c04a](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/528c04a03eaf3f0fda088bcfc21e9fd2619bcb86)), closes [#166](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/166)
+
 ## [2.6.2](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.6.1...v2.6.2) (2026-10-25)
 
 
