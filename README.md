@@ -259,7 +259,11 @@ before Prettier's rule set, which has to come last. A recommended set added afte
 import { a11yViolations } from '@sbb-polarion/react-sbb-polarion/testing';
 
 it('has no WCAG A/AA violations', async () => {
-  render(<div className="sbb-ui"><MyPage /></div>);
+  render(
+    <div className="sbb-ui">
+      <MyPage />
+    </div>,
+  );
   await vi.waitFor(() => expect(document.querySelector('.my-page')).not.toBeNull());
   expect(await a11yViolations()).toEqual([]);
 });
@@ -378,7 +382,7 @@ before renaming or moving either.
 **Components**: `PageLayout`, `SearchableSelect`, `Tabs`, `Modal`, `Toaster`, `BreadcrumbInjector`,
 `RestAuthTest`, `About`, `UserGuide`, `ConfigurationsPane`, `RevisionsTable`, `ConfigurationButtons`,
 `CodeEditor`, `DateInput`, `DateRangePicker`, `AuthorizationSettings`, `StylePackageWeights`, `Disclaimer`,
-`FeatureRouter`, `DocsProvider`, `DocPage`, `DocLinkInterceptor`.
+`FeatureRouter`, `DocsProvider`, `DocPage`, `DocLinkInterceptor`, `BulkExportWidget`.
 
 `SearchableSelect` is the shared combobox for both selection modes. By default it is a single-select
 (`value: string`); pass `multiple` and it renders checkbox options in the popup and one removable chip
@@ -456,9 +460,9 @@ default values nor revisions.
 project roles of the current scope as two multi-select `SearchableSelect`s (granted roles as chips, the
 rest as checkbox options behind a search box), the Save / Cancel / Default / Revisions toolbar and the
 revision table. It stores only roles the scope still offers, so a role deleted since the last save drops
-out instead of lingering in the setting. Pair it with `createAuthorizationService(sendRequest, settingName)`, 
+out instead of lingering in the setting. Pair it with `createAuthorizationService(sendRequest, settingName)`,
 which builds the calls over generic's own endpoints (`/roles` and the single-setting endpoints); the extension
-supplies the title and its own Quick Help text. Note that `/roles` is opt-in on the Java side: the extension 
+supplies the title and its own Quick Help text. Note that `/roles` is opt-in on the Java side: the extension
 has to name generic's `RolesInternalController` and `RolesApiController` in its REST application.
 
 ### Single-bundle admin app and documentation site
@@ -593,6 +597,46 @@ it.
 
 The export does not capture the page. Polarion renders the widget on the server for the PDF, so the widget
 needs HTML of its own for the `PDF_EXPORT` target. JavaScript does not run there, and an iframe stays empty.
+
+### Bulk export widget
+
+A report page widget that lists what its data set finds, with a checkbox per row. The server side is
+generic's `AbstractBulkExportWidget`. Its renderer emits a shim element and imports the extension's widget
+module, whose default export mounts the widget into a shadow root of the shim:
+
+```tsx
+import {
+  BulkExportWidget,
+  bulkExportWidgetStyles,
+  loadBulkExportItems,
+  mountInShadowRoot,
+  readBulkExportWidgetShim,
+} from '@sbb-polarion/react-sbb-polarion';
+import rspStyles from '@sbb-polarion/react-sbb-polarion/style.css?inline';
+
+export default function mount(selector: string): void {
+  const host = document.querySelector<HTMLElement>(selector)!;
+  const shim = readBulkExportWidgetShim(host);
+  mountInShadowRoot(
+    host,
+    { styles: [rspStyles, bulkExportWidgetStyles], className: 'sbb-ui' },
+    <BulkExportWidget
+      title={shim.title}
+      loadItems={() => loadBulkExportItems(sendRequest, shim)}
+      exportLabel="Export"
+      onExport={(items) => startExport(items)}
+    />,
+  );
+}
+```
+
+- `loadBulkExportItems` posts the signed descriptor to `/widgets/bulk-export/items` with the extension's
+  `sendRequest`. The widget calls `loadItems` once.
+- `onExport` gets the selected rows. Render the extension's dialogs as children of the widget, so that they
+  live in the same shadow root.
+- `onSelectionChange` and `headerRef` let the extension follow the selection and find the widget on the page.
+- `bulkExportWidgetStyles` is not in `style.css`. Its selectors are Polarion's table classes, which would
+  restyle every page that loads the library. Pass it to the shadow root only.
 
 ## Bundled generic assets
 

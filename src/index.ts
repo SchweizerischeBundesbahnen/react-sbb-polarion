@@ -96,6 +96,20 @@ export { offerForPdfExport, PDF_EXPORT_TARGETS_KEY } from './services/pdfExportT
 export type { PdfExportTarget } from './services/pdfExportTargets';
 export { useOfferForPdfExport } from './hooks/useOfferForPdfExport';
 export { getScope, getProjectIdFromScope } from './services/scope';
+// A bulk export widget on a report page: the table of what the widget's data set found and the export button.
+// The server side is generic's AbstractBulkExportWidget. The widget renders into a shadow root of its own,
+// which mountInShadowRoot gives it, with bulkExportWidgetStyles among the root's stylesheets.
+export { default as BulkExportWidget, bulkExportWidgetStyles } from './widgets/BulkExportWidget';
+export type { BulkExportWidgetProps } from './widgets/BulkExportWidget';
+export { BULK_EXPORT_ITEMS_URL, loadBulkExportItems, readBulkExportWidgetShim } from './widgets/bulkExportItems';
+export type {
+  BulkExportColumn,
+  BulkExportItem,
+  BulkExportItems,
+  BulkExportWidgetShim,
+} from './widgets/bulkExportItems';
+export { adoptPageStyles, mountInShadowRoot } from './widgets/shadowMount';
+export type { ShadowMountOptions } from './widgets/shadowMount';
 export type {
   SettingName,
   Revision,
