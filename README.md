@@ -224,7 +224,7 @@ Add the dev dependencies (the other ESLint packages are already in every extensi
 npm install --save-dev eslint-plugin-jsx-a11y-x axe-core
 ```
 
-[`eslint-plugin-jsx-a11y-x`](https://github.com/es-tooling/eslint-plugin-jsx-a11y-x) is the maintained fork
+[`eslint-plugin-jsx-a11y-x`](https://github.com/eslint-community/eslint-plugin-jsx-a11y-x) is the maintained fork
 of `eslint-plugin-jsx-a11y`, with the same rules. It supports ESLint 10, and it works with minimatch 11,
 the first version without
 [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249). Its rules are named
