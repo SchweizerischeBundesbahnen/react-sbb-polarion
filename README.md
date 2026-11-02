@@ -230,14 +230,19 @@ the first version without
 [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249). Its rules are named
 `jsx-a11y-x/...`.
 
-Add one override for minimatch to the extension's `package.json`. ESLint, `typescript-eslint`, the
-Prettier import sorter and the fork work with minimatch 11:
+Add one override for minimatch to the extension's `package.json`. In the extensions today, only ESLint,
+`typescript-eslint`, the Prettier import sorter and the fork use minimatch, and all of them work with
+minimatch 11:
 
 ```json
 "overrides": {
   "minimatch": "^11.0.1"
 }
 ```
+
+The override applies to every package. Since minimatch 9, the module is no longer a function, so a tool
+that calls minimatch 3 or 5 that way fails at run time, and npm does not warn. Run `npm ls minimatch`
+before you add the override, and the build and the tests after it.
 
 ### Upgrade from 2.x to 3.0
 
@@ -248,7 +253,7 @@ Version 3.0 replaces `eslint-plugin-jsx-a11y` with `eslint-plugin-jsx-a11y-x`. I
    `minimatch`. Add the one override above.
 3. Rename `jsx-a11y/` to `jsx-a11y-x/` in the rules of `eslint.config.js` and in `eslint-disable` comments.
 4. If `eslint.config.js` sets `settings['jsx-a11y']`, rename the key to `settings['jsx-a11y-x']`.
-5. Run `npm install`, then `npm run lint`.
+5. Run `npm install` and `npm ls minimatch`, then `npm run lint`, the build and the tests.
 
 ### Shared ESLint config: `@sbb-polarion/react-sbb-polarion/eslint-config`
 
