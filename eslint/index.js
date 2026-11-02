@@ -1,6 +1,6 @@
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
+import jsxA11y from 'eslint-plugin-jsx-a11y-x';
 import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
@@ -11,10 +11,8 @@ import tseslint from 'typescript-eslint';
  * `@sbb-polarion/react-sbb-polarion/eslint-config`. Shipped as source, not bundled: ESLint loads it in Node.
  * The plugins it imports are optional peer dependencies, installed by the consuming extension.
  *
- * eslint-plugin-jsx-a11y declares peers only up to ESLint 9, so a consumer on ESLint 10 needs this in its
- * own package.json (npm applies overrides only in the root project), until upstream supports ESLint 10:
- *   "overrides": { "eslint-plugin-jsx-a11y": { "eslint": "$eslint" } }
- *   https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/issues/1075
+ * The accessibility rules come from eslint-plugin-jsx-a11y-x, the maintained fork of eslint-plugin-jsx-a11y:
+ * it supports ESLint 10 and needs no minimatch below 11. Its rules are named `jsx-a11y-x/...`.
  *
  * Usage, with the extension's own blocks passed in:
  *   export default polarionEslintConfig({ ignores: ['test/expected'], configs: [{ files: [...], rules: {...} }] });
@@ -43,7 +41,7 @@ export function polarionEslintConfig({ appFiles = ['src/**/*.{ts,tsx}'], ignores
     // Accessibility rules for the application markup. Tests stay out: their JSX is fixture markup.
     {
       files: appFiles,
-      ...jsxA11y.flatConfigs.recommended,
+      ...jsxA11y.configs.recommended,
     },
     ...configs,
     prettier,

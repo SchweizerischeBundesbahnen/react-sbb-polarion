@@ -100,7 +100,7 @@ verbatim from `ch.sbb.polarion.extension.generic` and must be re-copied to updat
 Uses [ESLint](https://eslint.org/) with a flat config (`eslint.config.js`), built from the shared config
 this library publishes (`eslint/index.js`), so RSP lints the way the extensions do: `@eslint/js` +
 `typescript-eslint` recommended, the `eslint-plugin-react-hooks` rules (rules-of-hooks +
-exhaustive-deps), the `eslint-plugin-jsx-a11y` recommended rules on the TypeScript sources in `src/`, and `eslint-config-prettier`
+exhaustive-deps), the `eslint-plugin-jsx-a11y-x` recommended rules on the TypeScript sources in `src/`, and `eslint-config-prettier`
 last so ESLint never fights Prettier over formatting. `src/generic/` and the test artifacts are ignored.
 RSP adds one exception on top: `Modal`'s content `<section>` may take the focus, because it is the
 dialog's only scroller and the keyboard scrolls only the focused element's scrollable ancestor.
@@ -214,25 +214,46 @@ to a local checkout work without touching the config.
 ## Accessibility checks for the extensions
 
 Two entry points let an extension check its React UI the way RSP checks its own components: a shared
-ESLint config with `eslint-plugin-jsx-a11y`, and an axe-core helper for the tests. Both are optional. The
+ESLint config with `eslint-plugin-jsx-a11y-x`, and an axe-core helper for the tests. Both are optional. The
 packages they need are **optional peer dependencies**, so an extension that uses neither installs nothing
 extra.
 
-1. Add the dev dependencies (the other ESLint packages are already in every extension):
+Add the dev dependencies (the other ESLint packages are already in every extension):
 
-   ```bash
-   npm install --save-dev eslint-plugin-jsx-a11y axe-core
-   ```
+```bash
+npm install --save-dev eslint-plugin-jsx-a11y-x axe-core
+```
 
-2. Add this to the extension's `package.json`. `eslint-plugin-jsx-a11y` declares peers only up to
-   ESLint 9, and npm applies `overrides` only in the root project, so every extension needs it until
-   [upstream supports ESLint 10](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/issues/1075):
+[`eslint-plugin-jsx-a11y-x`](https://github.com/eslint-community/eslint-plugin-jsx-a11y-x) is the maintained fork
+of `eslint-plugin-jsx-a11y`, with the same rules. It supports ESLint 10, and it works with minimatch 11,
+the first version without
+[GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249). Its rules are named
+`jsx-a11y-x/...`.
 
-   ```json
-   "overrides": {
-     "eslint-plugin-jsx-a11y": { "eslint": "$eslint" }
-   }
-   ```
+Add one override for minimatch to the extension's `package.json`. In the extensions today, only ESLint,
+`typescript-eslint`, the Prettier import sorter and the fork use minimatch, and all of them work with
+minimatch 11:
+
+```json
+"overrides": {
+  "minimatch": "^11.0.1"
+}
+```
+
+The override applies to every package. Since minimatch 9, the module is no longer a function, so a tool
+that calls minimatch 3 or 5 that way fails at run time, and npm does not warn. Run `npm ls minimatch`
+before you add the override, and the build and the tests after it.
+
+### Upgrade from 2.x to 3.0
+
+Version 3.0 replaces `eslint-plugin-jsx-a11y` with `eslint-plugin-jsx-a11y-x`. In the extension's `ui/`:
+
+1. Replace `eslint-plugin-jsx-a11y` with `eslint-plugin-jsx-a11y-x` in the dev dependencies.
+2. In the `overrides` of `package.json`, remove the entry for `eslint-plugin-jsx-a11y` and every entry for
+   `minimatch`. Add the one override above.
+3. Rename `jsx-a11y/` to `jsx-a11y-x/` in the rules of `eslint.config.js` and in `eslint-disable` comments.
+4. If `eslint.config.js` sets `settings['jsx-a11y']`, rename the key to `settings['jsx-a11y-x']`.
+5. Run `npm install` and `npm ls minimatch`, then `npm run lint`, the build and the tests.
 
 ### Shared ESLint config: `@sbb-polarion/react-sbb-polarion/eslint-config`
 
@@ -348,7 +369,7 @@ What these checks cannot tell you:
 - axe checks only what a test renders. A dialog, an error state or an edit mode needs a test that opens it.
 - axe and `getByRole({ name })` accept a `placeholder` as a name, so a control can pass while it is
   announced by its placeholder instead of its label.
-- jsx-a11y cannot see into components, and it assumes that a `{expression}` inside a `<label>` may render
+- The jsx-a11y rules cannot see into components, and it assumes that a `{expression}` inside a `<label>` may render
   the control, so it does not report such a label that names nothing.
 
 ## Releasing
