@@ -16,7 +16,7 @@ export default polarionEslintConfig({
         // and the keyboard scrolls only the focused element's scrollable ancestor. `roles` cannot allow
         // it, because it matches an explicit role attribute and a <section>'s region role is implicit.
         // The Modal holds the only <section> here; axe still checks any other at runtime.
-        'jsx-a11y/no-noninteractive-tabindex': [
+        'jsx-a11y-x/no-noninteractive-tabindex': [
           'error',
           { tags: ['section'], roles: ['tabpanel'], allowExpressionValues: true },
         ],

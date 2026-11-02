@@ -59,7 +59,7 @@
     "@eslint/js": ">=9.0.0",
     "typescript-eslint": "^8.0.0",
     "eslint-plugin-react-hooks": ">=5.0.0",
-    "eslint-plugin-jsx-a11y": "^6.10.0",
+    "eslint-plugin-jsx-a11y-x": ">=0.2.0",
     "eslint-config-prettier": ">=9.0.0",
     "globals": ">=15.0.0"
   },
@@ -75,7 +75,7 @@
     "axe-core": "4.14.0",
     "eslint": "10.13.0",
     "eslint-config-prettier": "10.1.8",
-    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-jsx-a11y-x": "0.2.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "globals": "17.13.0",
     "playwright": "1.64.1",
@@ -103,9 +103,7 @@
     "refractor": "^5.0.0"
   },
   "overrides": {
-    "eslint-plugin-jsx-a11y": {
-      "eslint": "$eslint"
-    }
+    "minimatch": "^11.0.1"
   },
   "peerDependenciesMeta": {
     "axe-core": {
@@ -123,7 +121,7 @@
     "eslint-plugin-react-hooks": {
       "optional": true
     },
-    "eslint-plugin-jsx-a11y": {
+    "eslint-plugin-jsx-a11y-x": {
       "optional": true
     },
     "eslint-config-prettier": {
