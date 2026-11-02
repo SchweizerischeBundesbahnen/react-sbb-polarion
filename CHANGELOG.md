@@ -1,5 +1,22 @@
 # Changelog
 
+## [3.0.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.7.0...v3.0.0) (2026-11-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* the shared ESLint config needs eslint-plugin-jsx-a11y-x in place of eslint-plugin-jsx-a11y. Its rules are named jsx-a11y-x/..., and it reads settings['jsx-a11y-x']. The README lists the upgrade steps.
+
+### Features
+
+* lint accessibility with eslint-plugin-jsx-a11y-x ([#170](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/170)) ([1ef85f9](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/1ef85f903e2641f5253968e0082c48d6d6c3f79d))
+
+
+### Bug Fixes
+
+* update dependencies ([#171](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/171)) ([8aba9f6](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/8aba9f66800c25fd99c6b22860e7a2f6ba703c19))
+* update dependency typescript-eslint to v8.72.1 ([939e499](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/939e4994737a4d54f4542e1968b9ae7491e4ec06))
+
 ## [2.7.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.6.2...v2.7.0) (2026-10-26)
 
 
