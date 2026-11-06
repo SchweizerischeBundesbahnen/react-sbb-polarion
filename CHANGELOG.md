@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v3.0.0...v3.0.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* update vitest monorepo to v5.1.0 ([e99fbce](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/e99fbcec7bab3783e0774ce7ac98139719834dae))
+
 ## [3.0.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.7.0...v3.0.0) (2026-11-02)
 
 
