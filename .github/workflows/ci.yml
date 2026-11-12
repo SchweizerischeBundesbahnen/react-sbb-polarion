@@ -43,7 +43,7 @@ jobs:
     # Pinned to the installed Playwright version (see package-lock.json) so the visual-test
     # screenshots match the references generated via `npm run test:update:docker`. Bump this tag
     # together with any Playwright bump (same rule as scripts/docker-test.mjs).
-    container: mcr.microsoft.com/playwright:v1.65.0-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+    container: mcr.microsoft.com/playwright:v1.65.0-noble@sha256:9beb546099e11f52d62e505537914870e01a67e0e6b00ae41da4775324e73dbe
     # This IS the reference environment for the committed screenshots, so the visual suites must
     # assert here (they skip themselves anywhere else - see vitest.config.ts).
     env:
