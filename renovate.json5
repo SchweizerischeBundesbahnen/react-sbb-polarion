@@ -66,8 +66,14 @@ build does NOT mean the reference screenshots were regenerated, and the regenera
 step. prCreation immediate so the branch surfaces as a pull request straight away instead of \
 waiting for the checks to settle. @vitest/browser-playwright stays out of this group: vitest pins \
 it as an exact peer, so it must share the vitest monorepo PR, or both PRs fail npm install with \
-ERESOLVE. It only takes playwright as a peer and does not move the image.",
-      matchPackageNames: ['playwright'],
+ERESOLVE. It only takes playwright as a peer and does not move the image. \
+The image is the `container:` of ci.yml and release-please.yml, which the built-in github-actions \
+manager reads as the docker dependency `mcr.microsoft.com/playwright`. That manager moves the tag \
+and its `@sha256` digest together. Naming it here pulls it out of the preset's github-actions group \
+and into this one. A regex manager used to do this job with the npm datasource, which has no \
+digests: it moved the tag but kept the digest of the old image, and Docker pulls by digest, so CI \
+kept running the old browser.",
+      matchPackageNames: ['playwright', 'mcr.microsoft.com/playwright'],
       groupName: 'playwright',
       automerge: false,
       prCreation: 'immediate',
@@ -94,23 +100,6 @@ CLAUDE.md - and a manager default is not something this repository would notice 
 against; keep them in the same PR as the peer range so the two never disagree.",
       matchPackageNames: ['react', 'react-dom', '@types/react', '@types/react-dom'],
       groupName: 'react',
-    },
-  ],
-
-  customManagers: [
-    {
-      customType: 'regex',
-      description: "The `container:` image tag in the workflows is a hand-written copy of the \
-playwright version - scripts/docker-test.mjs derives its own from node_modules, but the workflows \
-cannot, so Renovate has to edit them as if they were a dependency. It emits depName `playwright`, \
-so the playwright rule above groups it with the devDependency and keeps it out of automerge.",
-      managerFilePatterns: ['/^\\.github/workflows/[^/]+\\.ya?ml$/'],
-      matchStrings: [
-        'mcr\\.microsoft\\.com/playwright:v(?<currentValue>[0-9]+\\.[0-9]+\\.[0-9]+)-noble',
-      ],
-      depNameTemplate: 'playwright',
-      datasourceTemplate: 'npm',
-      versioningTemplate: 'npm',
     },
   ],
 }
