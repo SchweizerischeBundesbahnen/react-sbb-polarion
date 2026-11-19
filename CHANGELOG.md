@@ -1,5 +1,27 @@
 # Changelog
 
+## [3.1.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v3.0.0...v3.1.0) (2026-11-19)
+
+
+### Features
+
+* Add searchable option hints to SearchableSelect ([#177](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/177)) ([7f7d4a2](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/7f7d4a2735aabcd8f1c6c1e54c086fd5a6f1a003))
+
+
+### Bug Fixes
+
+* update dependency @vitejs/plugin-react to v6.3.0 ([76cea49](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/76cea492022f951f986d5cbf2e5f79a858650c53))
+* update dependency eslint to v10.15.0 ([ef861a0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/ef861a092bf348d33c8d36557f14c2656973db36))
+* update dependency playwright to v1.65.0 ([#174](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/174)) ([38e1935](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/38e19355e196eda91f4876f6bb961b54a835833c))
+* update dependency prettier to v3.10.0 ([3f455e2](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/3f455e2ba7128a1f1b435eda3de25df4e9f6ddf5))
+* update dependency prettier to v3.10.1 ([f503ed2](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/f503ed2e999d024cf3c008e5255bfc9e50a2c2eb))
+* update dependency typescript-eslint to v8.72.2 ([b65b293](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/b65b293764f008b81f74966a0ed1d90eb57315d6))
+* update dependency vite to v8.3.6 ([490741f](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/490741fb488730b46c6c1c65ddbe41a0f297a057))
+* update dependency vite to v8.3.7 ([49926ba](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/49926bae2022be311371edda51be867c605f0292))
+* update dependency vite to v8.3.8 ([2ea3322](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/2ea3322e77767a262e4d995827ee930b8c70cff5))
+* update playwright to v1.65.1 ([#176](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/176)) ([9a65d97](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/9a65d970ddc7d8547706b4aaa74c8aaa8e591ffd))
+* update vitest monorepo to v5.1.0 ([e99fbce](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/e99fbcec7bab3783e0774ce7ac98139719834dae))
+
 ## [3.0.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v2.7.0...v3.0.0) (2026-11-02)
 
 
