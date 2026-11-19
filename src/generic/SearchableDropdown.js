@@ -153,7 +153,10 @@ export default class SearchableDropdown {
                 // Optional per-option icon: <option data-icon="/polarion/…/icon.svg">Label</option>
                 icon: option.getAttribute('data-icon') || '',
                 // Optional coloured tile behind the icon: <option data-icon-bg="#1a3a5c">Label</option>
-                iconBg: option.getAttribute('data-icon-bg') || ''
+                iconBg: option.getAttribute('data-icon-bg') || '',
+                // react-sbb-polarion patch (not in upstream generic): optional secondary text, e.g. an ID,
+                // shown small and italic at the right of the popup row: <option data-hint="ID">Label</option>
+                hint: option.getAttribute('data-hint') || ''
             }));
     }
 
@@ -591,12 +594,15 @@ export default class SearchableDropdown {
 
     // Items whose label contains the query (case-insensitive). Empty query → all items. Shared by
     // the popup search box and the editable trigger.
+    // react-sbb-polarion patch (not in upstream generic): the hint is searched too, since it is shown
+    // in the row - typing an ID finds the option it is the hint of.
     _filterItems(query) {
         const q = (query || '').toLowerCase();
         if (!q) {
             return this.items;
         }
-        return this.items.filter(item => item.label.toLowerCase().includes(q));
+        return this.items.filter(item => item.label.toLowerCase().includes(q)
+            || (item.hint || '').toLowerCase().includes(q));
     }
 
     // Editable mode only: reconcile the suggestion popup with the current trigger text. If nothing
@@ -692,8 +698,24 @@ export default class SearchableDropdown {
                 labelSpan.className = 'option-label';
                 labelSpan.textContent = item.label;
                 option.appendChild(labelSpan);
+            } else if (item.hint) {
+                // react-sbb-polarion patch: a plain option with a hint is a flex row like the two above,
+                // so the label is a span of its own and ellipsizes before the hint.
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'option-label';
+                labelSpan.textContent = item.label;
+                option.appendChild(labelSpan);
             } else {
                 option.textContent = item.label;
+            }
+
+            if (item.hint) {
+                // react-sbb-polarion patch (not in upstream generic): the hint at the right of the row.
+                option.classList.add('has-hint');
+                const hintSpan = document.createElement('span');
+                hintSpan.className = 'option-hint';
+                hintSpan.textContent = item.hint;
+                option.appendChild(hintSpan);
             }
 
             if (this.preserveOptionClasses && item.className) {

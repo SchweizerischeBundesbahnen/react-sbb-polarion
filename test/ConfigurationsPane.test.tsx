@@ -253,12 +253,16 @@ describe('ConfigurationsPane', () => {
     await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
     mousedown(document.querySelector('.searchable-dropdown .sd-trigger') as HTMLElement);
     const options = Array.from(document.querySelectorAll<HTMLElement>('.sd-portal .items .option'));
-    // The name carries no "(inherited)" suffix: the marker is the `parent` class, which the shared CSS
-    // renders as a small italic "global" on the right of the option.
-    expect(options.map((o) => (o.textContent ?? '').trim())).toEqual(['global-cfg', 'project-cfg']);
+    // The name carries no "(inherited)" suffix: the option has the `parent` class, and SearchableSelect
+    // shows "global" as its hint, small and italic on the right of the option.
+    expect(options.map((o) => (o.querySelector('.option-label') ?? o).textContent)).toEqual([
+      'global-cfg',
+      'project-cfg',
+    ]);
     expect(options[0].classList.contains('parent')).toBe(true);
     expect(options[1].classList.contains('parent')).toBe(false);
-    expect(getComputedStyle(options[0], '::after').content).toBe('"global"');
+    expect(options[0].querySelector('.option-hint')?.textContent).toBe('global');
+    expect(options[1].querySelector('.option-hint')).toBeNull();
   });
 
   // The real "save it on this level first" flow: a global-scope configuration is saved onto the project

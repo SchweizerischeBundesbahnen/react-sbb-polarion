@@ -319,6 +319,48 @@ describe.skipIf(!__PIXEL_REFERENCES__)('SearchableSelect visual states - wrapper
     await expect(page.elementLocator(popupContent())).toMatchScreenshot('icon-capped-open-list');
   });
 
+  it('open list with hints', async () => {
+    // `hint` is secondary text such as the ID of an entity listed by its title: small and italic at the
+    // right of the row. The last option is inherited, so it shows "global" as its hint instead of its own.
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Requirements Specification', hint: 'Specification' },
+            { id: 'b', name: 'Design' },
+            { id: 'c', name: 'Default', hint: 'default', inherited: true },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    await settleBeforeCapture();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('hint-option-open-list');
+  });
+
+  it('open list with a hinted name past the popup cap', async () => {
+    // The name ellipsizes before the hint, which keeps its full width.
+    render(
+      <div className="sbb-ui visual-host" style={{ width: 240, padding: 16 }}>
+        <SearchableSelect
+          value="a"
+          onChange={() => {}}
+          options={[
+            { id: 'a', name: 'Design' },
+            { id: 'b', name: Array(4).fill('A space whose title does not fit').join(', '), hint: 'Specification' },
+          ]}
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    await settleBeforeCapture();
+    openStable(instanceOf(document.querySelector('select')!));
+    await expect(page.elementLocator(popupContent())).toMatchScreenshot('hint-long-name-open-list');
+  });
+
   it('open list with an inherited name past the popup cap', async () => {
     // The two rules meeting: the popup stops at --sbb-option-max-width, and the room reserved for the
     // marker is what the name ellipsizes before.
