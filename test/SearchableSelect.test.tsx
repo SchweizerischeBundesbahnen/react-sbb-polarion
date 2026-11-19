@@ -466,39 +466,46 @@ describe('SearchableSelect option decorations', () => {
     { id: 'b', name: 'From global', inherited: true },
   ];
 
-  it('marks an inherited option with the "global" marker instead of a name suffix', async () => {
+  // The name of an option: its label span where it has one (a row with an icon, a checkbox or a hint),
+  // else its own text.
+  const nameOf = (option: HTMLElement) => (option.querySelector('.option-label') ?? option).textContent;
+  const hintOf = (option: HTMLElement) => option.querySelector<HTMLElement>('.option-hint');
+
+  it('marks an inherited option with "global" as its hint instead of a name suffix', async () => {
     await mount({ options: SCOPED });
     mousedown(trigger());
     const [local, global] = options();
-    // The name itself stays untouched - the marker is CSS, not part of the label.
-    expect(labels()).toEqual(['Local', 'From global']);
+    // The name itself stays untouched - the marker is the hint, apart from the label.
+    expect(options().map(nameOf)).toEqual(['Local', 'From global']);
     expect(global.classList.contains('parent')).toBe(true);
     expect(local.classList.contains('parent')).toBe(false);
+    expect(hintOf(global)?.textContent).toBe('global');
+    expect(hintOf(local)).toBeNull();
 
-    const marker = getComputedStyle(global, '::after');
-    expect(marker.content).toBe('"global"');
+    const marker = getComputedStyle(hintOf(global)!);
     expect(marker.fontStyle).toBe('italic');
-    // Smaller than the option label, pinned to the right edge of the row and 2px below the name -
-    // generic's own marker geometry.
     expect(parseFloat(marker.fontSize)).toBeLessThan(parseFloat(getComputedStyle(global).fontSize));
-    expect(marker.position).toBe('absolute');
-    expect(marker.top).toBe('8px');
-    expect(marker.right).toBe('12px');
+    // Drawn once: the hint replaces the marker the shared CSS draws for the `parent` class.
+    expect(getComputedStyle(global, '::after').content).toBe('none');
     expect(getComputedStyle(local, '::after').content).toBe('none');
   });
 
-  it('reserves room for the marker so a long inherited name cannot reach it', async () => {
+  it('shows "global" on an inherited option, not the hint it was given', async () => {
+    await mount({ options: [SCOPED[0], { ...SCOPED[1], hint: 'Specification' }] });
+    mousedown(trigger());
+    expect(hintOf(options()[1])?.textContent).toBe('global');
+  });
+
+  it('keeps a long inherited name off the marker, which keeps its full width', async () => {
     await mount({ options: [SCOPED[0], { id: 'b', name: 'Global style package with long name', inherited: true }] });
     mousedown(trigger());
-    const [local, global] = options();
-    // The name is a bare text node, so the room is reserved on the option itself: right padding wide
-    // enough for the marker plus a gap. The popup is max-content, so the padding widens it and the gap
-    // survives any name length; the ellipsis of the base option covers a consumer-capped popup.
-    const style = getComputedStyle(global);
-    expect(style.display).toBe('block');
-    expect(parseFloat(style.paddingRight)).toBeGreaterThan(parseFloat(getComputedStyle(local).paddingRight));
-    expect(style.textOverflow).toBe('ellipsis');
-    expect(style.overflow).toBe('hidden');
+    const global = options()[1];
+    const name = global.querySelector<HTMLElement>('.option-label')!;
+    const marker = hintOf(global)!;
+    // The popup is max-content, so the name is painted in full and the gap before the marker holds.
+    expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth);
+    const markerTextLeft = marker.getBoundingClientRect().left + parseFloat(getComputedStyle(marker).paddingLeft);
+    expect(markerTextLeft - name.getBoundingClientRect().right).toBeGreaterThanOrEqual(16);
   });
 
   it('ellipsizes an inherited name at the cap and keeps it readable through the tooltip', async () => {
@@ -506,12 +513,14 @@ describe('SearchableSelect option decorations', () => {
     await mount({ options: [SCOPED[0], { id: 'b', name: long, inherited: true }] });
     mousedown(trigger());
     const global = options()[1];
-    // Capped popup: the name stops at the room reserved for the marker instead of widening the popup,
-    // and the part the ellipsis hides is still readable on the row.
-    expect(global.scrollWidth).toBeGreaterThan(global.clientWidth);
+    const name = global.querySelector<HTMLElement>('.option-label')!;
+    // Capped popup: the name ellipsizes before the marker instead of widening the popup, and the part
+    // the ellipsis hides is still readable on the row.
+    expect(name.scrollWidth).toBeGreaterThan(name.clientWidth);
+    expect(getComputedStyle(name).textOverflow).toBe('ellipsis');
+    expect(hintOf(global)!.getBoundingClientRect().right).toBeLessThanOrEqual(global.getBoundingClientRect().right);
     mouseover(global);
     expect(global.title).toBe(long);
-    expect(getComputedStyle(global).textOverflow).toBe('ellipsis');
   });
 
   it('writes an inherited option in normal weight and the ones of the scope in bold', async () => {
@@ -523,19 +532,17 @@ describe('SearchableSelect option decorations', () => {
     expect(getComputedStyle(local).fontWeight).toBe('700');
   });
 
-  // In both flex modes the option lays out its icon / checkbox and its label span, and the marker is
-  // placed by the shared rule: `margin-left: auto` pushes it to the right edge, `padding-left` keeps it
-  // off the label. The out-of-flow placement of a plain option must not reach either.
-  const expectSharedMarkerPlacement = (option: HTMLElement) => {
+  // In both flex modes the option lays out its icon / checkbox and its label span, and the marker is the
+  // hint after them: `margin-left: auto` pushes it to the right edge, `padding-left` keeps it off the label.
+  const expectMarkerPlacement = (option: HTMLElement) => {
     const style = getComputedStyle(option);
     expect(style.display).toBe('flex');
-    // Centered, like an option of either flex mode that is not inherited - baseline alignment would
-    // drop the name against its icon, whose baseline is its bottom edge.
+    // Centered - baseline alignment would drop the name against its icon, whose baseline is its bottom edge.
     expect(style.alignItems).toBe('center');
-    const marker = getComputedStyle(option, '::after');
-    expect(marker.content).toBe('"global"');
-    expect(parseFloat(marker.marginLeft)).toBeGreaterThan(0);
-    expect(marker.paddingLeft).toBe('16px');
+    const marker = hintOf(option)!;
+    expect(marker.textContent).toBe('global');
+    expect(getComputedStyle(marker).paddingLeft).toBe('16px');
+    expect(getComputedStyle(option, '::after').content).toBe('none');
     // The label is bounded, so a name longer than a consumer-capped popup ellipsizes rather than
     // pushing the marker out of the row.
     const label = getComputedStyle(option.querySelector('.option-label')!);
@@ -554,7 +561,7 @@ describe('SearchableSelect option decorations', () => {
     mousedown(trigger());
     const global = options()[1];
     expect(global.classList.contains('has-icon')).toBe(true);
-    expectSharedMarkerPlacement(global);
+    expectMarkerPlacement(global);
   });
 
   it('keeps the flex layout and marker placement of an inherited option in multi-select mode', async () => {
@@ -562,7 +569,7 @@ describe('SearchableSelect option decorations', () => {
     mousedown(multiTrigger());
     const global = options()[1];
     expect(global.classList.contains('multiselect-option')).toBe(true);
-    expectSharedMarkerPlacement(global);
+    expectMarkerPlacement(global);
   });
 
   // Saving a global-scope configuration onto the project scope flips `inherited` on an option that
@@ -596,7 +603,7 @@ describe('SearchableSelect option decorations', () => {
     q<HTMLButtonElement>('[data-testid="save-on-scope"]').click();
     await vi.waitFor(() => expect(options()[0].classList.contains('parent')).toBe(false));
     expect(labels()).toEqual(['Default', 'Compact']);
-    expect(getComputedStyle(options()[0], '::after').content).toBe('none');
+    expect(hintOf(options()[0])).toBeNull();
   });
 
   it('drops the marker of an option that stops being inherited, with the popup closed', async () => {
@@ -607,6 +614,7 @@ describe('SearchableSelect option decorations', () => {
 
     mousedown(trigger());
     expect(options()[0].classList.contains('parent')).toBe(false);
+    expect(hintOf(options()[0])).toBeNull();
     // The trigger mirrors the class of the selected option, so it has to lose it as well.
     expect(trigger().classList.contains('parent')).toBe(false);
     expect(trigger()).toHaveValue('Default');
@@ -623,6 +631,84 @@ describe('SearchableSelect option decorations', () => {
   it('shows only the name on the trigger when an inherited option is selected', async () => {
     await mount({ initial: 'b', options: SCOPED });
     expect(trigger()).toHaveValue('From global');
+  });
+
+  const HINTED: SelectOption[] = [
+    { id: 'spec', name: 'Requirements Specification', hint: 'Specification' },
+    { id: 'design', name: 'Design' },
+  ];
+  it('shows a hint small and italic at the right of its option, apart from the name', async () => {
+    // The plain option is the longest, so the hinted row has free room to push its hint across.
+    await mount({ options: [HINTED[0], { id: 'long', name: 'A space whose title is much longer than the others' }] });
+    mousedown(trigger());
+    const [hinted, plain] = options();
+    expect(hinted.classList.contains('has-hint')).toBe(true);
+    expect(hinted.querySelector('.option-label')?.textContent).toBe('Requirements Specification');
+    expect(hintOf(hinted)?.textContent).toBe('Specification');
+
+    const style = getComputedStyle(hintOf(hinted)!);
+    expect(style.fontStyle).toBe('italic');
+    expect(style.fontWeight).toBe('400');
+    expect(parseFloat(style.fontSize)).toBeLessThan(parseFloat(getComputedStyle(hinted).fontSize));
+    // At the right edge of a flex row, a gap off the name, and never shrunk: the label ellipsizes before it.
+    expect(getComputedStyle(hinted).display).toBe('flex');
+    expect(style.paddingLeft).toBe('16px');
+    expect(style.flexShrink).toBe('0');
+    const rowContentRight = hinted.getBoundingClientRect().right - parseFloat(getComputedStyle(hinted).paddingRight);
+    expect(Math.abs(hintOf(hinted)!.getBoundingClientRect().right - rowContentRight)).toBeLessThan(1);
+    expect(parseFloat(style.marginLeft)).toBeGreaterThan(0);
+    expect(getComputedStyle(hinted.querySelector('.option-label')!).textOverflow).toBe('ellipsis');
+
+    // An option without a hint keeps its plain rendering.
+    expect(plain.classList.contains('has-hint')).toBe(false);
+    expect(hintOf(plain)).toBeNull();
+  });
+
+  it('shows only the name on the trigger when an option with a hint is selected', async () => {
+    await mount({ initial: 'spec', options: HINTED });
+    expect(trigger()).toHaveValue('Requirements Specification');
+  });
+
+  it('finds an option by its hint as well as by its name', async () => {
+    await mount({ options: [...HINTED, { id: 'other', name: 'Other', hint: 'Archive' }] });
+    mousedown(trigger());
+    typeInto(searchBox(), 'archi');
+    expect(options().map((o) => o.querySelector('.option-label')?.textContent ?? o.textContent)).toEqual(['Other']);
+    typeInto(searchBox(), 'design');
+    expect(options().map((o) => o.textContent)).toEqual(['Design']);
+  });
+
+  it('shows the hint in multi-select mode and next to an icon', async () => {
+    await mountMulti({ options: [{ ...HINTED[0], iconURL: ICON }, HINTED[1]] });
+    mousedown(multiTrigger());
+    const hinted = options()[0];
+    expect(hinted.classList.contains('multiselect-option')).toBe(true);
+    expect(hinted.querySelector('img.option-icon')).not.toBeNull();
+    expect(hintOf(hinted)?.textContent).toBe('Specification');
+  });
+
+  // A hint that changes on an option which keeps its id and name is an attribute change on an existing
+  // <option>, which the wrapped dropdown does not watch - the key has to cover the hint.
+  function HintFlipHost() {
+    const [hint, setHint] = useState('Old');
+    return (
+      <div className="sbb-ui" style={{ width: 240, padding: 16 }}>
+        <button type="button" data-testid="flip-hint" onClick={() => setHint('New')}>
+          flip
+        </button>
+        <SearchableSelect value="a" onChange={() => {}} options={[{ id: 'a', name: 'Space', hint: hint }]} />
+      </div>
+    );
+  }
+
+  it('repaints a hint that changes on an option keeping its id and name', async () => {
+    render(<HintFlipHost />);
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    mousedown(trigger());
+    expect(hintOf(options()[0])?.textContent).toBe('Old');
+
+    q<HTMLButtonElement>('[data-testid="flip-hint"]').click();
+    await vi.waitFor(() => expect(hintOf(options()[0])?.textContent).toBe('New'));
   });
 });
 
@@ -651,6 +737,26 @@ describe('SearchableSelect accessibility', () => {
       </div>,
     );
     await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger-multi')).not.toBeNull());
+    expect(await a11yViolations()).toEqual([]);
+  });
+
+  it('has no WCAG A/AA violations with the popup open on options with hints', async () => {
+    render(
+      <div className="sbb-ui">
+        <SearchableSelect
+          value="a"
+          onChange={() => undefined}
+          options={[
+            { id: 'a', name: 'Requirements Specification', hint: 'Specification' },
+            { id: 'b', name: 'Design', hint: 'design' },
+          ]}
+          ariaLabel="Space"
+        />
+      </div>,
+    );
+    await vi.waitFor(() => expect(document.querySelector('.searchable-dropdown .sd-trigger')).not.toBeNull());
+    mousedown(trigger());
+    await vi.waitFor(() => expect(options()).toHaveLength(2));
     expect(await a11yViolations()).toEqual([]);
   });
 

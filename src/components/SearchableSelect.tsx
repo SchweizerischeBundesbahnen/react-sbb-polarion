@@ -13,11 +13,20 @@ export interface SelectOption {
   indent?: boolean;
   /**
    * Marks the option as inherited from a broader (e.g. global) scope, the way generic marks a config
-   * of the global level: the name in normal weight with a small italic "global" marker on the right,
-   * while the options of the current scope turn bold. The trigger is an <input> and cannot render the
-   * marker, so a selected inherited option shows just its name there.
+   * of the global level: the name in normal weight with "global" as its `hint`, while the options of the
+   * current scope turn bold. The "global" marker takes the place of the `hint`, so when an option has
+   * both, `inherited` wins: the list shows "global", and the given `hint` is ignored - it is neither shown
+   * nor matched by the search. The trigger is an <input> and cannot render the hint, so a selected
+   * inherited option shows just its name there.
    */
   inherited?: boolean;
+  /**
+   * Secondary text shown small and italic at the right of the option in the open list, e.g. the ID of
+   * an entity listed by its title. The search matches it too. The trigger is an <input> and cannot
+   * render it, so a selected option shows just its name there. Ignored on an `inherited` option, which
+   * shows "global" in its place.
+   */
+  hint?: string;
 }
 
 interface BaseProps {
@@ -60,6 +69,11 @@ function optionClass(option: SelectOption): string | undefined {
   return classes.length > 0 ? classes.join(' ') : undefined;
 }
 
+/** The hint an option shows: "global" for an inherited option, whatever hint it was given, else its own. */
+function optionHint(option: SelectOption): string | undefined {
+  return option.inherited ? 'global' : option.hint || undefined;
+}
+
 /**
  * React key covering everything an option paints with, not just its id.
  *
@@ -72,7 +86,14 @@ function optionClass(option: SelectOption): string | undefined {
  * childList change the dropdown already handles.
  */
 function optionKey(option: SelectOption): string {
-  return [option.id, option.name, optionClass(option) ?? '', option.iconURL ?? '', option.iconBg ?? ''].join('\u0000');
+  return [
+    option.id,
+    option.name,
+    optionClass(option) ?? '',
+    option.iconURL ?? '',
+    option.iconBg ?? '',
+    optionHint(option) ?? '',
+  ].join('\u0000');
 }
 
 /** The selection as a list in both modes: multi-select passes one through, single-select wraps its
@@ -181,6 +202,7 @@ export default function SearchableSelect(props: Readonly<SearchableSelectProps>)
           value={o.id}
           data-icon={o.iconURL || undefined}
           data-icon-bg={o.iconBg || undefined}
+          data-hint={optionHint(o)}
           className={optionClass(o)}
         >
           {o.name}

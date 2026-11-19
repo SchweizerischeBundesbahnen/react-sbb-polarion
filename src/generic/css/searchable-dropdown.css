@@ -336,6 +336,26 @@
     text-overflow: ellipsis;
 }
 
+/* react-sbb-polarion patch (not in upstream generic): an option with a hint (<option data-hint>), such
+   as an ID after a title. The hint sits at the right of the row, small and italic like the "global"
+   marker of an inherited option, and keeps its full width while the label ellipsizes before it. It is
+   in normal weight whatever the row's weight, so it stays secondary next to a bold name. SearchableSelect
+   draws that "global" marker as a hint too, so both share this geometry. */
+.sd-portal .option.has-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sd-portal .option > .option-hint {
+    flex: none;
+    margin-left: auto;
+    padding-left: 16px;
+    font-size: 10px;
+    font-style: italic;
+    font-weight: 400;
+}
+
 /* Optional coloured tile behind an icon (<option data-icon-bg> / addOption's 4th arg). The tile
    colour is per-option, so it is set inline in JS (_applyIconBg); this only adds the padding and
    radius that turn the icon's own background into a neat little tile — matching the entity/project
@@ -412,13 +432,21 @@
    padding, the width of the italic 10px "global", and the gap. Where a consumer caps the popup width,
    the name ellipsizes at the padding edge instead, which is why the ellipsis of the base `.option` is
    kept here rather than turned off the way the flex placement above turns it off. */
-.sd-portal .option.parent:not(.has-icon):not(.multiselect-option) {
+.sd-portal .option.parent:not(.has-icon):not(.multiselect-option):not(.has-hint) {
     display: block;
     position: relative;
     padding-right: 56px;
 }
 
-.sd-portal .option.parent:not(.has-icon):not(.multiselect-option)::after {
+.sd-portal .option.parent.has-hint::after {
+    /* react-sbb-polarion patch: a row with a hint shows its marker as that hint - SearchableSelect passes
+       "global" as the hint of an inherited option - so the marker this rule set draws is not drawn twice.
+       An option marked with the `parent` class alone (build mode, a plain <option class="parent">) has no
+       hint and keeps the marker drawn here. */
+    content: none;
+}
+
+.sd-portal .option.parent:not(.has-icon):not(.multiselect-option):not(.has-hint)::after {
     position: absolute;
     /* 6px of row padding, then the 2px drop below the name generic's own config list has. */
     top: 8px;

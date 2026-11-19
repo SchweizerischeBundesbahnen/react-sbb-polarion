@@ -408,7 +408,12 @@ before renaming or moving either.
 `SearchableSelect` is the shared combobox for both selection modes. By default it is a single-select
 (`value: string`); pass `multiple` and it renders checkbox options in the popup and one removable chip
 per selection, with `value` / `onChange` switching to a string list. Options may carry `iconURL`,
-`iconBg` and `indent`, so a nested or icon-bearing list needs no bespoke control.
+`iconBg` and `indent`, so a nested or icon-bearing list needs no bespoke control. An option may also carry
+a `hint`, secondary text such as the ID of an entity listed by its title: the open list shows it small and
+italic at the right of the row, and the search matches it. The trigger shows the name only. An `inherited`
+option uses the same place for its "global" marker, so an option has one hint at most. When an option has
+both, `inherited` wins: the list shows "global", and the given `hint` is ignored - it is neither shown nor
+matched by the search.
 
 `DateInput` is a native `<input type="date">` - the platform's own calendar popup, keyboard entry and
 locale-formatted display - wearing the control look of every other input here, which the browser's
