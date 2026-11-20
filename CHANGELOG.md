@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v3.1.0...v3.1.1) (2026-11-20)
+
+
+### Bug Fixes
+
+* style in-page doc anchors as links and frame article screenshots ([#180](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/180)) ([be16a4e](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/be16a4e32484da95f726d040c41b17aef608a4d0)), closes [#179](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/179)
+* update dependency axe-core to v4.14.1 ([febbb7a](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/febbb7ad70ccf0273434ba692e26149c708da712))
+* update dependency typescript-eslint to v8.73.0 ([f5f5277](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/f5f527798e034e54b66b4dc7d1facb2e7817753d))
+
 ## [3.1.0](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v3.0.0...v3.1.0) (2026-11-19)
 
 
