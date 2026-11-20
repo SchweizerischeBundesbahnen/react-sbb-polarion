@@ -252,16 +252,31 @@
   font-weight: 600;
 }
 
+/* --- Article images: a grey frame sets a screenshot (white controls on white) apart from the text --- */
+
+/* border-box: the GitHub markdown reset makes images content-box, so a full-width screenshot plus the
+   10px border would overflow the column. Emoji and images in table cells are inline icons, not
+   screenshots, and keep the reset's frameless look. */
+.docs-main .markdown-body img:not(.emoji, g-emoji img, table img) {
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 10px 0;
+  border: 10px solid #eee;
+}
+
 /* --- In-article same-page anchors (turned into scroll targets by useInPageAnchors) --- */
 
-.docs-anchor {
-  color: var(--sbb-color-accent, #0d5c9e);
+/* useInPageAnchors removes the href, so the GitHub markdown reset `.markdown-body a:not([href])` (colour:
+   inherit, specificity 0,2,1) would render these as plain text. Repeating `:not([href])` outranks it
+   (0,3,1) regardless of stylesheet order, and the colour matches every other `.markdown-body a`. */
+.markdown-body a.docs-anchor:not([href]) {
+  color: #197fa2;
   cursor: pointer;
   text-decoration: none;
 }
 
-.docs-anchor:hover,
-.docs-anchor:focus-visible {
+.markdown-body a.docs-anchor:not([href]):hover,
+.markdown-body a.docs-anchor:not([href]):focus-visible {
   text-decoration: underline;
 }
 

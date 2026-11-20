@@ -282,6 +282,44 @@ describe('documentation site', () => {
     expect(anchor.getAttribute('title')).toBe('#weasyprint-configuration');
   });
 
+  it('styles an in-page anchor like any other article link, not as body text', async () => {
+    stubFetch(
+      '<h2 id="enabling-cors">Enabling CORS</h2>' +
+        '<p>See <a href="#enabling-cors">here</a> or <a href="https://example.test/">there</a>.</p>',
+    );
+    renderConfig();
+
+    await vi.waitFor(() => expect(q('article.markdown-body .docs-anchor')).not.toBeNull());
+    const anchor = q('article.markdown-body .docs-anchor')!;
+    const link = q('article.markdown-body a[href]')!;
+    const paragraph = anchor.parentElement!;
+    // The GitHub markdown reset `.markdown-body a:not([href]) { color: inherit }` must not win.
+    expect(getComputedStyle(anchor).color).not.toBe(getComputedStyle(paragraph).color);
+    expect(getComputedStyle(anchor).color).toBe(getComputedStyle(link).color);
+  });
+
+  it('frames an article screenshot inside the column, but not an icon in a table cell', async () => {
+    // Wider than any test viewport: with the reset's content-box, the 10px frame would push it past the column.
+    const wide = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="4000" height="40"/>')}`;
+    const icon = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"/>')}`;
+    stubFetch(
+      `<h1 id="configuration">Configuration</h1><p><img id="shot" alt="Settings page" src="${wide}"></p>` +
+        `<table><tr><td><img id="icon" alt="ok" src="${icon}"></td></tr></table>`,
+    );
+    renderDocPage(CONFIG.docs[2]!);
+
+    await vi.waitFor(() => expect((q('#shot') as HTMLImageElement | null)?.complete).toBe(true));
+    const shot = q('#shot')!;
+    const article = q('.docs-main article.markdown-body')!;
+    const style = getComputedStyle(shot);
+    expect(style.borderTopWidth).toBe('10px');
+    expect(style.borderTopStyle).toBe('solid');
+    expect(style.borderTopColor).toBe('rgb(238, 238, 238)');
+    expect(shot.getBoundingClientRect().width).toBeGreaterThan(30);
+    expect(shot.getBoundingClientRect().right).toBeLessThanOrEqual(article.getBoundingClientRect().right);
+    expect(getComputedStyle(q('#icon')!).borderTopStyle).toBe('none');
+  });
+
   it('scrolls to the URL fragment once the fetched article is in the DOM', async () => {
     stubFetch(CONFIG_HTML);
     const scrollIntoView = vi.fn();
