@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.1.2](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v3.1.1...v3.1.2) (2026-11-28)
+
+
+### Bug Fixes
+
+* update dependency @testing-library/jest-dom to v8 ([#182](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/issues/182)) ([e59eb65](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/e59eb65284858adc17ae973177e8f67671199dab))
+* update dependency @types/react to v19.3.1 ([83a97d4](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/83a97d46c803ab181474625be2be6ce7b6f2faf1))
+* update dependency typescript-eslint to v8.74.0 ([2492bec](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/2492bec3f94e8c2a1317f71d66404d3ebac4464d))
+* update vitest monorepo to v5.1.1 ([e44e142](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/commit/e44e142830a81715dd839fe035b941842b1f9f47))
+
 ## [3.1.1](https://github.com/SchweizerischeBundesbahnen/react-sbb-polarion/compare/v3.1.0...v3.1.1) (2026-11-20)
 
 
